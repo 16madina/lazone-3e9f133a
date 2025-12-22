@@ -440,6 +440,16 @@ export const usePushNotifications = () => {
                 window.location.href = `/property/${data.property_id}`;
               }
               break;
+            case 'reservation_request':
+            case 'reservation':
+            case 'appointment':
+              // Redirect to dashboard for reservation/appointment notifications
+              window.location.href = '/dashboard';
+              break;
+            case 'test':
+              // Test notifications don't need special handling
+              window.location.href = '/notifications';
+              break;
             default:
               window.location.href = '/notifications';
           }

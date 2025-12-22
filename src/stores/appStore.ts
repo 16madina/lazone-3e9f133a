@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import { Country } from '@/data/africanCountries';
 
 export interface Property {
   id: string;
@@ -38,6 +40,7 @@ interface AppState {
   minimumStayFilter: number | null;
   appMode: AppMode;
   isModeSwitching: boolean;
+  selectedCountry: Country | null;
   toggleFavorite: (id: string) => void;
   setSearchQuery: (query: string) => void;
   setActiveFilter: (filter: string) => void;
@@ -47,6 +50,7 @@ interface AppState {
   setMinimumStayFilter: (value: number | null) => void;
   setAppMode: (mode: AppMode) => void;
   setIsModeSwitching: (switching: boolean) => void;
+  setSelectedCountry: (country: Country | null) => void;
 }
 
 const mockProperties: Property[] = [
@@ -223,6 +227,7 @@ export const useAppStore = create<AppState>((set) => ({
   minimumStayFilter: null,
   appMode: 'lazone',
   isModeSwitching: false,
+  selectedCountry: null,
   toggleFavorite: (id) =>
     set((state) => ({
       favorites: state.favorites.includes(id)
@@ -237,4 +242,5 @@ export const useAppStore = create<AppState>((set) => ({
   setMinimumStayFilter: (value) => set({ minimumStayFilter: value }),
   setAppMode: (mode) => set({ appMode: mode }),
   setIsModeSwitching: (switching) => set({ isModeSwitching: switching }),
+  setSelectedCountry: (country) => set({ selectedCountry: country }),
 }));

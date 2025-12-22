@@ -27,6 +27,65 @@ interface ServiceAccount {
   client_x509_cert_url: string;
 }
 
+// Check if token is APNs format (hex string) vs FCM format (longer, contains colons or letters)
+function isApnsToken(token: string): boolean {
+  // APNs tokens are 64-character hex strings (device token)
+  // FCM tokens are longer and contain more varied characters
+  const isHex = /^[0-9A-Fa-f]+$/.test(token);
+  const isApnsLength = token.length === 64;
+  return isHex && isApnsLength;
+}
+
+// Convert APNs token to FCM token using Firebase Instance ID API
+async function convertApnsToFcm(
+  apnsToken: string, 
+  accessToken: string,
+  projectId: string
+): Promise<string | null> {
+  console.log("Converting APNs token to FCM token...");
+  console.log("APNs token:", apnsToken);
+  
+  // Firebase IID API to import APNs token
+  // This creates/retrieves an FCM registration token for the APNs device token
+  const iidUrl = `https://iid.googleapis.com/iid/v1:batchImport`;
+  
+  const requestBody = {
+    application: `app.lovable.8555b7d95bbc422ab78d1f70f2b81296`, // Your app bundle ID
+    sandbox: true, // Set to false for production APNs
+    apns_tokens: [apnsToken]
+  };
+  
+  try {
+    const response = await fetch(iidUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${accessToken}`,
+        "access_token_auth": "true"
+      },
+      body: JSON.stringify(requestBody)
+    });
+    
+    const result = await response.json();
+    console.log("IID batchImport response:", JSON.stringify(result));
+    
+    if (result.results && result.results.length > 0) {
+      const firstResult = result.results[0];
+      if (firstResult.registration_token) {
+        console.log("Got FCM token from APNs conversion:", firstResult.registration_token.substring(0, 30) + "...");
+        return firstResult.registration_token;
+      } else if (firstResult.status) {
+        console.error("APNs conversion failed:", firstResult.status);
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    console.error("Error converting APNs to FCM:", error);
+    return null;
+  }
+}
+
 // Generate JWT for FCM v1 OAuth 2.0
 async function generateAccessToken(serviceAccount: ServiceAccount): Promise<string> {
   const now = Math.floor(Date.now() / 1000);
@@ -39,7 +98,7 @@ async function generateAccessToken(serviceAccount: ServiceAccount): Promise<stri
 
   const payload = {
     iss: serviceAccount.client_email,
-    scope: "https://www.googleapis.com/auth/firebase.messaging",
+    scope: "https://www.googleapis.com/auth/firebase.messaging https://www.googleapis.com/auth/cloud-platform",
     aud: serviceAccount.token_uri,
     iat: now,
     exp: expiry,
@@ -102,7 +161,6 @@ async function generateAccessToken(serviceAccount: ServiceAccount): Promise<stri
 
   const responseText = await tokenResponse.text();
   console.log("Token exchange status:", tokenResponse.status);
-  console.log("Token response preview:", responseText.substring(0, 200));
 
   if (!tokenResponse.ok) {
     console.error("Token exchange failed:", responseText);
@@ -111,10 +169,53 @@ async function generateAccessToken(serviceAccount: ServiceAccount): Promise<stri
 
   const tokenData = JSON.parse(responseText);
   console.log("Got access token, length:", tokenData.access_token?.length);
-  console.log("Token type:", tokenData.token_type);
-  console.log("Expires in:", tokenData.expires_in);
-  console.log("Access token prefix:", tokenData.access_token?.substring(0, 50));
   return tokenData.access_token;
+}
+
+// Send via legacy FCM API (supports APNs tokens directly with device_token field)
+async function sendViaLegacyFcm(
+  apnsToken: string,
+  title: string,
+  body: string,
+  data: Record<string, string>,
+  serverKey: string
+): Promise<{ success: boolean; result: any }> {
+  console.log("Attempting to send via legacy FCM with APNs token...");
+  
+  // Legacy FCM HTTP API can accept APNs tokens if properly configured
+  const legacyUrl = "https://fcm.googleapis.com/fcm/send";
+  
+  const message = {
+    to: apnsToken,
+    notification: {
+      title,
+      body,
+      sound: "default",
+      badge: 1
+    },
+    data,
+    priority: "high",
+    content_available: true
+  };
+  
+  try {
+    const response = await fetch(legacyUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `key=${serverKey}`
+      },
+      body: JSON.stringify(message)
+    });
+    
+    const result = await response.json();
+    console.log("Legacy FCM response:", JSON.stringify(result));
+    
+    return { success: response.ok && result.success === 1, result };
+  } catch (error) {
+    console.error("Legacy FCM error:", error);
+    return { success: false, result: { error } };
+  }
 }
 
 serve(async (req) => {
@@ -137,7 +238,6 @@ serve(async (req) => {
     try {
       serviceAccount = JSON.parse(serviceAccountJson);
       console.log("Service account project_id:", serviceAccount.project_id);
-      console.log("Service account client_email:", serviceAccount.client_email);
     } catch (e) {
       console.error("Invalid service account JSON:", e);
       return new Response(
@@ -162,7 +262,7 @@ serve(async (req) => {
 
     console.log(`Sending push notification to user: ${userId}`);
 
-    // Get push_token directly from profiles table (like AYOKA)
+    // Get push_token from profiles table
     const { data: profile, error: profileError } = await supabaseClient
       .from("profiles")
       .select("push_token")
@@ -185,15 +285,38 @@ serve(async (req) => {
       );
     }
 
-    const token = profile.push_token;
-    console.log(`Found push_token for user, token prefix: ${token.substring(0, 20)}...`);
+    let token = profile.push_token;
+    console.log(`Found push_token, length: ${token.length}, prefix: ${token.substring(0, 20)}...`);
+    
+    // Check if this is an APNs token that needs conversion
+    const tokenIsApns = isApnsToken(token);
+    console.log(`Token is APNs format: ${tokenIsApns}`);
 
     // Get OAuth 2.0 access token
     console.log("Starting OAuth token generation...");
-    console.log("Private key exists:", !!serviceAccount.private_key);
-    console.log("Private key starts with:", serviceAccount.private_key?.substring(0, 30));
     const accessToken = await generateAccessToken(serviceAccount);
-    console.log("Access token obtained, length:", accessToken?.length);
+    console.log("Access token obtained");
+
+    // If it's an APNs token, try to convert it to FCM
+    if (tokenIsApns) {
+      console.log("Detected APNs token, attempting conversion to FCM...");
+      const fcmToken = await convertApnsToFcm(token, accessToken, serviceAccount.project_id);
+      
+      if (fcmToken) {
+        console.log("Successfully converted APNs to FCM token");
+        token = fcmToken;
+        
+        // Update the token in the database for future use
+        await supabaseClient
+          .from("profiles")
+          .update({ push_token: fcmToken })
+          .eq("user_id", userId);
+        console.log("Updated profile with FCM token");
+      } else {
+        console.log("APNs conversion failed, will try sending with original token anyway");
+      }
+    }
+
     const fcmUrl = `https://fcm.googleapis.com/v1/projects/${serviceAccount.project_id}/messages:send`;
 
     // Build FCM message
@@ -230,19 +353,14 @@ serve(async (req) => {
 
     try {
       console.log("FCM URL:", fcmUrl);
-      console.log("Authorization header length:", `Bearer ${accessToken}`.length);
-      console.log("Access token used (first 60 chars):", accessToken?.substring(0, 60));
       console.log("Message payload:", JSON.stringify(message));
-      
-      const headers = {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${accessToken}`,
-      };
-      console.log("Request headers:", JSON.stringify(Object.keys(headers)));
       
       const response = await fetch(fcmUrl, {
         method: "POST",
-        headers,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${accessToken}`,
+        },
         body: JSON.stringify(message),
       });
 

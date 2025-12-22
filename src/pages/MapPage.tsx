@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 import { africanCountries, Country } from '@/data/africanCountries';
+import { getCurrencyByCountry } from '@/data/currencies';
 import SectionTutorialButton from '@/components/tutorial/SectionTutorialButton';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -68,11 +69,13 @@ const formatPriceShort = (price: number, isResidence: boolean = false) => {
   return price.toString() + (isResidence ? '/n' : '');
 };
 
-const formatPrice = (price: number, isResidence: boolean = false) => {
+const formatPrice = (price: number, countryCode: string | null, isResidence: boolean = false) => {
+  const currency = getCurrencyByCountry(countryCode);
+  const symbol = currency?.symbol || 'FCFA';
   const formatted = new Intl.NumberFormat('fr-FR', {
     style: 'decimal',
     maximumFractionDigits: 0,
-  }).format(price) + ' FCFA';
+  }).format(price) + ' ' + symbol;
   return isResidence ? `${formatted}/nuit` : formatted;
 };
 
@@ -795,10 +798,10 @@ const MapPage = () => {
                   {/* Price */}
                   <p className="text-primary font-bold">
                     {isResidence 
-                      ? formatPrice(selectedProperty.pricePerNight || selectedProperty.price, true)
+                      ? formatPrice(selectedProperty.pricePerNight || selectedProperty.price, selectedProperty.country, true)
                       : (
                         <>
-                          {formatPrice(selectedProperty.price)}
+                          {formatPrice(selectedProperty.price, selectedProperty.country)}
                           {selectedProperty.type === 'rent' && <span className="text-xs font-normal">/mois</span>}
                         </>
                       )

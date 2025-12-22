@@ -94,16 +94,25 @@ export const sendPushNotification = async (
   data?: Record<string, string>
 ): Promise<boolean> => {
   try {
-    const { error } = await supabase.functions.invoke('send-push-notification', {
-      body: { userId, title, body, data }
+    const { data: res, error } = await supabase.functions.invoke('send-push-notification', {
+      body: { userId, title, body, data },
     });
 
     if (error) {
       console.error('Error sending push notification:', error);
       return false;
     }
-    
-    console.log('Push notification sent successfully');
+
+    // Edge function returns { sent: 0|1, ... }
+    if (res && typeof res === 'object' && 'sent' in (res as any)) {
+      const sent = Boolean((res as any).sent);
+      if (!sent) {
+        console.warn('Push notification not sent:', res);
+      }
+      return sent;
+    }
+
+    // Backward-compatible fallback
     return true;
   } catch (error) {
     console.error('Failed to send push notification:', error);

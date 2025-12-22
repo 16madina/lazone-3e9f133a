@@ -262,151 +262,146 @@ serve(async (req) => {
 
     console.log(`Sending push notification to user: ${userId}`);
 
-    // Get push_token from profiles table
-    const { data: profile, error: profileError } = await supabaseClient
-      .from("profiles")
-      .select("push_token")
-      .eq("user_id", userId)
-      .maybeSingle();
+    // Get latest *FCM* token(s) for user from fcm_tokens table.
+    // We prefer real FCM registration tokens over raw APNs device tokens.
+    const { data: tokenRows, error: tokenError } = await supabaseClient
+      .from('fcm_tokens')
+      .select('id, token, platform, updated_at, created_at')
+      .eq('user_id', userId)
+      .order('updated_at', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(20);
 
-    if (profileError) {
-      console.error("Error fetching profile:", profileError);
+    if (tokenError) {
+      console.error('Error fetching fcm_tokens:', tokenError);
       return new Response(
-        JSON.stringify({ error: "Failed to fetch user profile" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: 'Failed to fetch user tokens', sent: 0 }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    if (!profile?.push_token) {
-      console.log("No push_token found for user");
-      return new Response(
-        JSON.stringify({ message: "No push token registered for user", sent: 0 }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    const tokens = (tokenRows || []).map((r) => r.token).filter(Boolean);
 
-    let token = profile.push_token;
-    console.log(`Found push_token, length: ${token.length}, prefix: ${token.substring(0, 20)}...`);
-    
-    // Check if this is an APNs token that needs conversion
-    const tokenIsApns = isApnsToken(token);
-    console.log(`Token is APNs format: ${tokenIsApns}`);
+    // Fallback: legacy profiles.push_token if present
+    let profileToken: string | null = null;
+    if (tokens.length === 0) {
+      const { data: profile, error: profileError } = await supabaseClient
+        .from('profiles')
+        .select('push_token')
+        .eq('user_id', userId)
+        .maybeSingle();
 
-    // Get OAuth 2.0 access token
-    console.log("Starting OAuth token generation...");
-    const accessToken = await generateAccessToken(serviceAccount);
-    console.log("Access token obtained");
-
-    // If it's an APNs token, try to convert it to FCM
-    if (tokenIsApns) {
-      console.log("Detected APNs token, attempting conversion to FCM...");
-      const fcmToken = await convertApnsToFcm(token, accessToken, serviceAccount.project_id);
-      
-      if (fcmToken) {
-        console.log("Successfully converted APNs to FCM token");
-        token = fcmToken;
-        
-        // Update the token in the database for future use
-        await supabaseClient
-          .from("profiles")
-          .update({ push_token: fcmToken })
-          .eq("user_id", userId);
-        console.log("Updated profile with FCM token");
+      if (profileError) {
+        console.error('Error fetching profile:', profileError);
       } else {
-        console.log("APNs conversion failed, will try sending with original token anyway");
+        profileToken = profile?.push_token ?? null;
       }
     }
 
+    const candidateTokens = [...tokens, ...(profileToken ? [profileToken] : [])];
+
+    if (candidateTokens.length === 0) {
+      console.log('No push tokens found for user');
+      return new Response(
+        JSON.stringify({ message: 'No push token registered for user', sent: 0 }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Filter out APNs-only tokens; FCM v1 needs an FCM registration token.
+    const fcmTokens = candidateTokens.filter((t) => !isApnsToken(t));
+
+    if (fcmTokens.length === 0) {
+      console.log('Only APNs tokens found; cannot send via FCM v1 without an FCM registration token');
+      return new Response(
+        JSON.stringify({
+          message: 'Device registered but FCM token missing. Please re-register on the mobile app after syncing updates.',
+          sent: 0,
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`Found ${fcmTokens.length} FCM token(s). Sending...`);
+
+    // Get OAuth 2.0 access token once
+    console.log('Starting OAuth token generation...');
+    const accessToken = await generateAccessToken(serviceAccount);
+    console.log('Access token obtained');
+
     const fcmUrl = `https://fcm.googleapis.com/v1/projects/${serviceAccount.project_id}/messages:send`;
 
-    // Build FCM message
-    const message: Record<string, any> = {
-      message: {
-        token,
-        notification: {
-          title,
-          body,
-        },
-        data: data || {},
-        android: {
-          priority: "high",
-          notification: {
-            sound: "default",
-            channel_id: "lazone_notifications",
-            ...(imageUrl && { image: imageUrl }),
-          },
-        },
-        apns: {
-          payload: {
-            aps: {
-              sound: "default",
-              badge: 1,
-              "mutable-content": 1,
+    let sentCount = 0;
+
+    for (const token of fcmTokens) {
+      const message: Record<string, any> = {
+        message: {
+          token,
+          notification: { title, body },
+          data: data || {},
+          android: {
+            priority: 'high',
+            notification: {
+              sound: 'default',
+              channel_id: 'lazone_notifications',
+              ...(imageUrl && { image: imageUrl }),
             },
           },
-          fcm_options: {
-            ...(imageUrl && { image: imageUrl }),
+          apns: {
+            payload: {
+              aps: {
+                sound: 'default',
+                badge: 1,
+                'mutable-content': 1,
+              },
+            },
+            fcm_options: {
+              ...(imageUrl && { image: imageUrl }),
+            },
           },
         },
-      },
-    };
+      };
 
-    try {
-      console.log("FCM URL:", fcmUrl);
-      console.log("Message payload:", JSON.stringify(message));
-      
       const response = await fetch(fcmUrl, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify(message),
       });
 
       const result = await response.json();
-      console.log(`FCM v1 response status:`, response.status);
-      console.log(`FCM v1 response:`, JSON.stringify(result));
-
-      // If token is invalid, clear it from profiles
-      if (!response.ok && result.error?.details?.some((d: any) => 
-        d.errorCode === "UNREGISTERED" || d.errorCode === "INVALID_ARGUMENT"
-      )) {
-        console.log("Removing invalid token from profiles");
-        await supabaseClient
-          .from("profiles")
-          .update({ push_token: null })
-          .eq("user_id", userId);
-      }
+      console.log('FCM v1 response status:', response.status);
+      console.log('FCM v1 response:', JSON.stringify(result));
 
       if (response.ok) {
-        console.log("Push notification sent successfully");
-        return new Response(
-          JSON.stringify({
-            message: "Push notification sent",
-            sent: 1,
-            result,
-          }),
-          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        sentCount += 1;
       } else {
-        console.error("FCM error:", result);
-        return new Response(
-          JSON.stringify({
-            error: "FCM request failed",
-            details: result,
-            sent: 0,
-          }),
-          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        // If token is invalid, remove it from fcm_tokens (best-effort)
+        const shouldRemove = result?.error?.details?.some((d: any) =>
+          d?.errorCode === 'UNREGISTERED' || d?.errorCode === 'INVALID_ARGUMENT'
         );
+
+        if (shouldRemove) {
+          console.log('Removing invalid token from fcm_tokens');
+          await supabaseClient.from('fcm_tokens').delete().eq('user_id', userId).eq('token', token);
+        }
       }
-    } catch (error) {
-      console.error(`Error sending push notification:`, error);
+    }
+
+    if (sentCount > 0) {
+      console.log('Push notification sent successfully');
       return new Response(
-        JSON.stringify({ error: "Failed to send notification", sent: 0 }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ message: 'Push notification sent', sent: sentCount }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    return new Response(
+      JSON.stringify({ message: 'FCM request failed', sent: 0 }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   } catch (error: unknown) {
     console.error("Error in send-push-notification:", error);
     const message = error instanceof Error ? error.message : "Unknown error";

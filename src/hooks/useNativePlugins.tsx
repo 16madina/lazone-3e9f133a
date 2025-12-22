@@ -172,7 +172,7 @@ export const usePushNotifications = () => {
     };
   }, []);
 
-  // Save push token directly to profiles table (like AYOKA)
+  // Save push token to fcm_tokens table (can store multiple devices)
   const saveTokenToDatabase = useCallback(async (pushToken: string) => {
     // NOTE: registration can happen before our auth listener updates `userId`.
     // Always fetch the current user as a fallback so we don't lose the token.
@@ -189,20 +189,41 @@ export const usePushNotifications = () => {
     }
 
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ push_token: pushToken })
-        .eq('user_id', uid);
+      const platform = getPlatform();
 
-      if (error) throw error;
-      console.log('[push] token saved to profiles.push_token');
+      // Avoid infinite growth: if the same token already exists, just touch it.
+      const { data: existing, error: existingError } = await supabase
+        .from('fcm_tokens')
+        .select('id')
+        .eq('user_id', uid)
+        .eq('token', pushToken)
+        .maybeSingle();
+
+      if (existingError) throw existingError;
+
+      if (existing?.id) {
+        const { error: updateError } = await supabase
+          .from('fcm_tokens')
+          .update({ platform })
+          .eq('id', existing.id);
+
+        if (updateError) throw updateError;
+      } else {
+        const { error: insertError } = await supabase
+          .from('fcm_tokens')
+          .insert({ user_id: uid, platform, token: pushToken });
+
+        if (insertError) throw insertError;
+      }
+
+      console.log('[push] token saved to fcm_tokens');
     } catch (error) {
       console.error('[push] Error saving token:', error);
     }
   }, []);
 
-  // Remove token from database (set push_token to null)
-  const removeTokenFromDatabase = useCallback(async (_pushToken: string) => {
+  // Remove token from database
+  const removeTokenFromDatabase = useCallback(async (pushToken: string) => {
     let uid = userIdRef.current;
 
     if (!uid) {
@@ -217,12 +238,13 @@ export const usePushNotifications = () => {
 
     try {
       const { error } = await supabase
-        .from('profiles')
-        .update({ push_token: null })
-        .eq('user_id', uid);
+        .from('fcm_tokens')
+        .delete()
+        .eq('user_id', uid)
+        .eq('token', pushToken);
 
       if (error) throw error;
-      console.log('[push] token removed from profiles');
+      console.log('[push] token removed from fcm_tokens');
     } catch (error) {
       console.error('[push] Error removing token:', error);
     }

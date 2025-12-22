@@ -251,9 +251,10 @@ const PropertyDetailPage = () => {
     return formattedPrice;
   };
 
-  // En mode Residence, on affiche le système de réservation
-  const isResidenceMode = appMode === 'residence';
-  const isResidenceProperty = property.listingType === 'short_term' || isResidenceMode;
+  // Déterminer si c'est une propriété de type résidence basé sur son listing_type réel
+  // On n'utilise plus isResidenceMode car ça causait des erreurs quand on cliquait sur 
+  // une propriété long_term affichée par erreur en mode résidence
+  const isResidenceProperty = property.listingType === 'short_term';
   const displayPrice = isResidenceProperty && property.pricePerNight 
     ? property.pricePerNight 
     : property.price;

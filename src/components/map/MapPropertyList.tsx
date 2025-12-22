@@ -3,6 +3,7 @@ import { useAppStore } from '@/stores/appStore';
 import { MapPin, Bed, Bath, Maximize, Calendar, Star, X } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getCurrencyByCountry } from '@/data/currencies';
 
 interface MapPropertyListProps {
   properties: Property[];
@@ -12,11 +13,13 @@ interface MapPropertyListProps {
   isOpen: boolean;
 }
 
-const formatPrice = (price: number, isResidence: boolean = false) => {
+const formatPrice = (price: number, countryCode: string | null, isResidence: boolean = false) => {
+  const currency = getCurrencyByCountry(countryCode);
+  const symbol = currency?.symbol || 'FCFA';
   const formatted = new Intl.NumberFormat('fr-FR', {
     style: 'decimal',
     maximumFractionDigits: 0,
-  }).format(price) + ' FCFA';
+  }).format(price) + ' ' + symbol;
   return isResidence ? `${formatted}/nuit` : formatted;
 };
 
@@ -159,7 +162,7 @@ const PropertyListItem = ({
 
           {/* Price */}
           <p className="text-primary font-bold text-sm mt-1">
-            {formatPrice(displayPrice, isResidence)}
+            {formatPrice(displayPrice, property.country, isResidence)}
             {!isResidence && property.type === 'rent' && (
               <span className="text-xs font-normal">/mois</span>
             )}

@@ -16,19 +16,89 @@ import { supabase } from '@/integrations/supabase/client';
 export const isNativePlatform = () => Capacitor.isNativePlatform();
 export const getPlatform = () => Capacitor.getPlatform();
 
+// Helper to get user-friendly error message
+const getCameraErrorMessage = (error: any, source: 'camera' | 'photos'): string | null => {
+  const errorMessage = error?.message?.toLowerCase() || '';
+  
+  // User cancelled - no error to show
+  if (errorMessage.includes('cancelled') || errorMessage.includes('canceled') || errorMessage === 'user cancelled photos app') {
+    return null;
+  }
+  
+  // Permission denied
+  if (errorMessage.includes('permission') || errorMessage.includes('denied') || errorMessage.includes('access')) {
+    return source === 'camera' 
+      ? 'Veuillez autoriser l\'accès à la caméra dans Réglages > Confidentialité > Caméra'
+      : 'Veuillez autoriser l\'accès aux photos dans Réglages > Confidentialité > Photos';
+  }
+  
+  // Device not available
+  if (errorMessage.includes('not available') || errorMessage.includes('no camera')) {
+    return 'La caméra n\'est pas disponible sur cet appareil';
+  }
+  
+  // Generic error
+  return source === 'camera' 
+    ? 'Impossible d\'accéder à la caméra. Vérifiez les permissions dans les réglages.'
+    : 'Impossible d\'accéder à la galerie. Vérifiez les permissions dans les réglages.';
+};
+
 // ==================== CAMERA HOOK ====================
 export const useCamera = () => {
   const [photo, setPhoto] = useState<Photo | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const checkPermissions = useCallback(async () => {
+    if (!isNativePlatform()) return { camera: 'granted' as const, photos: 'granted' as const };
+    
+    try {
+      const permissions = await Camera.checkPermissions();
+      return permissions;
+    } catch (error) {
+      console.error('Check permissions error:', error);
+      return { camera: 'denied' as const, photos: 'denied' as const };
+    }
+  }, []);
+
+  const requestPermissions = useCallback(async (permissions: ('camera' | 'photos')[]) => {
+    if (!isNativePlatform()) return { camera: 'granted' as const, photos: 'granted' as const };
+    
+    try {
+      const result = await Camera.requestPermissions({ permissions });
+      return result;
+    } catch (error) {
+      console.error('Request permissions error:', error);
+      return { camera: 'denied' as const, photos: 'denied' as const };
+    }
+  }, []);
+
   const takePicture = useCallback(async () => {
     if (!isNativePlatform()) {
-      // Fallback for web - use file input
       return null;
     }
 
     setLoading(true);
     try {
+      // Check camera permission first
+      const permissions = await Camera.checkPermissions();
+      console.log('[Camera] Current permissions:', permissions);
+      
+      if (permissions.camera !== 'granted') {
+        console.log('[Camera] Requesting camera permission...');
+        const requested = await Camera.requestPermissions({ permissions: ['camera'] });
+        console.log('[Camera] Permission request result:', requested);
+        
+        if (requested.camera !== 'granted') {
+          toast({
+            title: 'Permission requise',
+            description: 'Veuillez autoriser l\'accès à la caméra dans Réglages > Confidentialité > Caméra',
+            variant: 'destructive'
+          });
+          setLoading(false);
+          return null;
+        }
+      }
+
       const image = await Camera.getPhoto({
         quality: 90,
         allowEditing: true,
@@ -40,11 +110,12 @@ export const useCamera = () => {
       setPhoto(image);
       return image;
     } catch (error: any) {
-      console.error('Camera error:', error);
-      if (error.message !== 'User cancelled photos app') {
+      console.error('[Camera] Error:', error);
+      const errorMessage = getCameraErrorMessage(error, 'camera');
+      if (errorMessage) {
         toast({
           title: 'Erreur caméra',
-          description: 'Impossible d\'accéder à la caméra',
+          description: errorMessage,
           variant: 'destructive'
         });
       }
@@ -61,6 +132,26 @@ export const useCamera = () => {
 
     setLoading(true);
     try {
+      // Check photos permission first
+      const permissions = await Camera.checkPermissions();
+      console.log('[Gallery] Current permissions:', permissions);
+      
+      if (permissions.photos !== 'granted' && permissions.photos !== 'limited') {
+        console.log('[Gallery] Requesting photos permission...');
+        const requested = await Camera.requestPermissions({ permissions: ['photos'] });
+        console.log('[Gallery] Permission request result:', requested);
+        
+        if (requested.photos !== 'granted' && requested.photos !== 'limited') {
+          toast({
+            title: 'Permission requise',
+            description: 'Veuillez autoriser l\'accès aux photos dans Réglages > Confidentialité > Photos',
+            variant: 'destructive'
+          });
+          setLoading(false);
+          return null;
+        }
+      }
+
       const image = await Camera.getPhoto({
         quality: 90,
         allowEditing: true,
@@ -71,11 +162,12 @@ export const useCamera = () => {
       setPhoto(image);
       return image;
     } catch (error: any) {
-      console.error('Gallery error:', error);
-      if (error.message !== 'User cancelled photos app') {
+      console.error('[Gallery] Error:', error);
+      const errorMessage = getCameraErrorMessage(error, 'photos');
+      if (errorMessage) {
         toast({
           title: 'Erreur galerie',
-          description: 'Impossible d\'accéder à la galerie',
+          description: errorMessage,
           variant: 'destructive'
         });
       }
@@ -92,6 +184,26 @@ export const useCamera = () => {
 
     setLoading(true);
     try {
+      // Check photos permission first
+      const permissions = await Camera.checkPermissions();
+      console.log('[PickMultiple] Current permissions:', permissions);
+      
+      if (permissions.photos !== 'granted' && permissions.photos !== 'limited') {
+        console.log('[PickMultiple] Requesting photos permission...');
+        const requested = await Camera.requestPermissions({ permissions: ['photos'] });
+        console.log('[PickMultiple] Permission request result:', requested);
+        
+        if (requested.photos !== 'granted' && requested.photos !== 'limited') {
+          toast({
+            title: 'Permission requise',
+            description: 'Veuillez autoriser l\'accès aux photos dans Réglages > Confidentialité > Photos',
+            variant: 'destructive'
+          });
+          setLoading(false);
+          return [];
+        }
+      }
+
       const result = await Camera.pickImages({
         quality: 90,
         limit,
@@ -99,32 +211,18 @@ export const useCamera = () => {
       });
       return result.photos;
     } catch (error: any) {
-      console.error('Pick images error:', error);
+      console.error('[PickMultiple] Error:', error);
+      const errorMessage = getCameraErrorMessage(error, 'photos');
+      if (errorMessage) {
+        toast({
+          title: 'Erreur galerie',
+          description: errorMessage,
+          variant: 'destructive'
+        });
+      }
       return [];
     } finally {
       setLoading(false);
-    }
-  }, []);
-
-  const checkPermissions = useCallback(async () => {
-    if (!isNativePlatform()) return { camera: 'granted', photos: 'granted' };
-    
-    try {
-      const permissions = await Camera.checkPermissions();
-      return permissions;
-    } catch {
-      return { camera: 'denied', photos: 'denied' };
-    }
-  }, []);
-
-  const requestPermissions = useCallback(async () => {
-    if (!isNativePlatform()) return { camera: 'granted', photos: 'granted' };
-    
-    try {
-      const permissions = await Camera.requestPermissions();
-      return permissions;
-    } catch {
-      return { camera: 'denied', photos: 'denied' };
     }
   }, []);
 

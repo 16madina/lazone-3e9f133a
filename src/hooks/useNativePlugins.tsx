@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Camera, CameraResultType, CameraSource, Photo } from '@capacitor/camera';
-import { PushNotifications, Token, PushNotificationSchema, ActionPerformed } from '@capacitor/push-notifications';
+import { PushNotifications, PushNotificationSchema, ActionPerformed } from '@capacitor/push-notifications';
+import { FirebaseMessaging } from '@capacitor-firebase/messaging';
 import { Share, ShareResult } from '@capacitor/share';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { Keyboard } from '@capacitor/keyboard';
@@ -234,13 +235,15 @@ export const usePushNotifications = () => {
     }
 
     try {
-      let permStatus = await PushNotifications.checkPermissions();
+      // Use Firebase Messaging for proper FCM token on iOS
+      const platform = getPlatform();
+      console.log('[push] Registering on platform:', platform);
 
-      if (permStatus.receive === 'prompt') {
-        permStatus = await PushNotifications.requestPermissions();
-      }
+      // Request permissions via Firebase Messaging
+      const permResult = await FirebaseMessaging.requestPermissions();
+      console.log('[push] Permission result:', permResult);
 
-      if (permStatus.receive !== 'granted') {
+      if (permResult.receive !== 'granted') {
         toast({
           title: 'Notifications désactivées',
           description: 'Activez les notifications dans les paramètres',
@@ -249,51 +252,56 @@ export const usePushNotifications = () => {
         return null;
       }
 
-      // NOTE: register() returns void (undefined) by design.
-      // The token comes via the 'registration' event listener below.
-      await PushNotifications.register();
-      console.log('[push] register() called — waiting for registration event...');
-      return true;
+      // Get FCM token (this returns a proper FCM token, not raw APNs)
+      const { token: fcmToken } = await FirebaseMessaging.getToken();
+      console.log('[push] FCM token received:', fcmToken);
+
+      if (fcmToken) {
+        setToken(fcmToken);
+        setIsRegistered(true);
+        await saveTokenToDatabase(fcmToken);
+        return fcmToken;
+      }
+
+      return null;
     } catch (error) {
       console.error('[push] registration error:', error);
       return null;
     }
-  }, []);
+  }, [saveTokenToDatabase]);
 
   // Attach listeners once (avoid add/remove loops that can miss the token)
   useEffect(() => {
     if (!isNativePlatform()) return;
 
-    console.log('[push] setting up listeners');
+    console.log('[push] setting up Firebase Messaging listeners');
 
-    const tokenListener = PushNotifications.addListener('registration', async (tokenData: Token) => {
-      console.log('[push] registration event token:', tokenData.value);
-      setToken(tokenData.value);
+    // Listen for token refresh
+    const tokenListener = FirebaseMessaging.addListener('tokenReceived', async (event) => {
+      console.log('[push] tokenReceived event:', event.token);
+      setToken(event.token);
       setIsRegistered(true);
-      await saveTokenToDatabase(tokenData.value);
+      await saveTokenToDatabase(event.token);
     });
 
-    const errorListener = PushNotifications.addListener('registrationError', (error: any) => {
-      console.error('[push] registrationError event:', error);
-      setIsRegistered(false);
-    });
-
-    const notificationListener = PushNotifications.addListener(
-      'pushNotificationReceived',
-      (notification: PushNotificationSchema) => {
+    // Listen for foreground notifications
+    const notificationListener = FirebaseMessaging.addListener(
+      'notificationReceived',
+      (notification) => {
         console.log('[push] notification received:', notification);
         toast({
-          title: notification.title || 'Notification',
-          description: notification.body || '',
+          title: notification.notification?.title || 'Notification',
+          description: notification.notification?.body || '',
         });
       }
     );
 
-    const actionListener = PushNotifications.addListener(
-      'pushNotificationActionPerformed',
-      (notification: ActionPerformed) => {
-        console.log('[push] notification action:', notification);
-        const data = notification.notification.data;
+    // Listen for notification taps (background/killed state)
+    const actionListener = FirebaseMessaging.addListener(
+      'notificationActionPerformed',
+      (event) => {
+        console.log('[push] notification action:', event);
+        const data = event.notification?.data as Record<string, string> | undefined;
         if (data?.route) {
           window.location.href = data.route;
         } else if (data?.type) {
@@ -320,9 +328,8 @@ export const usePushNotifications = () => {
     );
 
     return () => {
-      console.log('[push] removing listeners');
+      console.log('[push] removing Firebase Messaging listeners');
       tokenListener.then((l) => l.remove());
-      errorListener.then((l) => l.remove());
       notificationListener.then((l) => l.remove());
       actionListener.then((l) => l.remove());
     };
@@ -342,7 +349,7 @@ export const usePushNotifications = () => {
       if (token) {
         await removeTokenFromDatabase(token);
       }
-      await PushNotifications.unregister();
+      await FirebaseMessaging.deleteToken();
       setIsRegistered(false);
       setToken(null);
     } catch (error) {

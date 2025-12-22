@@ -36,16 +36,16 @@ interface AdBannerData {
 }
 
 const Index = () => {
-  const { activeFilter, searchQuery, priceRange, bedroomsFilter, bathroomsFilter, setBedroomsFilter, setBathroomsFilter } = useAppStore();
+  const { activeFilter, searchQuery, priceRange, bedroomsFilter, bathroomsFilter, setBedroomsFilter, setBathroomsFilter, selectedCountry, setSelectedCountry } = useAppStore();
   const { properties, loading } = useProperties();
   const { profile, user } = useAuth();
   const { detectedCountry, permissionDenied, showAllCountries } = useGeoCountry();
   const { appMode, isResidence, isModeSwitching, switchMode, completeModeSwitch } = useAppMode();
   const [pendingMode, setPendingMode] = useState<AppMode | null>(null);
   const [currentBg, setCurrentBg] = useState(heroBg1);
-  const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
   const [showGeoAlert, setShowGeoAlert] = useState(false);
   const [adBanners, setAdBanners] = useState<AdBannerData[]>([]);
+  const [initialCountrySet, setInitialCountrySet] = useState(false);
 
   const handleModeSwitch = (newMode: AppMode) => {
     setPendingMode(newMode);
@@ -75,25 +75,30 @@ const Index = () => {
 
   // Initialize country: logged-in users get their profile country, others get geolocation
   useEffect(() => {
+    if (initialCountrySet) return;
+    
     if (user && profile?.country) {
       // Logged-in user: use profile country
       const userCountry = africanCountries.find(c => c.code === profile.country);
       if (userCountry) {
         setSelectedCountry(userCountry);
+        setInitialCountrySet(true);
       }
     } else if (!user) {
       if (detectedCountry) {
         // Not logged in: use geolocation-detected country
         setSelectedCountry(detectedCountry);
+        setInitialCountrySet(true);
       } else if (showAllCountries) {
         // Geolocation denied or not in Africa - show all countries
         setSelectedCountry(null);
+        setInitialCountrySet(true);
         if (permissionDenied) {
           setShowGeoAlert(true);
         }
       }
     }
-  }, [user, profile?.country, detectedCountry, showAllCountries, permissionDenied]);
+  }, [user, profile?.country, detectedCountry, showAllCountries, permissionDenied, initialCountrySet, setSelectedCountry]);
 
   useEffect(() => {
     const randomIndex = Math.floor(Math.random() * heroImages.length);

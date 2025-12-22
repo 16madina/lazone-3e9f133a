@@ -87,7 +87,7 @@ const MapPage = () => {
   const userMarkerRef = useRef<L.Marker | null>(null);
   const { properties, loading: propertiesLoading } = useProperties();
   const { profile } = useAuth();
-  const appMode = useAppStore((state) => state.appMode);
+  const { appMode, selectedCountry, setSelectedCountry } = useAppStore();
   const isResidence = appMode === 'residence';
   const [loading, setLoading] = useState(true);
   const [mapLoaded, setMapLoaded] = useState(false);
@@ -95,7 +95,6 @@ const MapPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [propertyTypeFilter, setPropertyTypeFilter] = useState<string>('all');
-  const [countryFilter, setCountryFilter] = useState<Country | null>(null);
   const [countrySearchQuery, setCountrySearchQuery] = useState('');
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locatingUser, setLocatingUser] = useState(false);
@@ -105,12 +104,17 @@ const MapPage = () => {
   // Default center (Africa)
   const defaultCenter = { lat: 5.3600, lng: -4.0083 };
 
-  // Initialize country filter from user profile
+  // Initialize country filter from user profile if not already set
   useEffect(() => {
+    if (selectedCountry) {
+      setInitialCountrySet(true);
+      return;
+    }
+    
     if (profile?.country && !initialCountrySet) {
       const userCountry = africanCountries.find(c => c.code === profile.country);
       if (userCountry) {
-        setCountryFilter(userCountry);
+        setSelectedCountry(userCountry);
         setInitialCountrySet(true);
         
         // Zoom to user's country when map is ready
@@ -122,17 +126,20 @@ const MapPage = () => {
         }
       }
     }
-  }, [profile?.country, initialCountrySet]);
+  }, [profile?.country, initialCountrySet, selectedCountry, setSelectedCountry]);
 
-  // Zoom to user's country when map loads
+  // Zoom to country when map loads or selectedCountry changes
   useEffect(() => {
-    if (mapLoaded && countryFilter && mapRef.current) {
-      const coords = countryCoordinates[countryFilter.code];
+    if (mapLoaded && selectedCountry && mapRef.current) {
+      const coords = countryCoordinates[selectedCountry.code];
       if (coords) {
-        mapRef.current.setView([coords.lat, coords.lng], coords.zoom);
+        mapRef.current.flyTo([coords.lat, coords.lng], coords.zoom, {
+          duration: 1.5,
+          easeLinearity: 0.25
+        });
       }
     }
-  }, [mapLoaded, countryFilter]);
+  }, [mapLoaded, selectedCountry]);
 
   useEffect(() => {
     loadLeaflet();
@@ -272,13 +279,13 @@ const MapPage = () => {
         p.city.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesType = typeFilter === 'all' || p.type === typeFilter;
       const matchesPropertyType = propertyTypeFilter === 'all' || p.propertyType === propertyTypeFilter;
-      const matchesCountry = !countryFilter || p.country === countryFilter.code;
+      const matchesCountry = !selectedCountry || p.country === selectedCountry.code;
       return matchesSearch && matchesType && matchesPropertyType && matchesCountry;
     });
-  }, [properties, searchQuery, typeFilter, propertyTypeFilter, countryFilter]);
+  }, [properties, searchQuery, typeFilter, propertyTypeFilter, selectedCountry]);
 
   const handleCountrySelect = (country: Country | null) => {
-    setCountryFilter(country);
+    setSelectedCountry(country);
     setCountrySearchQuery('');
     
     if (country && mapRef.current) {
@@ -483,17 +490,17 @@ const MapPage = () => {
               <button 
                 data-tutorial="map-country"
                 className={`p-3 rounded-xl shadow-md border flex items-center gap-1 ${
-                  countryFilter 
+                  selectedCountry 
                     ? isResidence 
                       ? 'bg-emerald-500 text-white border-emerald-500' 
                       : 'bg-primary text-primary-foreground' 
                     : 'bg-card'
                 }`}
               >
-                {countryFilter ? (
+                {selectedCountry ? (
                   <img 
-                    src={`https://flagcdn.com/w40/${countryFilter.code.toLowerCase()}.png`}
-                    alt={countryFilter.name}
+                    src={`https://flagcdn.com/w40/${selectedCountry.code.toLowerCase()}.png`}
+                    alt={selectedCountry.name}
                     className="w-5 h-5 rounded-sm object-cover"
                   />
                 ) : (
@@ -523,11 +530,11 @@ const MapPage = () => {
                 {!countrySearchQuery && (
                   <DropdownMenuItem
                     onClick={() => handleCountrySelect(null)}
-                    className={`flex items-center gap-3 cursor-pointer ${!countryFilter ? 'bg-primary/10' : ''}`}
+                    className={`flex items-center gap-3 cursor-pointer ${!selectedCountry ? 'bg-primary/10' : ''}`}
                   >
                     <Globe className="w-5 h-5 text-muted-foreground" />
                     <span className="flex-1 text-sm font-medium">Tous les pays</span>
-                    {!countryFilter && <Check className="w-4 h-4 text-primary" />}
+                    {!selectedCountry && <Check className="w-4 h-4 text-primary" />}
                   </DropdownMenuItem>
                 )}
                 
@@ -536,7 +543,7 @@ const MapPage = () => {
                   <DropdownMenuItem
                     key={country.code}
                     onClick={() => handleCountrySelect(country)}
-                    className={`flex items-center gap-3 cursor-pointer ${countryFilter?.code === country.code ? 'bg-primary/10' : ''}`}
+                    className={`flex items-center gap-3 cursor-pointer ${selectedCountry?.code === country.code ? 'bg-primary/10' : ''}`}
                   >
                     <img
                       src={`https://flagcdn.com/w40/${country.code.toLowerCase()}.png`}
@@ -544,7 +551,7 @@ const MapPage = () => {
                       className="w-5 h-4 rounded-sm object-cover"
                     />
                     <span className="flex-1 text-sm">{country.name}</span>
-                    {countryFilter?.code === country.code && (
+                    {selectedCountry?.code === country.code && (
                       <Check className="w-4 h-4 text-primary" />
                     )}
                   </DropdownMenuItem>

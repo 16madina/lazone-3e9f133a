@@ -350,9 +350,14 @@ serve(async (req) => {
           apns: {
             payload: {
               aps: {
+                alert: {
+                  title,
+                  body,
+                },
                 sound: 'default',
                 badge: 1,
                 'mutable-content': 1,
+                'content-available': 1,
               },
             },
             fcm_options: {

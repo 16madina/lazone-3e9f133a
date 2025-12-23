@@ -53,6 +53,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { useAdmin } from '@/hooks/useAdmin';
 import { useAuth } from '@/hooks/useAuth';
+import { useAppStore } from '@/stores/appStore';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
@@ -333,6 +334,7 @@ const AdminPage = () => {
   const navigate = useNavigate();
   const { isAdmin, isModerator, loading: loadingRoles } = useAdmin();
   const { user } = useAuth();
+  const appMode = useAppStore((state) => state.appMode);
   const [activeTab, setActiveTab] = useState<TabType>('users');
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -1226,6 +1228,10 @@ const AdminPage = () => {
   const handleSendPushNotification = async () => {
     const title = customNotificationTitle.trim();
     const body = customNotificationBody.trim();
+    const notificationData: Record<string, string> = {
+      type: 'promotion',
+      listing_type: appMode === 'residence' ? 'short_term' : 'long_term',
+    };
 
     if (!title || !body) {
       toast({ title: 'Veuillez remplir le titre et le message', variant: 'destructive' });
@@ -1242,7 +1248,7 @@ const AdminPage = () => {
       if (notificationTargetType === 'single') {
         // Send to single user
         const { error } = await supabase.functions.invoke('send-push-notification', {
-          body: { userId: selectedUserId, title, body },
+          body: { userId: selectedUserId, title, body, data: notificationData },
         });
         if (error) throw error;
         toast({ title: 'Notification envoyée' });
@@ -1261,7 +1267,7 @@ const AdminPage = () => {
         for (const userId of uniqueUserIds) {
           try {
             await supabase.functions.invoke('send-push-notification', {
-              body: { userId, title, body },
+              body: { userId, title, body, data: notificationData },
             });
             successCount++;
           } catch (e) {

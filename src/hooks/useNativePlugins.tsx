@@ -422,37 +422,90 @@ export const usePushNotifications = () => {
       (event) => {
         console.log('[push] notification action:', event);
         const data = event.notification?.data as Record<string, string> | undefined;
+        
+        // If a direct route is specified, use it
         if (data?.route) {
           window.location.href = data.route;
-        } else if (data?.type) {
+          return;
+        }
+        
+        // Handle different notification types
+        if (data?.type) {
           switch (data.type) {
+            // === Messages ===
             case 'message':
               window.location.href = '/messages';
               break;
+              
+            // === Social ===
             case 'follow':
-              window.location.href = `/user/${data.actor_id}`;
+              if (data.actor_id) {
+                window.location.href = `/user/${data.actor_id}`;
+              } else {
+                window.location.href = '/followers';
+              }
               break;
+              
+            // === Reviews ===
             case 'review':
               window.location.href = '/profile';
               break;
+              
+            // === Properties ===
             case 'property':
               if (data.property_id) {
                 window.location.href = `/property/${data.property_id}`;
+              } else {
+                window.location.href = '/';
               }
               break;
+              
+            // === Reservations & Appointments ===
             case 'reservation_request':
             case 'reservation':
             case 'appointment':
-              // Redirect to dashboard for reservation/appointment notifications
               window.location.href = '/dashboard';
               break;
+              
+            // === Email Verification Reminder ===
+            case 'verify_email':
+              window.location.href = '/settings/edit-profile';
+              break;
+              
+            // === Promotions ===
+            case 'promotion':
+              window.location.href = '/';
+              break;
+              
+            // === Admin - Delete Listing Warning ===
+            case 'delete_listing':
+              window.location.href = '/my-listings';
+              break;
+              
+            // === Admin - Reports (for admins) ===
+            case 'user_report':
+            case 'property_report':
+              window.location.href = '/admin';
+              break;
+              
+            // === Badge Earned ===
+            case 'badge':
+              window.location.href = '/profile';
+              break;
+              
+            // === Test notifications ===
             case 'test':
-              // Test notifications don't need special handling
               window.location.href = '/notifications';
               break;
+              
+            // === Default fallback ===
             default:
+              console.log('[push] Unknown notification type:', data.type);
               window.location.href = '/notifications';
           }
+        } else {
+          // No type specified, go to notifications
+          window.location.href = '/notifications';
         }
       }
     );

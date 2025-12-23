@@ -900,7 +900,107 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      appointments_secure: {
+        Row: {
+          check_in_date: string | null
+          check_out_date: string | null
+          contact_phone: string | null
+          created_at: string | null
+          id: string | null
+          message: string | null
+          owner_id: string | null
+          price_per_night: number | null
+          property_id: string | null
+          requested_date: string | null
+          requested_time: string | null
+          requester_id: string | null
+          reservation_type: string | null
+          response_message: string | null
+          share_phone: boolean | null
+          status: string | null
+          total_nights: number | null
+          total_price: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          check_in_date?: string | null
+          check_out_date?: string | null
+          contact_phone?: never
+          created_at?: string | null
+          id?: string | null
+          message?: string | null
+          owner_id?: string | null
+          price_per_night?: number | null
+          property_id?: string | null
+          requested_date?: string | null
+          requested_time?: string | null
+          requester_id?: string | null
+          reservation_type?: string | null
+          response_message?: string | null
+          share_phone?: boolean | null
+          status?: string | null
+          total_nights?: number | null
+          total_price?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          check_in_date?: string | null
+          check_out_date?: string | null
+          contact_phone?: never
+          created_at?: string | null
+          id?: string | null
+          message?: string | null
+          owner_id?: string | null
+          price_per_night?: number | null
+          property_id?: string | null
+          requested_date?: string | null
+          requested_time?: string | null
+          requester_id?: string | null
+          reservation_type?: string | null
+          response_message?: string | null
+          share_phone?: boolean | null
+          status?: string | null
+          total_nights?: number | null
+          total_price?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      public_profiles: {
+        Row: {
+          avatar_url: string | null
+          country: string | null
+          created_at: string | null
+          full_name: string | null
+          last_seen_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          country?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          last_seen_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          country?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          last_seen_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       calculate_badge_level: {

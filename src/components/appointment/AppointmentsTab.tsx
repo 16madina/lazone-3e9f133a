@@ -256,19 +256,11 @@ export const AppointmentsTab = () => {
 
       if (error) throw error;
 
-      // Send push notification and create in-app notification
+      // Create in-app notification (the backend trigger will send push notification automatically)
       if (appointment) {
         const isReservation = appointment.reservation_type === 'reservation';
         
-        // Send push notification
-        await sendAppointmentNotification(
-          appointment.requester_id,
-          status,
-          appointment.property?.title || 'Propriété',
-          isReservation
-        );
-        
-        // Create in-app notification
+        // Create in-app notification - this triggers the backend push notification via database trigger
         await createStatusNotification(
           appointment.requester_id,
           user!.id,

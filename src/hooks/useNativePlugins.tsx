@@ -430,15 +430,46 @@ export const usePushNotifications = () => {
         console.log('[push] notification action:', event);
         const data = event.notification?.data as Record<string, string> | undefined;
         
-        // If a direct route is specified, use it
-        if (data?.route) {
-          window.location.href = data.route;
-          return;
-        }
+        // Helper function to get target route based on notification type
+        const getTargetRoute = (type: string, notifData: Record<string, string>): string => {
+          switch (type) {
+            case 'message':
+              return '/messages';
+            case 'follow':
+              return notifData.actor_id ? `/user/${notifData.actor_id}` : '/followers';
+            case 'review':
+              return '/profile';
+            case 'property':
+              return notifData.property_id ? `/property/${notifData.property_id}` : '/';
+            case 'reservation_request':
+            case 'reservation_approved':
+            case 'reservation_rejected':
+            case 'reservation':
+            case 'appointment_request':
+            case 'appointment_approved':
+            case 'appointment_rejected':
+            case 'appointment':
+              return '/dashboard';
+            case 'verify_email':
+              return '/settings/edit-profile';
+            case 'promotion':
+              return '/';
+            case 'delete_listing':
+              return '/my-listings';
+            case 'user_report':
+            case 'property_report':
+              return '/admin';
+            case 'badge':
+              return '/profile';
+            case 'test':
+              return '/notifications';
+            default:
+              return '/notifications';
+          }
+        };
         
         // Helper function to switch app mode based on notification type (SYNCHRONOUS)
         const switchModeForNotificationType = (type: string) => {
-          // Get current mode from localStorage (synchronous)
           const currentMode = localStorage.getItem('lazone-app-mode') || 'lazone';
           
           // Reservation notifications -> Residence mode
@@ -447,7 +478,6 @@ export const usePushNotifications = () => {
               console.log('[push] Switching to residence mode for reservation notification');
               localStorage.setItem('lazone-app-mode', 'residence');
               document.documentElement.classList.add('residence');
-              // Store flag to show toast after page load
               sessionStorage.setItem('mode-switch-toast', JSON.stringify({
                 title: '🏠 Mode Résidence activé',
                 description: 'Passage automatique en mode résidence pour cette réservation',
@@ -460,7 +490,6 @@ export const usePushNotifications = () => {
               console.log('[push] Switching to lazone mode for appointment notification');
               localStorage.setItem('lazone-app-mode', 'lazone');
               document.documentElement.classList.remove('residence');
-              // Store flag to show toast after page load
               sessionStorage.setItem('mode-switch-toast', JSON.stringify({
                 title: '🏢 Mode LaZone activé',
                 description: 'Passage automatique en mode immobilier pour cette visite',
@@ -469,95 +498,29 @@ export const usePushNotifications = () => {
           }
         };
         
-        // Handle different notification types
-        if (data?.type) {
-          // Switch mode BEFORE navigating (synchronous operations)
+        // Determine target route
+        let targetRoute = '/notifications';
+        
+        if (data?.route) {
+          targetRoute = data.route;
+        } else if (data?.type) {
           switchModeForNotificationType(data.type);
-          
-          switch (data.type) {
-            // === Messages ===
-            case 'message':
-              window.location.href = '/messages';
-              break;
-              
-            // === Social ===
-            case 'follow':
-              if (data.actor_id) {
-                window.location.href = `/user/${data.actor_id}`;
-              } else {
-                window.location.href = '/followers';
-              }
-              break;
-              
-            // === Reviews ===
-            case 'review':
-              window.location.href = '/profile';
-              break;
-              
-            // === Properties ===
-            case 'property':
-              if (data.property_id) {
-                window.location.href = `/property/${data.property_id}`;
-              } else {
-                window.location.href = '/';
-              }
-              break;
-              
-            // === Reservations (Residence mode) ===
-            case 'reservation_request':
-            case 'reservation_approved':
-            case 'reservation_rejected':
-            case 'reservation':
-              window.location.href = '/dashboard';
-              break;
-              
-            // === Appointments (LaZone mode) ===
-            case 'appointment_request':
-            case 'appointment_approved':
-            case 'appointment_rejected':
-            case 'appointment':
-              window.location.href = '/dashboard';
-              break;
-              
-            // === Email Verification Reminder ===
-            case 'verify_email':
-              window.location.href = '/settings/edit-profile';
-              break;
-              
-            // === Promotions ===
-            case 'promotion':
-              window.location.href = '/';
-              break;
-              
-            // === Admin - Delete Listing Warning ===
-            case 'delete_listing':
-              window.location.href = '/my-listings';
-              break;
-              
-            // === Admin - Reports (for admins) ===
-            case 'user_report':
-            case 'property_report':
-              window.location.href = '/admin';
-              break;
-              
-            // === Badge Earned ===
-            case 'badge':
-              window.location.href = '/profile';
-              break;
-              
-            // === Test notifications ===
-            case 'test':
-              window.location.href = '/notifications';
-              break;
-              
-            // === Default fallback ===
-            default:
-              console.log('[push] Unknown notification type:', data.type);
-              window.location.href = '/notifications';
-          }
+          targetRoute = getTargetRoute(data.type, data);
+        }
+        
+        console.log('[push] Navigating to:', targetRoute);
+        
+        // Store the route in sessionStorage for React Router navigation
+        // This avoids full page reload which causes blank pages
+        sessionStorage.setItem('pending_notification_route', targetRoute);
+        
+        // If app is already at root, the DeepLinkHandler will pick it up
+        // If app is closed/background, we need to ensure it goes to root first
+        if (window.location.pathname !== '/') {
+          window.location.href = '/';
         } else {
-          // No type specified, go to notifications
-          window.location.href = '/notifications';
+          // App is at root, trigger a small state change to activate the handler
+          window.dispatchEvent(new Event('notification-deep-link'));
         }
       }
     );

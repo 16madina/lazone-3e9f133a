@@ -47,6 +47,7 @@ import NetworkStatusPage from "./pages/settings/NetworkStatusPage";
 import ReservationPage from "./pages/ReservationPage";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { PushNotificationBanner } from "@/components/PushNotificationBanner";
+import { NotificationDeepLinkHandler } from "@/components/NotificationDeepLinkHandler";
 
 const queryClient = new QueryClient();
 
@@ -70,6 +71,7 @@ const App = () => {
                 <SplashScreen onComplete={handleSplashComplete} />
               ) : (
                 <BrowserRouter>
+                  <NotificationDeepLinkHandler />
                   <PushNotificationBanner />
                   <div className="min-h-screen bg-background">
                     <Routes>

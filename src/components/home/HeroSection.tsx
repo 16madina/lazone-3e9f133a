@@ -23,11 +23,9 @@ export const HeroSection = () => {
       <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent" />
 
       {/* Animated Mode Badge - Bottom Left Corner */}
-      <motion.button
+      <button
         onClick={handleModeSwitch}
         className="absolute left-3 bottom-3 z-20"
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
       >
         <motion.div
           className={`
@@ -74,7 +72,7 @@ export const HeroSection = () => {
           
           <ArrowRight className="w-3 h-3 text-white/70" />
         </motion.div>
-      </motion.button>
+      </button>
 
       <div className="relative z-10">
         <div className="flex items-center gap-2 mb-3">

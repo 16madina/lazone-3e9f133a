@@ -358,43 +358,35 @@ export const usePushNotifications = () => {
   const register = useCallback(async () => {
     if (!isNativePlatform()) {
       console.log('[push] Push notifications only available on native platforms');
-      return null;
+      throw new Error('not_native');
     }
 
-    try {
-      // Use Firebase Messaging for proper FCM token on iOS
-      const platform = getPlatform();
-      console.log('[push] Registering on platform:', platform);
+    const platform = getPlatform();
+    console.log('[push] Registering on platform:', platform);
 
-      // Request permissions via Firebase Messaging
-      const permResult = await FirebaseMessaging.requestPermissions();
-      console.log('[push] Permission result:', permResult);
+    // Request permissions via Firebase Messaging
+    const permResult = await FirebaseMessaging.requestPermissions();
+    console.log('[push] Permission result:', JSON.stringify(permResult));
 
-      if (permResult.receive !== 'granted') {
-        toast({
-          title: 'Notifications désactivées',
-          description: 'Activez les notifications dans les paramètres',
-          variant: 'destructive',
-        });
-        return null;
-      }
-
-      // Get FCM token (this returns a proper FCM token, not raw APNs)
-      const { token: fcmToken } = await FirebaseMessaging.getToken();
-      console.log('[push] FCM token received:', fcmToken);
-
-      if (fcmToken) {
-        setToken(fcmToken);
-        setIsRegistered(true);
-        await saveTokenToDatabase(fcmToken);
-        return fcmToken;
-      }
-
-      return null;
-    } catch (error) {
-      console.error('[push] registration error:', error);
-      return null;
+    if (permResult.receive !== 'granted') {
+      console.log('[push] Permission denied');
+      throw new Error('permission_denied');
     }
+
+    // Get FCM token (this returns a proper FCM token, not raw APNs)
+    const { token: fcmToken } = await FirebaseMessaging.getToken();
+    console.log('[push] FCM token received:', fcmToken ? fcmToken.substring(0, 20) + '...' : 'null');
+
+    if (!fcmToken) {
+      console.log('[push] No token received');
+      throw new Error('no_token');
+    }
+
+    setToken(fcmToken);
+    setIsRegistered(true);
+    await saveTokenToDatabase(fcmToken);
+    console.log('[push] Registration complete, token saved');
+    return fcmToken;
   }, [saveTokenToDatabase]);
 
   // Attach listeners once (avoid add/remove loops that can miss the token)

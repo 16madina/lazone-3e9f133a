@@ -442,6 +442,11 @@ export const usePushNotifications = () => {
                 localStorage.setItem('lazone-app-mode', 'residence');
                 useAppStore.getState().setAppMode('residence');
                 document.documentElement.classList.add('residence');
+                // Show toast confirmation
+                toast({
+                  title: '🏠 Mode Résidence activé',
+                  description: 'Passage automatique en mode résidence pour cette réservation',
+                });
               }
             }
             // Appointment notifications -> LaZone mode
@@ -451,6 +456,11 @@ export const usePushNotifications = () => {
                 localStorage.setItem('lazone-app-mode', 'lazone');
                 useAppStore.getState().setAppMode('lazone');
                 document.documentElement.classList.remove('residence');
+                // Show toast confirmation
+                toast({
+                  title: '🏢 Mode LaZone activé',
+                  description: 'Passage automatique en mode immobilier pour cette visite',
+                });
               }
             }
           });

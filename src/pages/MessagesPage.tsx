@@ -910,7 +910,7 @@ const ConversationView = ({ participantId, propertyId, onBack }: ConversationVie
       )}
 
       {/* Input */}
-      <div className="p-4 pb-20 bg-card border-t border-border" style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom))' }} data-tutorial="messages-input">
+      <div className="p-4 bg-card border-t border-border" style={{ paddingBottom: 'calc(16px + env(safe-area-inset-bottom))' }} data-tutorial="messages-input">
         <div className="flex items-center gap-2">
           <input
             type="file"

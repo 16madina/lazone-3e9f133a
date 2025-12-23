@@ -526,33 +526,47 @@ export const usePushNotifications = () => {
           }
         };
         
-        // Helper function to switch app mode based on notification type (SYNCHRONOUS)
-        const switchModeForNotificationType = (type: string) => {
+        // Helper function to switch app mode based on notification data
+        const switchModeForNotification = (type: string, notifData: Record<string, string>) => {
           const currentMode = localStorage.getItem('lazone-app-mode') || 'lazone';
+          let targetMode: 'lazone' | 'residence' | null = null;
           
-          // Reservation notifications -> Residence mode
-          if (type.startsWith('reservation')) {
-            if (currentMode !== 'residence') {
-              console.log('[push] Switching to residence mode for reservation notification');
-              localStorage.setItem('lazone-app-mode', 'residence');
+          // First check if listing_type is provided in notification data
+          if (notifData.listing_type) {
+            targetMode = notifData.listing_type === 'short_term' ? 'residence' : 'lazone';
+          }
+          // Fallback to notification type-based switching
+          else if (type.startsWith('reservation')) {
+            targetMode = 'residence';
+          }
+          else if (type.startsWith('appointment')) {
+            targetMode = 'lazone';
+          }
+          
+          // Switch mode if needed
+          if (targetMode && currentMode !== targetMode) {
+            console.log('[push] Switching to', targetMode, 'mode for notification');
+            localStorage.setItem('lazone-app-mode', targetMode);
+            
+            if (targetMode === 'residence') {
               document.documentElement.classList.add('residence');
               sessionStorage.setItem('mode-switch-toast', JSON.stringify({
                 title: '🏠 Mode Résidence activé',
-                description: 'Passage automatique en mode résidence pour cette réservation',
+                description: 'Passage automatique en mode résidence',
               }));
-            }
-          }
-          // Appointment notifications -> LaZone mode
-          else if (type.startsWith('appointment')) {
-            if (currentMode !== 'lazone') {
-              console.log('[push] Switching to lazone mode for appointment notification');
-              localStorage.setItem('lazone-app-mode', 'lazone');
+            } else {
               document.documentElement.classList.remove('residence');
               sessionStorage.setItem('mode-switch-toast', JSON.stringify({
                 title: '🏢 Mode LaZone activé',
-                description: 'Passage automatique en mode immobilier pour cette visite',
+                description: 'Passage automatique en mode immobilier',
               }));
             }
+            
+            // Force React state update by dispatching a storage event
+            window.dispatchEvent(new StorageEvent('storage', {
+              key: 'lazone-app-mode',
+              newValue: targetMode,
+            }));
           }
         };
         
@@ -562,7 +576,7 @@ export const usePushNotifications = () => {
         if (data?.route) {
           targetRoute = data.route;
         } else if (data?.type) {
-          switchModeForNotificationType(data.type);
+          switchModeForNotification(data.type, data);
           targetRoute = getTargetRoute(data.type, data);
         }
         

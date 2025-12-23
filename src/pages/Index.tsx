@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Loader2, Info, Home, Building2, ArrowRight } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { SearchBar } from '@/components/home/SearchBar';
 import { FilterChips } from '@/components/home/FilterChips';
@@ -311,31 +311,49 @@ const Index = () => {
             </motion.button>
 
             <AppLogo className="h-24 mx-auto mb-4" />
-            <h1 className="font-display text-2xl font-bold text-white mb-2">
-              {isResidence ? (
-                <>
-                  Séjours uniques
-                  <br />
-                  <span className="text-white/90">dans votre Zone</span>
-                </>
-              ) : (
-                <>
-                  Trouvez votre chez vous
-                  <br />
-                  <span className="text-white/90">dans votre Zone</span>
-                </>
-              )}
-            </h1>
-            <p className="text-white/70 text-sm">
-              {isResidence 
-                ? (selectedCountry 
-                    ? `Courts séjours disponibles en ${selectedCountry.name}` 
-                    : 'Courts séjours et locations vacances en Afrique')
-                : (selectedCountry 
-                    ? `Propriétés disponibles en ${selectedCountry.name}` 
-                    : 'Des milliers de propriétés disponibles en Afrique')
-              }
-            </p>
+            <AnimatePresence mode="wait">
+              <motion.h1 
+                key={isResidence ? 'residence-title' : 'lazone-title'}
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                className="font-display text-2xl font-bold text-white mb-2"
+              >
+                {isResidence ? (
+                  <>
+                    Séjours uniques
+                    <br />
+                    <span className="text-white/90">dans votre Zone</span>
+                  </>
+                ) : (
+                  <>
+                    Trouvez votre chez vous
+                    <br />
+                    <span className="text-white/90">dans votre Zone</span>
+                  </>
+                )}
+              </motion.h1>
+            </AnimatePresence>
+            <AnimatePresence mode="wait">
+              <motion.p 
+                key={isResidence ? 'residence-subtitle' : 'lazone-subtitle'}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3, ease: "easeOut", delay: 0.1 }}
+                className="text-white/70 text-sm"
+              >
+                {isResidence 
+                  ? (selectedCountry 
+                      ? `Courts séjours disponibles en ${selectedCountry.name}` 
+                      : 'Courts séjours et locations vacances en Afrique')
+                  : (selectedCountry 
+                      ? `Propriétés disponibles en ${selectedCountry.name}` 
+                      : 'Des milliers de propriétés disponibles en Afrique')
+                }
+              </motion.p>
+            </AnimatePresence>
           </div>
 
           {/* Search Bar */}

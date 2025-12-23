@@ -201,18 +201,29 @@ export const AppointmentsTab = () => {
     }
   };
 
-  // Create in-app notification for reservation status change
-  const createReservationNotification = async (
+  // Create in-app notification for reservation/appointment status change
+  const createStatusNotification = async (
     userId: string,
     actorId: string,
     status: 'approved' | 'rejected',
-    appointmentId: string
+    appointmentId: string,
+    isReservation: boolean
   ) => {
     try {
+      // Determine notification type based on mode and status
+      let notificationType: string;
+      if (isReservation) {
+        // Mode résidence
+        notificationType = status === 'approved' ? 'reservation_approved' : 'reservation_rejected';
+      } else {
+        // Mode immobilier
+        notificationType = status === 'approved' ? 'appointment_approved' : 'appointment_rejected';
+      }
+
       await supabase.from('notifications').insert({
         user_id: userId,
         actor_id: actorId,
-        type: status === 'approved' ? 'reservation_approved' : 'reservation_rejected',
+        type: notificationType,
         entity_id: appointmentId,
       });
     } catch (error) {
@@ -258,11 +269,12 @@ export const AppointmentsTab = () => {
         );
         
         // Create in-app notification
-        await createReservationNotification(
+        await createStatusNotification(
           appointment.requester_id,
           user!.id,
           status,
-          appointment.id
+          appointment.id,
+          isReservation
         );
 
         // Send confirmation email for reservations

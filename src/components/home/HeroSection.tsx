@@ -27,39 +27,24 @@ export const HeroSection = () => {
         onClick={handleModeSwitch}
         className="absolute left-3 bottom-3 z-20"
       >
-        <motion.div
+        <div
           className={`
             flex items-center gap-2 px-3 py-2 rounded-xl
             backdrop-blur-md border border-white/20
-            cursor-pointer transition-all duration-300
+            cursor-pointer
             ${isResidence 
-              ? 'bg-gradient-to-r from-teal-500/80 to-teal-600/60' 
-              : 'bg-gradient-to-r from-primary/80 to-primary/60'
+              ? 'bg-gradient-to-r from-teal-500/80 to-teal-600/60 shadow-[0_0_15px_rgba(20,184,166,0.4)]' 
+              : 'bg-gradient-to-r from-primary/80 to-primary/60 shadow-[0_0_15px_rgba(249,115,22,0.4)]'
             }
           `}
-          animate={{
-            boxShadow: [
-              `0 0 10px ${isResidence ? 'rgba(20, 184, 166, 0.3)' : 'rgba(249, 115, 22, 0.3)'}`,
-              `0 0 20px ${isResidence ? 'rgba(20, 184, 166, 0.5)' : 'rgba(249, 115, 22, 0.5)'}`,
-              `0 0 10px ${isResidence ? 'rgba(20, 184, 166, 0.3)' : 'rgba(249, 115, 22, 0.3)'}`,
-            ],
-          }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
         >
-          <motion.div
-            animate={{ rotate: [0, 10, -10, 0] }}
-            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-          >
+          <div>
             {isResidence ? (
               <Home className="w-4 h-4 text-white" />
             ) : (
               <Building2 className="w-4 h-4 text-white" />
             )}
-          </motion.div>
+          </div>
           
           <div className="flex flex-col items-start">
             <span className="text-[10px] text-white/70 leading-tight">
@@ -71,7 +56,7 @@ export const HeroSection = () => {
           </div>
           
           <ArrowRight className="w-3 h-3 text-white/70" />
-        </motion.div>
+        </div>
       </button>
 
       <div className="relative z-10">

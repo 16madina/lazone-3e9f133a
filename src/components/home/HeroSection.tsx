@@ -22,16 +22,16 @@ export const HeroSection = () => {
       {/* Dark Overlay */}
       <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent" />
 
-      {/* Animated Mode Badge - Left Side */}
+      {/* Animated Mode Badge - Bottom Left Corner */}
       <motion.button
         onClick={handleModeSwitch}
-        className="absolute left-0 top-1/2 -translate-y-1/2 z-20"
-        whileHover={{ x: 4 }}
+        className="absolute left-3 bottom-3 z-20"
+        whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >
         <motion.div
           className={`
-            flex items-center gap-2 px-3 py-2 rounded-r-xl
+            flex items-center gap-2 px-3 py-2 rounded-xl
             backdrop-blur-md border border-white/20
             cursor-pointer transition-all duration-300
             ${isResidence 

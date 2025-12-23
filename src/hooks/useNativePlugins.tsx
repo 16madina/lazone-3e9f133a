@@ -429,8 +429,38 @@ export const usePushNotifications = () => {
           return;
         }
         
+        // Helper function to switch app mode based on notification type
+        const switchModeForNotificationType = (type: string) => {
+          // Import the store dynamically to avoid circular dependencies
+          import('@/stores/appStore').then(({ useAppStore }) => {
+            const currentMode = useAppStore.getState().appMode;
+            
+            // Reservation notifications -> Residence mode
+            if (type.startsWith('reservation')) {
+              if (currentMode !== 'residence') {
+                console.log('[push] Switching to residence mode for reservation notification');
+                localStorage.setItem('lazone-app-mode', 'residence');
+                useAppStore.getState().setAppMode('residence');
+                document.documentElement.classList.add('residence');
+              }
+            }
+            // Appointment notifications -> LaZone mode
+            else if (type.startsWith('appointment')) {
+              if (currentMode !== 'lazone') {
+                console.log('[push] Switching to lazone mode for appointment notification');
+                localStorage.setItem('lazone-app-mode', 'lazone');
+                useAppStore.getState().setAppMode('lazone');
+                document.documentElement.classList.remove('residence');
+              }
+            }
+          });
+        };
+        
         // Handle different notification types
         if (data?.type) {
+          // Switch mode before navigating
+          switchModeForNotificationType(data.type);
+          
           switch (data.type) {
             // === Messages ===
             case 'message':
@@ -460,9 +490,18 @@ export const usePushNotifications = () => {
               }
               break;
               
-            // === Reservations & Appointments ===
+            // === Reservations (Residence mode) ===
             case 'reservation_request':
+            case 'reservation_approved':
+            case 'reservation_rejected':
             case 'reservation':
+              window.location.href = '/dashboard';
+              break;
+              
+            // === Appointments (LaZone mode) ===
+            case 'appointment_request':
+            case 'appointment_approved':
+            case 'appointment_rejected':
             case 'appointment':
               window.location.href = '/dashboard';
               break;

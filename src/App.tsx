@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
+import { GlobalHeader } from "@/components/layout/GlobalHeader";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { TutorialProvider } from "@/hooks/useTutorial";
@@ -107,6 +108,7 @@ const App = () => {
                       <Route path="/settings/network" element={<NetworkStatusPage />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
+                    <GlobalHeader />
                     <BottomNavigation />
                     <TutorialOverlay />
                     <TutorialPrompt />

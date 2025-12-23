@@ -351,6 +351,10 @@ const AuthPage = () => {
           await sendVerificationEmail(formData.email, formData.firstName, data.user.id);
         }
         
+        // Wait a bit for the profile to be updated before navigating
+        // This ensures the avatar_url is fetched correctly
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
         toast({
           title: 'Compte créé!',
           description: 'Bienvenue sur LaZone! Votre compte est actif.',

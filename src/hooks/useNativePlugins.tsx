@@ -364,29 +364,59 @@ export const usePushNotifications = () => {
     const platform = getPlatform();
     console.log('[push] Registering on platform:', platform);
 
-    // Request permissions via Firebase Messaging
-    const permResult = await FirebaseMessaging.requestPermissions();
-    console.log('[push] Permission result:', JSON.stringify(permResult));
+    try {
+      // Request permissions via Firebase Messaging
+      const permResult = await FirebaseMessaging.requestPermissions();
+      console.log('[push] Permission result:', JSON.stringify(permResult));
 
-    if (permResult.receive !== 'granted') {
-      console.log('[push] Permission denied');
-      throw new Error('permission_denied');
+      if (permResult.receive !== 'granted') {
+        console.log('[push] Permission denied');
+        throw new Error('permission_denied');
+      }
+
+      // Try to get FCM token directly first
+      let fcmToken: string | null = null;
+      
+      try {
+        const tokenResult = await FirebaseMessaging.getToken();
+        fcmToken = tokenResult.token || null;
+        console.log('[push] Direct getToken result:', fcmToken ? fcmToken.substring(0, 20) + '...' : 'null');
+      } catch (tokenError) {
+        console.log('[push] Direct getToken failed:', tokenError);
+      }
+
+      // If no token yet (common on Android), wait for tokenReceived event
+      if (!fcmToken) {
+        console.log('[push] No immediate token, waiting for tokenReceived event...');
+        
+        fcmToken = await new Promise<string>((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            console.log('[push] Token wait timeout (10s)');
+            reject(new Error('token_timeout'));
+          }, 10000);
+
+          FirebaseMessaging.addListener('tokenReceived', (event) => {
+            clearTimeout(timeout);
+            console.log('[push] Token received via event:', event.token?.substring(0, 20) + '...');
+            resolve(event.token);
+          });
+        });
+      }
+
+      if (!fcmToken) {
+        console.log('[push] Still no token after waiting');
+        throw new Error('no_token');
+      }
+
+      setToken(fcmToken);
+      setIsRegistered(true);
+      await saveTokenToDatabase(fcmToken);
+      console.log('[push] Registration complete, token saved');
+      return fcmToken;
+    } catch (error: any) {
+      console.error('[push] Registration error:', error?.message || error);
+      throw error;
     }
-
-    // Get FCM token (this returns a proper FCM token, not raw APNs)
-    const { token: fcmToken } = await FirebaseMessaging.getToken();
-    console.log('[push] FCM token received:', fcmToken ? fcmToken.substring(0, 20) + '...' : 'null');
-
-    if (!fcmToken) {
-      console.log('[push] No token received');
-      throw new Error('no_token');
-    }
-
-    setToken(fcmToken);
-    setIsRegistered(true);
-    await saveTokenToDatabase(fcmToken);
-    console.log('[push] Registration complete, token saved');
-    return fcmToken;
   }, [saveTokenToDatabase]);
 
   // Attach listeners once (avoid add/remove loops that can miss the token)
@@ -522,12 +552,8 @@ export const usePushNotifications = () => {
     };
   }, [saveTokenToDatabase]);
 
-  // Optional auto-register after login (keeps existing behavior)
-  useEffect(() => {
-    if (userId && isNativePlatform() && !isRegistered) {
-      register();
-    }
-  }, [userId, isRegistered, register]);
+  // Auto-register removed: now user must explicitly click "Activer" in the banner
+  // This prevents background registration attempts that can interfere with the UI flow
 
   const unregister = useCallback(async () => {
     if (!isNativePlatform()) return;

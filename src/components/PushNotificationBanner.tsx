@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Bell, Smartphone, CheckCircle, AlertTriangle, Settings } from 'lucide-react';
+import { Bell, Smartphone, CheckCircle, AlertTriangle, Settings, Copy, WifiOff } from 'lucide-react';
 import { usePushNotifications, isNativePlatform, getPlatform } from '@/hooks/useNativePlugins';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -10,8 +10,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { toast } from '@/hooks/use-toast';
 
-type DialogState = 'prompt' | 'loading' | 'success' | 'denied';
+type DialogState = 'prompt' | 'loading' | 'success' | 'denied' | 'error';
+
+interface ErrorInfo {
+  code: string;
+  message: string;
+}
 
 export const PushNotificationBanner = () => {
   const { user } = useAuth();
@@ -19,6 +25,7 @@ export const PushNotificationBanner = () => {
   const [dismissed, setDismissed] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
   const [dialogState, setDialogState] = useState<DialogState>('prompt');
+  const [errorInfo, setErrorInfo] = useState<ErrorInfo | null>(null);
   const platform = getPlatform();
   const isAndroid = platform === 'android';
 
@@ -47,6 +54,8 @@ export const PushNotificationBanner = () => {
 
   const handleEnable = async () => {
     setDialogState('loading');
+    setErrorInfo(null);
+    
     try {
       console.log('[PushBanner] Starting registration for platform:', platform);
       const token = await register();
@@ -54,20 +63,56 @@ export const PushNotificationBanner = () => {
       console.log('[PushBanner] Registration successful, token:', token.substring(0, 20) + '...');
       setDialogState('success');
       
+      // Immediately mark as dismissed to prevent popup from reopening
+      sessionStorage.setItem('push-banner-dismissed', 'true');
+      setDismissed(true);
+      
       // Close dialog after showing success
       setTimeout(() => {
         setShowDialog(false);
       }, 2000);
     } catch (error: any) {
-      console.error('[PushBanner] Registration error:', error?.message || error);
+      const errorCode = error?.message || 'unknown_error';
+      console.error('[PushBanner] Registration error:', errorCode, error);
       
-      if (error?.message === 'permission_denied') {
+      if (errorCode === 'permission_denied') {
         setDialogState('denied');
       } else {
-        // For other errors, go back to prompt state
-        setDialogState('prompt');
+        // Show detailed error state
+        setDialogState('error');
+        setErrorInfo({
+          code: errorCode,
+          message: getErrorMessage(errorCode),
+        });
       }
     }
+  };
+
+  const getErrorMessage = (code: string): string => {
+    switch (code) {
+      case 'no_token':
+        return 'Impossible d\'obtenir le token. Vérifiez que Google Play Services est à jour.';
+      case 'token_timeout':
+        return 'Délai dépassé lors de l\'obtention du token. Vérifiez votre connexion internet.';
+      case 'not_native':
+        return 'Les notifications push ne sont disponibles que sur l\'application mobile.';
+      default:
+        return `Erreur technique: ${code}`;
+    }
+  };
+
+  const handleCopyDiagnostic = () => {
+    const diagnostic = {
+      platform,
+      error: errorInfo?.code,
+      timestamp: new Date().toISOString(),
+      userAgent: navigator.userAgent,
+    };
+    navigator.clipboard.writeText(JSON.stringify(diagnostic, null, 2));
+    toast({
+      title: 'Diagnostic copié',
+      description: 'Informations copiées dans le presse-papier',
+    });
   };
 
   const handleDismiss = () => {
@@ -78,6 +123,7 @@ export const PushNotificationBanner = () => {
 
   const handleRetry = () => {
     setDialogState('prompt');
+    setErrorInfo(null);
   };
 
   const getIcon = () => {
@@ -86,6 +132,8 @@ export const PushNotificationBanner = () => {
         return <CheckCircle className="h-8 w-8 text-green-500" />;
       case 'denied':
         return <AlertTriangle className="h-8 w-8 text-amber-500" />;
+      case 'error':
+        return <WifiOff className="h-8 w-8 text-destructive" />;
       case 'loading':
         return (
           <div className="w-8 h-8 border-3 border-primary/30 border-t-primary rounded-full animate-spin" />
@@ -101,6 +149,8 @@ export const PushNotificationBanner = () => {
         return 'Notifications activées !';
       case 'denied':
         return 'Autorisation requise';
+      case 'error':
+        return 'Erreur d\'activation';
       case 'loading':
         return 'Activation...';
       default:
@@ -123,6 +173,8 @@ export const PushNotificationBanner = () => {
             </span>
           </>
         );
+      case 'error':
+        return errorInfo?.message || 'Une erreur est survenue';
       case 'loading':
         return 'Veuillez patienter...';
       default:
@@ -194,6 +246,40 @@ export const PushNotificationBanner = () => {
             >
               Plus tard
             </Button>
+          </div>
+        )}
+
+        {dialogState === 'error' && (
+          <div className="flex flex-col gap-3 mt-4">
+            <Button
+              onClick={handleRetry}
+              className="w-full h-12 text-base font-medium"
+            >
+              Réessayer
+            </Button>
+            
+            <Button
+              variant="outline"
+              onClick={handleCopyDiagnostic}
+              className="w-full h-10"
+            >
+              <Copy className="h-4 w-4 mr-2" />
+              Copier le diagnostic
+            </Button>
+            
+            <Button
+              variant="ghost"
+              onClick={handleDismiss}
+              className="w-full h-10 text-muted-foreground"
+            >
+              Plus tard
+            </Button>
+
+            {errorInfo && (
+              <p className="text-xs text-center text-muted-foreground font-mono">
+                Code: {errorInfo.code}
+              </p>
+            )}
           </div>
         )}
       </DialogContent>

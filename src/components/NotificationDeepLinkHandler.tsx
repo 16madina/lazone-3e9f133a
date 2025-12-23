@@ -1,29 +1,83 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppMode } from '@/hooks/useAppMode';
+import { useAppStore, AppMode } from '@/stores/appStore';
+import { toast } from '@/hooks/use-toast';
 
 /**
  * Handles deep linking from push notifications.
- * Reads pending navigation from sessionStorage and navigates using React Router
+ * Applies the correct app mode FIRST (via Zustand), then navigates using React Router
  * to avoid full page reloads that cause blank pages on mobile.
  */
 export const NotificationDeepLinkHandler = () => {
   const navigate = useNavigate();
   const { appMode } = useAppMode();
+  const setAppMode = useAppStore((state) => state.setAppMode);
+  const isProcessingRef = useRef(false);
 
   const processPendingRoute = useCallback(() => {
+    // Prevent double processing
+    if (isProcessingRef.current) {
+      console.log('[DeepLink] Already processing, skipping');
+      return;
+    }
+
     const pendingRoute = sessionStorage.getItem('pending_notification_route');
+    const pendingMode = sessionStorage.getItem('pending_notification_mode') as AppMode | null;
     
-    if (pendingRoute) {
-      console.log('[DeepLink] Processing pending route:', pendingRoute);
-      sessionStorage.removeItem('pending_notification_route');
+    if (!pendingRoute) {
+      return;
+    }
+
+    console.log('[DeepLink] Processing pending route:', pendingRoute, 'mode:', pendingMode);
+    isProcessingRef.current = true;
+
+    // Clear sessionStorage items immediately to prevent re-processing
+    sessionStorage.removeItem('pending_notification_route');
+    sessionStorage.removeItem('pending_notification_mode');
+
+    // Check if we need to switch mode
+    const currentMode = useAppStore.getState().appMode;
+    const needsModeSwitch = pendingMode && pendingMode !== currentMode;
+
+    if (needsModeSwitch) {
+      console.log('[DeepLink] Switching mode from', currentMode, 'to', pendingMode);
       
-      // Small delay to ensure app is fully mounted and mode is applied
+      // Apply mode via Zustand (this will sync localStorage and DOM class)
+      setAppMode(pendingMode);
+      
+      // Also apply DOM class immediately for visual consistency
+      if (pendingMode === 'residence') {
+        document.documentElement.classList.add('residence');
+      } else {
+        document.documentElement.classList.remove('residence');
+      }
+      
+      // Persist to localStorage immediately
+      localStorage.setItem('lazone-app-mode', pendingMode);
+      
+      // Show toast for mode switch
+      const toastTitle = pendingMode === 'residence' 
+        ? '🏠 Mode Résidence activé' 
+        : '🏢 Mode LaZone activé';
+      const toastDescription = pendingMode === 'residence'
+        ? 'Passage automatique en mode résidence'
+        : 'Passage automatique en mode immobilier';
+      
+      // Navigate after a delay to ensure mode is applied and React state is updated
+      setTimeout(() => {
+        toast({ title: toastTitle, description: toastDescription });
+        navigate(pendingRoute);
+        isProcessingRef.current = false;
+      }, 300);
+    } else {
+      // No mode switch needed, navigate immediately
       setTimeout(() => {
         navigate(pendingRoute);
-      }, 150);
+        isProcessingRef.current = false;
+      }, 100);
     }
-  }, [navigate]);
+  }, [navigate, setAppMode]);
 
   // Process on mount (app opened from killed/background state)
   useEffect(() => {
@@ -40,14 +94,6 @@ export const NotificationDeepLinkHandler = () => {
     window.addEventListener('notification-deep-link', handleDeepLink);
     return () => window.removeEventListener('notification-deep-link', handleDeepLink);
   }, [processPendingRoute]);
-
-  // Re-process when appMode changes (ensures navigation happens after mode switch)
-  useEffect(() => {
-    const pendingRoute = sessionStorage.getItem('pending_notification_route');
-    if (pendingRoute) {
-      processPendingRoute();
-    }
-  }, [appMode, processPendingRoute]);
 
   return null;
 };

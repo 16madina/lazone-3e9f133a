@@ -445,6 +445,8 @@ export const usePushNotifications = () => {
             case 'reservation_approved':
             case 'reservation_rejected':
             case 'reservation':
+              // Navigate to specific reservation if entity_id exists
+              return notifData.entity_id ? `/reservation/${notifData.entity_id}` : '/dashboard';
             case 'appointment_request':
             case 'appointment_approved':
             case 'appointment_rejected':
@@ -514,14 +516,9 @@ export const usePushNotifications = () => {
         // This avoids full page reload which causes blank pages
         sessionStorage.setItem('pending_notification_route', targetRoute);
         
-        // If app is already at root, the DeepLinkHandler will pick it up
-        // If app is closed/background, we need to ensure it goes to root first
-        if (window.location.pathname !== '/') {
-          window.location.href = '/';
-        } else {
-          // App is at root, trigger a small state change to activate the handler
-          window.dispatchEvent(new Event('notification-deep-link'));
-        }
+        // Always dispatch event for React Router navigation (avoids page reload)
+        // The DeepLinkHandler listens for this and navigates via navigate()
+        window.dispatchEvent(new Event('notification-deep-link'));
       }
     );
 

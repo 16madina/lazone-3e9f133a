@@ -64,7 +64,14 @@ const NotificationsPage = () => {
       navigate(`/user/${notification.actor_id}`);
     } else if (notification.type === 'message') {
       navigate('/messages');
-    } else if (notification.type.includes('reservation') || notification.type.includes('appointment')) {
+    } else if (notification.type.includes('reservation')) {
+      // Navigate to specific reservation if entity_id exists
+      if (notification.entity_id) {
+        navigate(`/reservation/${notification.entity_id}`);
+      } else {
+        navigate('/dashboard');
+      }
+    } else if (notification.type.includes('appointment')) {
       navigate('/dashboard');
     }
   };

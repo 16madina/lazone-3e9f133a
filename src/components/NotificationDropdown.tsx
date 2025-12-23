@@ -134,10 +134,17 @@ export const NotificationDropdown = ({ variant = 'default' }: NotificationDropdo
       case 'message':
         navigate('/messages', { state: { recipientId: notification.actor_id } });
         break;
-      // Réservations & Rendez-vous
+      // Réservations (navigate to specific reservation if entity_id exists)
       case 'reservation_request':
       case 'reservation_approved':
       case 'reservation_rejected':
+        if (notification.entity_id) {
+          navigate(`/reservation/${notification.entity_id}`);
+        } else {
+          navigate('/dashboard');
+        }
+        break;
+      // Rendez-vous
       case 'appointment_request':
       case 'appointment_approved':
       case 'appointment_rejected':

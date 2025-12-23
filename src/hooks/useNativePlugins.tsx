@@ -302,11 +302,18 @@ export const usePushNotifications = () => {
       if (existing?.id) {
         const { error: updateError } = await supabase
           .from('fcm_tokens')
-          .update({ platform })
+          .update({ platform, updated_at: new Date().toISOString() })
           .eq('id', existing.id);
 
         if (updateError) throw updateError;
       } else {
+        // Delete all existing tokens for this user on the same platform to avoid duplicates
+        await supabase
+          .from('fcm_tokens')
+          .delete()
+          .eq('user_id', uid)
+          .eq('platform', platform);
+
         const { error: insertError } = await supabase
           .from('fcm_tokens')
           .insert({ user_id: uid, platform, token: pushToken });
@@ -429,46 +436,42 @@ export const usePushNotifications = () => {
           return;
         }
         
-        // Helper function to switch app mode based on notification type
+        // Helper function to switch app mode based on notification type (SYNCHRONOUS)
         const switchModeForNotificationType = (type: string) => {
-          // Import the store dynamically to avoid circular dependencies
-          import('@/stores/appStore').then(({ useAppStore }) => {
-            const currentMode = useAppStore.getState().appMode;
-            
-            // Reservation notifications -> Residence mode
-            if (type.startsWith('reservation')) {
-              if (currentMode !== 'residence') {
-                console.log('[push] Switching to residence mode for reservation notification');
-                localStorage.setItem('lazone-app-mode', 'residence');
-                useAppStore.getState().setAppMode('residence');
-                document.documentElement.classList.add('residence');
-                // Show toast confirmation
-                toast({
-                  title: '🏠 Mode Résidence activé',
-                  description: 'Passage automatique en mode résidence pour cette réservation',
-                });
-              }
+          // Get current mode from localStorage (synchronous)
+          const currentMode = localStorage.getItem('lazone-app-mode') || 'lazone';
+          
+          // Reservation notifications -> Residence mode
+          if (type.startsWith('reservation')) {
+            if (currentMode !== 'residence') {
+              console.log('[push] Switching to residence mode for reservation notification');
+              localStorage.setItem('lazone-app-mode', 'residence');
+              document.documentElement.classList.add('residence');
+              // Store flag to show toast after page load
+              sessionStorage.setItem('mode-switch-toast', JSON.stringify({
+                title: '🏠 Mode Résidence activé',
+                description: 'Passage automatique en mode résidence pour cette réservation',
+              }));
             }
-            // Appointment notifications -> LaZone mode
-            else if (type.startsWith('appointment')) {
-              if (currentMode !== 'lazone') {
-                console.log('[push] Switching to lazone mode for appointment notification');
-                localStorage.setItem('lazone-app-mode', 'lazone');
-                useAppStore.getState().setAppMode('lazone');
-                document.documentElement.classList.remove('residence');
-                // Show toast confirmation
-                toast({
-                  title: '🏢 Mode LaZone activé',
-                  description: 'Passage automatique en mode immobilier pour cette visite',
-                });
-              }
+          }
+          // Appointment notifications -> LaZone mode
+          else if (type.startsWith('appointment')) {
+            if (currentMode !== 'lazone') {
+              console.log('[push] Switching to lazone mode for appointment notification');
+              localStorage.setItem('lazone-app-mode', 'lazone');
+              document.documentElement.classList.remove('residence');
+              // Store flag to show toast after page load
+              sessionStorage.setItem('mode-switch-toast', JSON.stringify({
+                title: '🏢 Mode LaZone activé',
+                description: 'Passage automatique en mode immobilier pour cette visite',
+              }));
             }
-          });
+          }
         };
         
         // Handle different notification types
         if (data?.type) {
-          // Switch mode before navigating
+          // Switch mode BEFORE navigating (synchronous operations)
           switchModeForNotificationType(data.type);
           
           switch (data.type) {

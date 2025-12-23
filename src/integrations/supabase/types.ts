@@ -328,6 +328,7 @@ export type Database = {
           created_at: string
           id: string
           is_read: boolean | null
+          listing_type: string | null
           property_id: string | null
           receiver_id: string
           reply_to_id: string | null
@@ -341,6 +342,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_read?: boolean | null
+          listing_type?: string | null
           property_id?: string | null
           receiver_id: string
           reply_to_id?: string | null
@@ -354,6 +356,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_read?: boolean | null
+          listing_type?: string | null
           property_id?: string | null
           receiver_id?: string
           reply_to_id?: string | null

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Mail, Lock, User, ArrowLeft, Eye, EyeOff, Phone, MapPin, ChevronDown, Check, Globe, AlertCircle, Moon, Sun, ArrowRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { africanCountries, Country } from '@/data/africanCountries';
 import { diasporaCountries, DiasporaCountry, getRegionLabel } from '@/data/diasporaCountries';
@@ -32,6 +33,7 @@ interface FormErrors {
 const AuthPage = () => {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
+  const { refreshVerificationStatus } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [loginMethod, setLoginMethod] = useState<'email' | 'phone'>('email');
   const [showPassword, setShowPassword] = useState(false);
@@ -351,9 +353,8 @@ const AuthPage = () => {
           await sendVerificationEmail(formData.email, formData.firstName, data.user.id);
         }
         
-        // Wait a bit for the profile to be updated before navigating
-        // This ensures the avatar_url is fetched correctly
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Force refresh profile to get updated avatar_url
+        await refreshVerificationStatus();
         
         toast({
           title: 'Compte créé!',

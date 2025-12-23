@@ -25,7 +25,13 @@ export const GlobalHeader = () => {
   }
 
   return (
-    <div className="fixed top-0 right-0 z-40 p-3 sm:p-4">
+    <div 
+      className="fixed top-0 right-0 z-40 p-3 sm:p-4"
+      style={{ 
+        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)',
+        paddingRight: 'calc(env(safe-area-inset-right, 0px) + 12px)'
+      }}
+    >
       <NotificationDropdown />
     </div>
   );

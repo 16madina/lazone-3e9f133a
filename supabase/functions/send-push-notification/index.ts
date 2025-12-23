@@ -343,7 +343,6 @@ serve(async (req) => {
             priority: 'high',
             notification: {
               sound: 'default',
-              channel_id: 'lazone_notifications',
               ...(imageUrl && { image: imageUrl }),
             },
           },

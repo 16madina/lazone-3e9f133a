@@ -337,29 +337,21 @@ const ReservationPage = () => {
 
       if (error) throw error;
 
-      // Send email and push notifications to owner (fire and forget)
+      // Create in-app notification for the owner (mode résidence)
       if (insertedReservation?.id) {
-        // Email notification
+        // Insert notification in database (will trigger push via database trigger)
+        await supabase.from('notifications').insert({
+          user_id: property.user_id,
+          actor_id: user!.id,
+          type: 'reservation_request',
+          entity_id: insertedReservation.id,
+        });
+
+        // Also send email notification
         supabase.functions.invoke('notify-owner-reservation', {
           body: { reservationId: insertedReservation.id }
         }).catch(emailError => {
           console.error('Error sending owner notification email:', emailError);
-        });
-
-        // Push notification
-        supabase.functions.invoke('send-push-notification', {
-          body: {
-            userId: property.user_id,
-            title: '📬 Nouvelle demande de réservation',
-            body: `Demande pour "${property.title}" du ${format(dateRange.from, 'dd/MM')} au ${format(dateRange.to, 'dd/MM')}`,
-            data: {
-              type: 'reservation_request',
-              property_id: property.id,
-              reservation_id: insertedReservation.id
-            }
-          }
-        }).catch(pushError => {
-          console.error('Error sending owner push notification:', pushError);
         });
       }
 

@@ -105,7 +105,7 @@ export const AppointmentDialog = ({
 
     setLoading(true);
     try {
-      const { error } = await supabase
+      const { data: insertedAppointment, error } = await supabase
         .from('appointments')
         .insert({
           property_id: propertyId,
@@ -116,9 +116,21 @@ export const AppointmentDialog = ({
           message: message.trim() || null,
           share_phone: sharePhone,
           contact_phone: sharePhone ? contactPhone.trim() : null,
-        });
+        })
+        .select('id')
+        .single();
 
       if (error) throw error;
+
+      // Create in-app notification for the owner (mode immobilier)
+      if (insertedAppointment?.id) {
+        await supabase.from('notifications').insert({
+          user_id: ownerId,
+          actor_id: user.id,
+          type: 'appointment_request',
+          entity_id: insertedAppointment.id,
+        });
+      }
 
       toast({
         title: 'Demande envoyée',

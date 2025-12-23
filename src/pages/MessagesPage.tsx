@@ -910,7 +910,7 @@ const ConversationView = ({ participantId, propertyId, onBack }: ConversationVie
       )}
 
       {/* Input */}
-      <div className="p-4 bg-card border-t border-border" data-tutorial="messages-input">
+      <div className="p-4 pb-20 bg-card border-t border-border" style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom))' }} data-tutorial="messages-input">
         <div className="flex items-center gap-2">
           <input
             type="file"
@@ -935,6 +935,10 @@ const ConversationView = ({ participantId, propertyId, onBack }: ConversationVie
             value={newMessage}
             onChange={handleInputChange}
             onKeyPress={handleKeyPress}
+            onBlur={() => {
+              // Force keyboard dismiss on iOS
+              (document.activeElement as HTMLElement)?.blur();
+            }}
             placeholder={replyTo ? "Répondre..." : "Votre message..."}
             className="flex-1 bg-muted px-4 py-3 rounded-full outline-none focus:ring-2 focus:ring-primary"
           />
@@ -952,8 +956,6 @@ const ConversationView = ({ participantId, propertyId, onBack }: ConversationVie
           </Button>
         </div>
       </div>
-
-      {user && <SectionTutorialButton section="messages" />}
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteConfirmation.open} onOpenChange={(open) => setDeleteConfirmation({ open, messageId: null })}>

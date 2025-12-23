@@ -3,7 +3,9 @@ import { useAppStore, AppMode } from '@/stores/appStore';
 import { toast } from '@/hooks/use-toast';
 
 export const useAppMode = () => {
+  // Zustand store
   const { appMode, setAppMode, isModeSwitching, setIsModeSwitching } = useAppStore();
+  // Track whether we've loaded initial state from localStorage
   const hasHydrated = useRef(false);
 
   // Load from localStorage on mount FIRST (before any persist happens)

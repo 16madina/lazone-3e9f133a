@@ -364,8 +364,77 @@ export const usePushNotifications = () => {
     const platform = getPlatform();
     console.log('[push] Registering on platform:', platform);
 
+    const finalize = async (pushToken: string) => {
+      setToken(pushToken);
+      setIsRegistered(true);
+      await saveTokenToDatabase(pushToken);
+      console.log('[push] Registration complete, token saved');
+      return pushToken;
+    };
+
     try {
-      // Request permissions via Firebase Messaging
+      // Android: use Capacitor PushNotifications to get the FCM registration token reliably.
+      if (platform === 'android') {
+        const perm = await PushNotifications.requestPermissions();
+        console.log('[push][android] Permission result:', JSON.stringify(perm));
+
+        if (perm.receive !== 'granted') {
+          throw new Error('permission_denied');
+        }
+
+        const tokenFromRegister = await new Promise<string>((resolve, reject) => {
+          let timeout: ReturnType<typeof setTimeout> | null = null;
+          let registrationHandle: any = null;
+          let errorHandle: any = null;
+
+          const cleanup = async () => {
+            if (timeout) clearTimeout(timeout);
+            try {
+              await registrationHandle?.remove?.();
+            } catch {}
+            try {
+              await errorHandle?.remove?.();
+            } catch {}
+          };
+
+          timeout = setTimeout(async () => {
+            console.log('[push][android] Token wait timeout (15s)');
+            await cleanup();
+            reject(new Error('token_timeout'));
+          }, 15000);
+
+          (async () => {
+            try {
+              // Listen BEFORE registering to avoid missing the event
+              registrationHandle = await PushNotifications.addListener('registration', async (t) => {
+                console.log('[push][android] registration token:', t.value?.substring(0, 20) + '...');
+                await cleanup();
+                resolve(t.value);
+              });
+
+              errorHandle = await PushNotifications.addListener('registrationError', async (err) => {
+                console.error('[push][android] registrationError:', err);
+                await cleanup();
+                reject(new Error('registration_error'));
+              });
+
+              await PushNotifications.register();
+            } catch (e) {
+              console.error('[push][android] register() failed:', e);
+              await cleanup();
+              reject(new Error('registration_error'));
+            }
+          })();
+        });
+
+        if (!tokenFromRegister) {
+          throw new Error('no_token');
+        }
+
+        return await finalize(tokenFromRegister);
+      }
+
+      // iOS / others: keep Firebase Messaging flow
       const permResult = await FirebaseMessaging.requestPermissions();
       console.log('[push] Permission result:', JSON.stringify(permResult));
 
@@ -376,7 +445,7 @@ export const usePushNotifications = () => {
 
       // Try to get FCM token directly first
       let fcmToken: string | null = null;
-      
+
       try {
         const tokenResult = await FirebaseMessaging.getToken();
         fcmToken = tokenResult.token || null;
@@ -385,21 +454,34 @@ export const usePushNotifications = () => {
         console.log('[push] Direct getToken failed:', tokenError);
       }
 
-      // If no token yet (common on Android), wait for tokenReceived event
+      // If no token yet, wait for tokenReceived event (with cleanup)
       if (!fcmToken) {
         console.log('[push] No immediate token, waiting for tokenReceived event...');
-        
+
         fcmToken = await new Promise<string>((resolve, reject) => {
-          const timeout = setTimeout(() => {
+          let timeout: ReturnType<typeof setTimeout> | null = null;
+          let handle: any = null;
+
+          const cleanup = async () => {
+            if (timeout) clearTimeout(timeout);
+            try {
+              await handle?.remove?.();
+            } catch {}
+          };
+
+          timeout = setTimeout(async () => {
             console.log('[push] Token wait timeout (10s)');
+            await cleanup();
             reject(new Error('token_timeout'));
           }, 10000);
 
-          FirebaseMessaging.addListener('tokenReceived', (event) => {
-            clearTimeout(timeout);
-            console.log('[push] Token received via event:', event.token?.substring(0, 20) + '...');
-            resolve(event.token);
-          });
+          (async () => {
+            handle = await FirebaseMessaging.addListener('tokenReceived', async (event) => {
+              console.log('[push] Token received via event:', event.token?.substring(0, 20) + '...');
+              await cleanup();
+              resolve(event.token);
+            });
+          })();
         });
       }
 
@@ -408,11 +490,7 @@ export const usePushNotifications = () => {
         throw new Error('no_token');
       }
 
-      setToken(fcmToken);
-      setIsRegistered(true);
-      await saveTokenToDatabase(fcmToken);
-      console.log('[push] Registration complete, token saved');
-      return fcmToken;
+      return await finalize(fcmToken);
     } catch (error: any) {
       console.error('[push] Registration error:', error?.message || error);
       throw error;

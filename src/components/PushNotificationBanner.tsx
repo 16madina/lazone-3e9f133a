@@ -94,6 +94,8 @@ export const PushNotificationBanner = () => {
         return 'Impossible d\'obtenir le token. Vérifiez que Google Play Services est à jour.';
       case 'token_timeout':
         return 'Délai dépassé lors de l\'obtention du token. Vérifiez votre connexion internet.';
+      case 'registration_error':
+        return 'Impossible d\'enregistrer l\'appareil pour les notifications. Vérifiez Google Play Services et la configuration Firebase.';
       case 'not_native':
         return 'Les notifications push ne sont disponibles que sur l\'application mobile.';
       default:

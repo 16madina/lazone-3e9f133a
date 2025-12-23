@@ -526,68 +526,47 @@ export const usePushNotifications = () => {
           }
         };
         
-        // Helper function to switch app mode based on notification data
-        const switchModeForNotification = (type: string, notifData: Record<string, string>) => {
-          const currentMode = localStorage.getItem('lazone-app-mode') || 'lazone';
-          let targetMode: 'lazone' | 'residence' | null = null;
-          
-          // First check if listing_type is provided in notification data
-          if (notifData.listing_type) {
-            targetMode = notifData.listing_type === 'short_term' ? 'residence' : 'lazone';
+        // Helper function to determine target mode based on notification data
+        const getTargetModeForNotification = (type: string, notifData: Record<string, string>): 'lazone' | 'residence' | null => {
+          // First check if listing_type is explicitly provided in notification data
+          if (notifData.listing_type === 'short_term') {
+            return 'residence';
           }
-          // Fallback to notification type-based switching
-          else if (type.startsWith('reservation')) {
-            targetMode = 'residence';
+          if (notifData.listing_type === 'long_term') {
+            return 'lazone';
           }
-          else if (type.startsWith('appointment')) {
-            targetMode = 'lazone';
+          // Fallback to notification type-based switching (less reliable)
+          if (type.startsWith('reservation')) {
+            return 'residence';
           }
-          
-          // Switch mode if needed
-          if (targetMode && currentMode !== targetMode) {
-            console.log('[push] Switching to', targetMode, 'mode for notification');
-            localStorage.setItem('lazone-app-mode', targetMode);
-            
-            if (targetMode === 'residence') {
-              document.documentElement.classList.add('residence');
-              sessionStorage.setItem('mode-switch-toast', JSON.stringify({
-                title: '🏠 Mode Résidence activé',
-                description: 'Passage automatique en mode résidence',
-              }));
-            } else {
-              document.documentElement.classList.remove('residence');
-              sessionStorage.setItem('mode-switch-toast', JSON.stringify({
-                title: '🏢 Mode LaZone activé',
-                description: 'Passage automatique en mode immobilier',
-              }));
-            }
-            
-            // Force React state update by dispatching a storage event
-            window.dispatchEvent(new StorageEvent('storage', {
-              key: 'lazone-app-mode',
-              newValue: targetMode,
-            }));
+          if (type.startsWith('appointment')) {
+            return 'lazone';
           }
+          return null;
         };
         
-        // Determine target route
+        // Determine target route and mode
         let targetRoute = '/notifications';
+        let targetMode: 'lazone' | 'residence' | null = null;
         
         if (data?.route) {
           targetRoute = data.route;
         } else if (data?.type) {
-          switchModeForNotification(data.type, data);
+          targetMode = getTargetModeForNotification(data.type, data);
           targetRoute = getTargetRoute(data.type, data);
         }
         
-        console.log('[push] Navigating to:', targetRoute);
+        console.log('[push] Target route:', targetRoute, 'Target mode:', targetMode);
         
-        // Store the route in sessionStorage for React Router navigation
-        // This avoids full page reload which causes blank pages
+        // Store the route AND mode in sessionStorage for the DeepLinkHandler
+        // The handler will apply the mode via Zustand BEFORE navigating
         sessionStorage.setItem('pending_notification_route', targetRoute);
+        if (targetMode) {
+          sessionStorage.setItem('pending_notification_mode', targetMode);
+        }
         
-        // Always dispatch event for React Router navigation (avoids page reload)
-        // The DeepLinkHandler listens for this and navigates via navigate()
+        // Dispatch event for React Router navigation
+        // The DeepLinkHandler listens for this, applies mode first, then navigates
         window.dispatchEvent(new Event('notification-deep-link'));
       }
     );

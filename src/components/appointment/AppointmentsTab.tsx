@@ -166,7 +166,9 @@ export const AppointmentsTab = () => {
     userId: string, 
     status: 'approved' | 'rejected',
     propertyTitle: string,
-    isReservation: boolean = false
+    isReservation: boolean = false,
+    propertyListingType?: string,
+    propertyId?: string
   ) => {
     try {
       let title: string;
@@ -193,7 +195,12 @@ export const AppointmentsTab = () => {
           userId,
           title,
           body,
-          data: { type: isReservation ? 'reservation' : 'appointment', status }
+          data: { 
+            type: isReservation ? 'reservation' : 'appointment', 
+            status,
+            listing_type: propertyListingType || (isReservation ? 'short_term' : 'long_term'),
+            property_id: propertyId || ''
+          }
         }
       });
     } catch (error) {

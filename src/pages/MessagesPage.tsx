@@ -786,7 +786,7 @@ const ConversationView = ({ participantId, propertyId, onBack }: ConversationVie
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-3 space-y-3">
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -910,7 +910,7 @@ const ConversationView = ({ participantId, propertyId, onBack }: ConversationVie
       )}
 
       {/* Input */}
-      <div className="p-4 bg-card border-t border-border" style={{ paddingBottom: 'calc(16px + env(safe-area-inset-bottom))' }} data-tutorial="messages-input">
+      <div className="p-3 bg-card border-t border-border" style={{ paddingBottom: 'calc(16px + env(safe-area-inset-bottom))' }} data-tutorial="messages-input">
         <div className="flex items-center gap-2">
           <input
             type="file"
@@ -940,7 +940,7 @@ const ConversationView = ({ participantId, propertyId, onBack }: ConversationVie
               (document.activeElement as HTMLElement)?.blur();
             }}
             placeholder={replyTo ? "Répondre..." : "Votre message..."}
-            className="flex-1 bg-muted px-4 py-3 rounded-full outline-none focus:ring-2 focus:ring-primary"
+            className="flex-1 bg-muted px-3 py-2.5 rounded-full outline-none focus:ring-2 focus:ring-primary"
           />
           <Button
             onClick={handleSend}

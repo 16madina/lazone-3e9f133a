@@ -871,6 +871,7 @@ const AdminPage = () => {
             sender_id: user?.id,
             receiver_id: messageDialog.userId,
             content: messageContent,
+            listing_type: appMode === 'residence' ? 'short_term' : 'long_term',
           });
 
         if (error) throw error;

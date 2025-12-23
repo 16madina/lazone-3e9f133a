@@ -261,28 +261,28 @@ const Index = () => {
 
           {/* Hero Content with Logo */}
           <div className="text-center mb-8 relative">
-            {/* Animated Mode Badge - Left Side */}
+            {/* Animated Mode Badge - Right Side */}
             <motion.button
               onClick={() => handleModeSwitch(isResidence ? 'lazone' : 'residence')}
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-20"
-              whileHover={{ x: 4 }}
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-20"
+              whileHover={{ x: -2 }}
               whileTap={{ scale: 0.95 }}
             >
               <motion.div
                 className={`
-                  flex items-center gap-2 px-3 py-2 rounded-r-xl
+                  flex items-center gap-1.5 px-2 py-1.5 rounded-l-lg
                   backdrop-blur-md border border-white/20
                   cursor-pointer transition-all duration-300
                   ${isResidence 
-                    ? 'bg-gradient-to-r from-teal-500/80 to-teal-600/60' 
-                    : 'bg-gradient-to-r from-primary/80 to-primary/60'
+                    ? 'bg-gradient-to-l from-teal-500/80 to-teal-600/60' 
+                    : 'bg-gradient-to-l from-primary/80 to-primary/60'
                   }
                 `}
                 animate={{
                   boxShadow: [
-                    `0 0 10px ${isResidence ? 'rgba(20, 184, 166, 0.3)' : 'rgba(249, 115, 22, 0.3)'}`,
-                    `0 0 20px ${isResidence ? 'rgba(20, 184, 166, 0.5)' : 'rgba(249, 115, 22, 0.5)'}`,
-                    `0 0 10px ${isResidence ? 'rgba(20, 184, 166, 0.3)' : 'rgba(249, 115, 22, 0.3)'}`,
+                    `0 0 8px ${isResidence ? 'rgba(20, 184, 166, 0.3)' : 'rgba(249, 115, 22, 0.3)'}`,
+                    `0 0 16px ${isResidence ? 'rgba(20, 184, 166, 0.5)' : 'rgba(249, 115, 22, 0.5)'}`,
+                    `0 0 8px ${isResidence ? 'rgba(20, 184, 166, 0.3)' : 'rgba(249, 115, 22, 0.3)'}`,
                   ],
                 }}
                 transition={{
@@ -296,22 +296,17 @@ const Index = () => {
                   transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                 >
                   {isResidence ? (
-                    <Home className="w-4 h-4 text-white" />
+                    <Building2 className="w-3 h-3 text-white" />
                   ) : (
-                    <Building2 className="w-4 h-4 text-white" />
+                    <Home className="w-3 h-3 text-white" />
                   )}
                 </motion.div>
                 
-                <div className="flex flex-col items-start">
-                  <span className="text-[10px] text-white/70 leading-tight">
-                    Passer en
-                  </span>
-                  <span className="text-xs font-semibold text-white leading-tight">
-                    {isResidence ? 'LaZone' : 'Résidence'}
-                  </span>
-                </div>
+                <span className="text-[9px] font-medium text-white leading-tight">
+                  {isResidence ? 'Immobilier' : 'Résidence'}
+                </span>
                 
-                <ArrowRight className="w-3 h-3 text-white/70" />
+                <ArrowRight className="w-2.5 h-2.5 text-white/70" />
               </motion.div>
             </motion.button>
 

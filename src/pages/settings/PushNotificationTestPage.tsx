@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Bell, BellRing, CheckCircle, XCircle, Smartphone, Globe, Send, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Bell, BellRing, CheckCircle, XCircle, Smartphone, Globe, Send, RefreshCw, Bug } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +11,19 @@ import { sendPushNotification } from '@/hooks/useNotifications';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
+interface NotificationDebugInfo {
+  timestamp: string;
+  rawEvent?: string;
+  data?: string;
+  type?: string;
+  listing_type?: string;
+  entity_id?: string | null;
+  actor_id?: string | null;
+  route?: string | null;
+  calculated_route?: string;
+  calculated_mode?: string | null;
+}
+
 const PushNotificationTestPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -19,9 +32,29 @@ const PushNotificationTestPage = () => {
   const [testResult, setTestResult] = useState<'success' | 'error' | null>(null);
   const [fcmTokens, setFcmTokens] = useState<Array<{ token: string; platform: string; created_at: string }>>([]);
   const [loadingTokens, setLoadingTokens] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<NotificationDebugInfo | null>(null);
 
   const platform = getPlatform();
   const isNativePlatformCheck = isNativePlatform();
+  
+  // Load debug info from sessionStorage
+  const loadDebugInfo = () => {
+    try {
+      const stored = sessionStorage.getItem('last_notification_tap_debug');
+      if (stored) {
+        setDebugInfo(JSON.parse(stored));
+      }
+    } catch (e) {
+      console.log('Failed to load debug info:', e);
+    }
+  };
+  
+  // Clear debug info
+  const clearDebugInfo = () => {
+    sessionStorage.removeItem('last_notification_tap_debug');
+    setDebugInfo(null);
+    toast({ title: 'Debug info effacée' });
+  };
 
   const fetchUserTokens = async () => {
     if (!user) return;
@@ -132,11 +165,12 @@ const PushNotificationTestPage = () => {
     }
   };
 
-  // Fetch tokens on mount
+  // Fetch tokens and debug info on mount
   useEffect(() => {
     if (user) {
       fetchUserTokens();
     }
+    loadDebugInfo();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
@@ -353,6 +387,111 @@ const PushNotificationTestPage = () => {
                     </code>
                   </div>
                 ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Debug Panel */}
+        <Card className="border-dashed border-orange-500/50">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base flex items-center gap-2 text-orange-600">
+                <Bug className="h-5 w-5" />
+                Debug: Dernier tap notification
+              </CardTitle>
+              <div className="flex gap-2">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={loadDebugInfo}
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
+                {debugInfo && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={clearDebugInfo}
+                  >
+                    <XCircle className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
+            <CardDescription>
+              Données reçues lors du dernier clic sur une notification
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {!debugInfo ? (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                Aucun tap de notification enregistré. Cliquez sur une notification push pour voir les données ici.
+              </p>
+            ) : (
+              <div className="space-y-3 text-xs">
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Timestamp</span>
+                  <span className="font-mono">{new Date(debugInfo.timestamp).toLocaleString('fr-FR')}</span>
+                </div>
+                
+                <Separator />
+                
+                <div className="space-y-2">
+                  <p className="font-medium text-sm">Données reçues:</p>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="p-2 bg-muted/50 rounded">
+                      <span className="text-muted-foreground block">type</span>
+                      <span className="font-mono">{debugInfo.type || 'N/A'}</span>
+                    </div>
+                    <div className="p-2 bg-muted/50 rounded">
+                      <span className="text-muted-foreground block">listing_type</span>
+                      <Badge variant={debugInfo.listing_type === 'short_term' ? 'default' : debugInfo.listing_type === 'long_term' ? 'secondary' : 'outline'}>
+                        {debugInfo.listing_type || 'N/A'}
+                      </Badge>
+                    </div>
+                    <div className="p-2 bg-muted/50 rounded">
+                      <span className="text-muted-foreground block">entity_id</span>
+                      <span className="font-mono truncate block">{debugInfo.entity_id || 'N/A'}</span>
+                    </div>
+                    <div className="p-2 bg-muted/50 rounded">
+                      <span className="text-muted-foreground block">actor_id</span>
+                      <span className="font-mono truncate block">{debugInfo.actor_id || 'N/A'}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <Separator />
+                
+                <div className="space-y-2">
+                  <p className="font-medium text-sm">Valeurs calculées:</p>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="p-2 bg-green-500/10 rounded border border-green-500/30">
+                      <span className="text-muted-foreground block">Route calculée</span>
+                      <span className="font-mono text-green-600">{debugInfo.calculated_route || 'N/A'}</span>
+                    </div>
+                    <div className="p-2 bg-blue-500/10 rounded border border-blue-500/30">
+                      <span className="text-muted-foreground block">Mode calculé</span>
+                      <Badge variant={debugInfo.calculated_mode === 'residence' ? 'default' : debugInfo.calculated_mode === 'lazone' ? 'secondary' : 'outline'}>
+                        {debugInfo.calculated_mode || 'aucun'}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+                
+                {debugInfo.data && (
+                  <>
+                    <Separator />
+                    <div className="space-y-2">
+                      <p className="font-medium text-sm">Données brutes:</p>
+                      <pre className="p-2 bg-muted/50 rounded overflow-x-auto text-[10px]">
+                        {JSON.stringify(JSON.parse(debugInfo.data), null, 2)}
+                      </pre>
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </CardContent>

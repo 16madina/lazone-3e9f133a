@@ -484,7 +484,27 @@ export const usePushNotifications = () => {
       'notificationActionPerformed',
       (event) => {
         console.log('[push] notification action:', event);
+        console.log('[push] notification action full event:', JSON.stringify(event, null, 2));
+        
         const data = event.notification?.data as Record<string, string> | undefined;
+        
+        // Save debug info to sessionStorage for diagnostic panel
+        try {
+          const debugInfo = {
+            timestamp: new Date().toISOString(),
+            rawEvent: JSON.stringify(event),
+            data: data ? JSON.stringify(data) : null,
+            type: data?.type || 'unknown',
+            listing_type: data?.listing_type || 'not_provided',
+            entity_id: data?.entity_id || null,
+            actor_id: data?.actor_id || null,
+            route: data?.route || null,
+          };
+          sessionStorage.setItem('last_notification_tap_debug', JSON.stringify(debugInfo));
+          console.log('[push] Debug info saved:', debugInfo);
+        } catch (e) {
+          console.log('[push] Failed to save debug info:', e);
+        }
         
         // Helper function to get target route based on notification type
         const getTargetRoute = (type: string, notifData: Record<string, string>): string => {
@@ -527,21 +547,34 @@ export const usePushNotifications = () => {
         };
         
         // Helper function to determine target mode based on notification data
-        const getTargetModeForNotification = (type: string, notifData: Record<string, string>): 'lazone' | 'residence' | null => {
-          // First check if listing_type is explicitly provided in notification data
+        // Priority: listing_type > notification type fallback > route-based fallback
+        const getTargetModeForNotification = (notifData: Record<string, string>): 'lazone' | 'residence' | null => {
+          console.log('[push] Calculating target mode from data:', notifData);
+          
+          // Priority 1: Explicit listing_type in notification data
           if (notifData.listing_type === 'short_term') {
+            console.log('[push] Mode from listing_type: residence (short_term)');
             return 'residence';
           }
           if (notifData.listing_type === 'long_term') {
+            console.log('[push] Mode from listing_type: lazone (long_term)');
             return 'lazone';
           }
-          // Fallback to notification type-based switching (less reliable)
-          if (type.startsWith('reservation')) {
-            return 'residence';
+          
+          // Priority 2: Notification type-based fallback
+          const type = notifData.type;
+          if (type) {
+            if (type.startsWith('reservation')) {
+              console.log('[push] Mode from type fallback: residence (reservation)');
+              return 'residence';
+            }
+            if (type.startsWith('appointment')) {
+              console.log('[push] Mode from type fallback: lazone (appointment)');
+              return 'lazone';
+            }
           }
-          if (type.startsWith('appointment')) {
-            return 'lazone';
-          }
+          
+          console.log('[push] No mode determined from data');
           return null;
         };
         
@@ -549,14 +582,27 @@ export const usePushNotifications = () => {
         let targetRoute = '/notifications';
         let targetMode: 'lazone' | 'residence' | null = null;
         
-        if (data?.route) {
-          targetRoute = data.route;
-        } else if (data?.type) {
-          targetMode = getTargetModeForNotification(data.type, data);
-          targetRoute = getTargetRoute(data.type, data);
+        // ALWAYS calculate mode from data if available (regardless of whether route is provided)
+        if (data) {
+          targetMode = getTargetModeForNotification(data);
+          
+          // Determine route
+          if (data.route) {
+            targetRoute = data.route;
+          } else if (data.type) {
+            targetRoute = getTargetRoute(data.type, data);
+          }
         }
         
-        console.log('[push] Target route:', targetRoute, 'Target mode:', targetMode);
+        console.log('[push] Final target route:', targetRoute, 'Final target mode:', targetMode);
+        
+        // Update debug info with calculated values
+        try {
+          const existingDebug = JSON.parse(sessionStorage.getItem('last_notification_tap_debug') || '{}');
+          existingDebug.calculated_route = targetRoute;
+          existingDebug.calculated_mode = targetMode;
+          sessionStorage.setItem('last_notification_tap_debug', JSON.stringify(existingDebug));
+        } catch (e) {}
         
         // Store the route AND mode in sessionStorage for the DeepLinkHandler
         // The handler will apply the mode via Zustand BEFORE navigating

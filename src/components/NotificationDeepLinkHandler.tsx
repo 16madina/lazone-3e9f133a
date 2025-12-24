@@ -15,6 +15,18 @@ export const NotificationDeepLinkHandler = () => {
   const setAppMode = useAppStore((state) => state.setAppMode);
   const isProcessingRef = useRef(false);
 
+  // Helper function to deduce mode from route as a last resort fallback
+  const deduceModeFromRoute = (route: string): AppMode | null => {
+    // Reservation routes are always residence mode (short_term)
+    if (route.startsWith('/reservation')) {
+      console.log('[DeepLink] Deduced mode from route: residence (reservation route)');
+      return 'residence';
+    }
+    // Messages could be either, but if we're navigating to messages without explicit mode,
+    // we don't force a switch
+    return null;
+  };
+
   const processPendingRoute = useCallback(() => {
     // Prevent double processing
     if (isProcessingRef.current) {
@@ -23,24 +35,32 @@ export const NotificationDeepLinkHandler = () => {
     }
 
     const pendingRoute = sessionStorage.getItem('pending_notification_route');
-    const pendingMode = sessionStorage.getItem('pending_notification_mode') as AppMode | null;
+    let pendingMode = sessionStorage.getItem('pending_notification_mode') as AppMode | null;
     
     if (!pendingRoute) {
       return;
     }
 
-    console.log('[DeepLink] Processing pending route:', pendingRoute, 'mode:', pendingMode);
+    console.log('[DeepLink] Processing pending route:', pendingRoute, 'explicit mode:', pendingMode);
     isProcessingRef.current = true;
 
     // Clear sessionStorage items immediately to prevent re-processing
     sessionStorage.removeItem('pending_notification_route');
     sessionStorage.removeItem('pending_notification_mode');
 
+    // If no explicit mode was provided, try to deduce from route as fallback
+    if (!pendingMode) {
+      pendingMode = deduceModeFromRoute(pendingRoute);
+      console.log('[DeepLink] Fallback mode from route:', pendingMode);
+    }
+
     // Check if we need to switch mode
     const currentMode = useAppStore.getState().appMode;
     const needsModeSwitch = pendingMode && pendingMode !== currentMode;
 
-    if (needsModeSwitch) {
+    console.log('[DeepLink] Current mode:', currentMode, 'Target mode:', pendingMode, 'Needs switch:', needsModeSwitch);
+
+    if (needsModeSwitch && pendingMode) {
       console.log('[DeepLink] Switching mode from', currentMode, 'to', pendingMode);
       
       // Apply mode via Zustand (this will sync localStorage and DOM class)

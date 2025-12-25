@@ -45,6 +45,7 @@ import DashboardPage from "./pages/DashboardPage";
 import EditPropertyPage from "./pages/EditPropertyPage";
 import NetworkStatusPage from "./pages/settings/NetworkStatusPage";
 import ReservationPage from "./pages/ReservationPage";
+import CreditsPage from "./pages/CreditsPage";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { PushNotificationBanner } from "@/components/PushNotificationBanner";
 import { NotificationDeepLinkHandler } from "@/components/NotificationDeepLinkHandler";
@@ -91,6 +92,7 @@ const App = () => {
                       <Route path="/followers/:userId" element={<FollowersPage />} />
                       <Route path="/install" element={<InstallPage />} />
                       <Route path="/reservation/:id" element={<ReservationPage />} />
+                      <Route path="/credits" element={<CreditsPage />} />
                       <Route path="/dashboard" element={<DashboardPage />} />
                       <Route path="/admin" element={<AdminPage />} />
                       <Route path="/settings/edit-profile" element={<EditProfilePage />} />

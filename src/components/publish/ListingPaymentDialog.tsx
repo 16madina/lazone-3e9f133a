@@ -20,7 +20,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { usePaymentNumbers } from '@/hooks/usePaymentNumbers';
 import { usePlatformPayment, PaymentMethod } from '@/hooks/usePlatformPayment';
 import { useListingLimit } from '@/hooks/useListingLimit';
-import { PRODUCT_ID_LISTING_CREDIT } from '@/services/storeKitService';
+import { PRODUCT_IDS } from '@/services/storeKitService';
 
 interface ListingPaymentDialogProps {
   open: boolean;
@@ -121,7 +121,7 @@ const ListingPaymentDialog = ({
     if (method === 'apple_iap') {
       setStep('processing');
       const result = await startApplePayment({
-        productId: PRODUCT_ID_LISTING_CREDIT,
+        productId: PRODUCT_IDS.LISTING_SINGLE,
         listingType,
         propertyId,
       });

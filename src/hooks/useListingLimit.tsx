@@ -251,19 +251,34 @@ export const useListingLimit = () => {
   };
 
   const freeListingsLimit = getFreeListingsForUserType(profile?.user_type);
+  
+  // Debug logging for payment calculation
+  console.log('[useListingLimit] Mode:', currentListingType, 
+    '| Free limit:', freeListingsLimit, 
+    '| User listings:', userListingsCount, 
+    '| Credits:', availableCredits,
+    '| Settings enabled:', settings?.enabled,
+    '| Loading:', loading);
 
   // Calculate if user needs to pay (considering available credits)
-  // Important: when free_listings is 0, payment is always required
+  // Important: when free_listings is 0, payment is always required for the first listing
+  // Fix: Use > instead of >= only when freeListingsLimit > 0, otherwise always require payment
+  const exceededLimit = freeListingsLimit === 0 
+    ? true  // When limit is 0, always exceeded (must pay for every listing)
+    : userListingsCount >= freeListingsLimit;  // Otherwise check if count >= limit
+  
   const needsPayment = settings?.enabled && 
     !loading &&
-    userListingsCount >= freeListingsLimit && 
+    exceededLimit && 
     availableCredits === 0;
 
   // User has exceeded free limit but has credits
   const canUseCredit = settings?.enabled && 
     !loading &&
-    userListingsCount >= freeListingsLimit && 
+    exceededLimit && 
     availableCredits > 0;
+    
+  console.log('[useListingLimit] Exceeded limit:', exceededLimit, '| Needs payment:', needsPayment, '| Can use credit:', canUseCredit);
 
   // Get remaining free listings
   const remainingFreeListings = Math.max(0, freeListingsLimit - userListingsCount);

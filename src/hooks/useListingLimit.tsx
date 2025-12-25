@@ -1,10 +1,22 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
+import { useAppMode } from './useAppMode';
 import { countryCurrencyMap } from '@/data/currencies';
+
+// Settings for a single mode
+export interface ModeLimitSettings {
+  free_listings_default: number;
+  free_listings_agence: number;
+  free_listings_particulier: number;
+  free_listings_proprietaire: number;
+  free_listings_demarcheur: number;
+  price_per_extra: number;
+}
 
 export interface ListingLimitSettings {
   enabled: boolean;
+  // Legacy fields for backwards compatibility
   free_listings_default: number;
   free_listings_agence: number;
   free_listings_particulier: number;
@@ -12,6 +24,9 @@ export interface ListingLimitSettings {
   free_listings_demarcheur: number;
   price_per_extra: number;
   currency: string;
+  // New per-mode settings
+  long_term?: ModeLimitSettings;
+  short_term?: ModeLimitSettings;
 }
 
 interface ConversionRates {
@@ -36,10 +51,14 @@ const XOF_CONVERSION_RATES: ConversionRates = {
 
 export const useListingLimit = () => {
   const { user, profile } = useAuth();
+  const { isResidence } = useAppMode();
   const [settings, setSettings] = useState<ListingLimitSettings | null>(null);
   const [userListingsCount, setUserListingsCount] = useState<number>(0);
   const [availableCredits, setAvailableCredits] = useState<number>(0);
   const [loading, setLoading] = useState(true);
+  
+  // Current listing type based on app mode
+  const currentListingType = isResidence ? 'short_term' : 'long_term';
 
   // Fetch settings
   const fetchSettings = useCallback(async () => {
@@ -71,7 +90,7 @@ export const useListingLimit = () => {
     }
   }, []);
 
-  // Count user's active listings
+  // Count user's active listings for current mode
   const fetchUserListingsCount = useCallback(async () => {
     if (!user) {
       setUserListingsCount(0);
@@ -83,7 +102,8 @@ export const useListingLimit = () => {
         .from('properties')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id)
-        .eq('is_active', true);
+        .eq('is_active', true)
+        .eq('listing_type', currentListingType);
 
       if (error) throw error;
       setUserListingsCount(count || 0);
@@ -91,9 +111,9 @@ export const useListingLimit = () => {
       console.error('Error counting user listings:', error);
       setUserListingsCount(0);
     }
-  }, [user]);
+  }, [user, currentListingType]);
 
-  // Fetch available credits (completed payments without associated property)
+  // Fetch available credits for current mode (completed payments without associated property)
   const fetchAvailableCredits = useCallback(async () => {
     if (!user) {
       setAvailableCredits(0);
@@ -106,6 +126,7 @@ export const useListingLimit = () => {
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id)
         .eq('status', 'completed')
+        .eq('listing_type', currentListingType)
         .is('property_id', null);
 
       if (error) throw error;
@@ -114,7 +135,7 @@ export const useListingLimit = () => {
       console.error('Error counting available credits:', error);
       setAvailableCredits(0);
     }
-  }, [user]);
+  }, [user, currentListingType]);
 
   // Use a credit for a property
   const useCredit = useCallback(async (propertyId: string): Promise<boolean> => {
@@ -123,12 +144,13 @@ export const useListingLimit = () => {
     }
 
     try {
-      // Find the oldest unused credit
+      // Find the oldest unused credit for current mode
       const { data: credit, error: fetchError } = await supabase
         .from('listing_payments')
         .select('id')
         .eq('user_id', user.id)
         .eq('status', 'completed')
+        .eq('listing_type', currentListingType)
         .is('property_id', null)
         .order('completed_at', { ascending: true })
         .limit(1)
@@ -157,7 +179,7 @@ export const useListingLimit = () => {
       console.error('Error using credit:', error);
       return false;
     }
-  }, [user, availableCredits, fetchAvailableCredits]);
+  }, [user, availableCredits, fetchAvailableCredits, currentListingType]);
 
   // Initialize
   useEffect(() => {
@@ -169,29 +191,62 @@ export const useListingLimit = () => {
     init();
   }, [fetchSettings, fetchUserListingsCount, fetchAvailableCredits]);
 
-  // Refresh count when user changes
+  // Refresh count when user or mode changes
   useEffect(() => {
     if (user) {
       fetchUserListingsCount();
       fetchAvailableCredits();
     }
-  }, [user, fetchUserListingsCount, fetchAvailableCredits]);
+  }, [user, currentListingType, fetchUserListingsCount, fetchAvailableCredits]);
 
-  // Get the free listings limit based on user type
+  // Get the mode-specific settings
+  const getModeSettings = (): ModeLimitSettings => {
+    if (!settings) {
+      return {
+        free_listings_default: 3,
+        free_listings_agence: 1,
+        free_listings_particulier: 3,
+        free_listings_proprietaire: 3,
+        free_listings_demarcheur: 3,
+        price_per_extra: 1000,
+      };
+    }
+
+    // Check if mode-specific settings exist
+    const modeSettings = currentListingType === 'short_term' 
+      ? settings.short_term 
+      : settings.long_term;
+
+    if (modeSettings) {
+      return modeSettings;
+    }
+
+    // Fallback to legacy global settings
+    return {
+      free_listings_default: settings.free_listings_default,
+      free_listings_agence: settings.free_listings_agence,
+      free_listings_particulier: settings.free_listings_particulier,
+      free_listings_proprietaire: settings.free_listings_proprietaire,
+      free_listings_demarcheur: settings.free_listings_demarcheur,
+      price_per_extra: settings.price_per_extra,
+    };
+  };
+
+  const currentModeSettings = getModeSettings();
+
+  // Get the free listings limit based on user type for current mode
   const getFreeListingsForUserType = (userType: string | null | undefined): number => {
-    if (!settings) return 3;
-    
     switch (userType) {
       case 'agence':
-        return settings.free_listings_agence ?? 1;
+        return currentModeSettings.free_listings_agence ?? 1;
       case 'particulier':
-        return settings.free_listings_particulier ?? 3;
+        return currentModeSettings.free_listings_particulier ?? 3;
       case 'proprietaire':
-        return settings.free_listings_proprietaire ?? 3;
+        return currentModeSettings.free_listings_proprietaire ?? 3;
       case 'demarcheur':
-        return settings.free_listings_demarcheur ?? 3;
+        return currentModeSettings.free_listings_demarcheur ?? 3;
       default:
-        return settings.free_listings_default ?? 3;
+        return currentModeSettings.free_listings_default ?? 3;
     }
   };
 
@@ -213,13 +268,9 @@ export const useListingLimit = () => {
   // Get remaining free listings
   const remainingFreeListings = Math.max(0, freeListingsLimit - userListingsCount);
 
-  // Convert price to user's currency
+  // Convert price to user's currency - use mode-specific price
   const getConvertedPrice = useCallback((countryCode: string | null | undefined): { amount: number; currency: string; symbol: string } => {
-    if (!settings) {
-      return { amount: 1000, currency: 'XOF', symbol: 'FCFA' };
-    }
-
-    const basePriceXOF = settings.price_per_extra;
+    const basePriceXOF = currentModeSettings.price_per_extra;
     
     // Get user's currency based on country
     const userCurrency = countryCode ? countryCurrencyMap[countryCode] : null;
@@ -236,7 +287,7 @@ export const useListingLimit = () => {
       currency: userCurrency.code,
       symbol: userCurrency.symbol,
     };
-  }, [settings]);
+  }, [currentModeSettings]);
 
   // Get price for current user
   const priceForUser = getConvertedPrice(profile?.country);

@@ -28,6 +28,8 @@ interface FormErrors {
   confirmPassword?: string;
   terms?: string;
   loginPhone?: string;
+  userType?: string;
+  agencyName?: string;
 }
 
 const AuthPage = () => {
@@ -66,7 +68,16 @@ const AuthPage = () => {
     country: null as Country | null,
     city: '',
     phone: '',
+    userType: 'particulier' as 'particulier' | 'proprietaire' | 'demarcheur' | 'agence',
+    agencyName: '',
   });
+
+  const userTypeOptions = [
+    { value: 'particulier', label: 'Particulier', description: 'Vous cherchez un logement' },
+    { value: 'proprietaire', label: 'Propriétaire', description: 'Vous proposez vos biens' },
+    { value: 'demarcheur', label: 'Démarcheur', description: 'Vous aidez à trouver des biens' },
+    { value: 'agence', label: 'Agence', description: 'Vous représentez une agence immobilière' },
+  ];
 
   const availableCities = formData.country?.cities || [];
 
@@ -125,6 +136,11 @@ const AuthPage = () => {
         break;
       case 'city':
         if (!value) return 'Veuillez sélectionner une ville';
+        break;
+      case 'agencyName':
+        if (formData.userType === 'agence' && (!value || value.trim().length < 2)) {
+          return 'Le nom de l\'agence est requis';
+        }
         break;
     }
     return undefined;
@@ -331,11 +347,24 @@ const AuthPage = () => {
               is_diaspora: isDiaspora,
               residence_country: isDiaspora ? residenceCountry?.name : null,
               residence_country_code: isDiaspora ? residenceCountry?.code : null,
+              user_type: formData.userType,
+              agency_name: formData.userType === 'agence' ? formData.agencyName : null,
             },
             emailRedirectTo: `${window.location.origin}/profile`,
           },
         });
         if (error) throw error;
+        
+        // Update profile with user_type and agency_name
+        if (data.user) {
+          await supabase
+            .from('profiles')
+            .update({ 
+              user_type: formData.userType,
+              agency_name: formData.userType === 'agence' ? formData.agencyName : null,
+            })
+            .eq('user_id', data.user.id);
+        }
         
         // Upload avatar if selected
         if (data.user && avatarFile) {
@@ -479,7 +508,49 @@ const AuthPage = () => {
                 />
               </div>
 
-              {/* First Name & Last Name */}
+              {/* User Type Selection */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">Vous êtes :</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {userTypeOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => handleFieldChange('userType', option.value)}
+                      className={`p-3 rounded-xl border-2 text-left transition-all ${
+                        formData.userType === option.value
+                          ? 'border-primary bg-primary/10'
+                          : 'border-border bg-card hover:border-primary/50'
+                      }`}
+                    >
+                      <div className="font-medium text-sm">{option.label}</div>
+                      <div className="text-xs text-muted-foreground mt-0.5">{option.description}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Agency Name (conditional) */}
+              {formData.userType === 'agence' && (
+                <div>
+                  <div className={`glass-card p-1 ${errors.agencyName && touched.agencyName ? 'border border-destructive' : ''}`}>
+                    <div className="flex items-center gap-2 px-3 py-2.5">
+                      <span className="text-lg">🏢</span>
+                      <input
+                        type="text"
+                        placeholder="Nom de l'agence"
+                        value={formData.agencyName}
+                        onChange={(e) => handleFieldChange('agencyName', e.target.value)}
+                        onBlur={() => handleBlur('agencyName')}
+                        className="flex-1 bg-transparent outline-none text-sm"
+                      />
+                    </div>
+                  </div>
+                  <InputError message={touched.agencyName ? errors.agencyName : undefined} />
+                </div>
+              )}
+
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <div className={`glass-card p-1 ${errors.firstName && touched.firstName ? 'border border-destructive' : ''}`}>

@@ -125,6 +125,7 @@ const PublishPage = () => {
   const { takePicture, pickMultiple, loading: cameraLoading } = useCamera();
   const { 
     settings: limitSettings, 
+    loading: limitLoading,
     needsPayment, 
     canUseCredit,
     availableCredits,
@@ -606,6 +607,15 @@ const PublishPage = () => {
     if (!user) {
       toast({ title: 'Veuillez vous connecter', variant: 'destructive' });
       navigate('/auth');
+      return;
+    }
+
+    // Wait for limit settings to load before proceeding
+    if (limitLoading) {
+      toast({ 
+        title: 'Chargement en cours', 
+        description: 'Veuillez patienter...',
+      });
       return;
     }
 

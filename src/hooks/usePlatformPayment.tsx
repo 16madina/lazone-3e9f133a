@@ -49,8 +49,31 @@ export const usePlatformPayment = (): UsePlatformPaymentReturn => {
 
   const platform = getPlatform();
 
+
   // Determine preferred payment method based on platform
   const preferredMethod: PaymentMethod = platform === 'ios' ? 'apple_iap' : 'stripe';
+
+  const isInIframe = () => {
+    try {
+      return window.self !== window.top;
+    } catch {
+      return true;
+    }
+  };
+
+  const redirectToExternal = (url: string) => {
+    // Stripe Checkout must be top-level (Stripe blocks iframing)
+    if (isInIframe()) {
+      try {
+        window.top?.location.assign(url);
+        return;
+      } catch {
+        // ignore
+      }
+    }
+
+    window.location.assign(url);
+  };
 
   // Start Stripe payment (for Android and Web)
   const startStripePayment = useCallback(async (params: {
@@ -60,47 +83,37 @@ export const usePlatformPayment = (): UsePlatformPaymentReturn => {
     propertyId?: string;
   }): Promise<PaymentResult> => {
     setIsLoading(true);
-    
+
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      
+
       if (!session?.access_token) {
         throw new Error('Non authentifié');
       }
 
-      // Call edge function to create checkout session
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout-session`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({
-            amount: params.amount,
-            currency: params.currency,
-            listingType: params.listingType,
-            propertyId: params.propertyId,
-            successUrl: `${window.location.origin}/publish?payment=success`,
-            cancelUrl: `${window.location.origin}/publish?payment=cancelled`,
-          }),
-        }
-      );
+      const { data, error } = await supabase.functions.invoke('create-checkout-session', {
+        body: {
+          amount: params.amount,
+          currency: params.currency,
+          listingType: params.listingType,
+          propertyId: params.propertyId,
+          successUrl: `${window.location.origin}/publish?payment=success`,
+          cancelUrl: `${window.location.origin}/publish?payment=cancelled`,
+        },
+      });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Erreur lors de la création du paiement');
+      if (error) {
+        throw new Error(error.message || 'Erreur lors de la création du paiement');
       }
 
-      const { url, transactionRef } = await response.json();
+      const url = (data as any)?.url as string | undefined;
+      const transactionRef = (data as any)?.transactionRef as string | undefined;
 
       if (!url) {
         throw new Error('URL de paiement non reçue');
       }
 
-      // Redirect to Stripe Checkout
-      window.location.href = url;
+      redirectToExternal(url);
 
       return {
         success: true,
@@ -129,7 +142,7 @@ export const usePlatformPayment = (): UsePlatformPaymentReturn => {
     propertyId?: string;
   }): Promise<PaymentResult> => {
     setIsLoading(true);
-    
+
     try {
       // Check if we're on iOS
       if (platform !== 'ios') {
@@ -138,7 +151,7 @@ export const usePlatformPayment = (): UsePlatformPaymentReturn => {
 
       // Import StoreKit service dynamically
       const { storeKitService } = await import('@/services/storeKitService');
-      
+
       // Initialize StoreKit
       await storeKitService.initialize();
 
@@ -151,34 +164,25 @@ export const usePlatformPayment = (): UsePlatformPaymentReturn => {
 
       // Validate receipt on server
       const { data: { session } } = await supabase.auth.getSession();
-      
+
       if (!session?.access_token) {
         throw new Error('Non authentifié');
       }
 
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/validate-apple-receipt`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({
-            receiptData: purchase.receiptData,
-            productId: params.productId,
-            listingType: params.listingType,
-            propertyId: params.propertyId,
-          }),
-        }
-      );
+      const { data, error } = await supabase.functions.invoke('validate-apple-receipt', {
+        body: {
+          receiptData: purchase.receiptData,
+          productId: params.productId,
+          listingType: params.listingType,
+          propertyId: params.propertyId,
+        },
+      });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Erreur de validation');
+      if (error) {
+        throw new Error(error.message || 'Erreur de validation');
       }
 
-      const result = await response.json();
+      const result = data as any;
 
       toast({
         title: 'Paiement réussi !',
@@ -187,8 +191,8 @@ export const usePlatformPayment = (): UsePlatformPaymentReturn => {
 
       return {
         success: true,
-        paymentId: result.paymentId,
-        transactionRef: result.transactionId,
+        paymentId: result?.paymentId,
+        transactionRef: result?.transactionId,
       };
     } catch (error) {
       console.error('Apple payment error:', error);

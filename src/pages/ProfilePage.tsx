@@ -774,33 +774,42 @@ const ProfilePage = () => {
                 </div>
                 
                 {/* Profile Info & Edit Button */}
-                <div className="mt-4 flex items-center gap-2">
-                  <Sheet open={showProfileSheet} onOpenChange={setShowProfileSheet}>
-                    <SheetTrigger asChild>
-                      <button 
-                        data-tutorial="profile-info"
-                        className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md hover:bg-primary/90 transition-colors"
-                      >
-                        <User className="w-4 h-4" />
-                      </button>
-                    </SheetTrigger>
-                    <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto rounded-t-2xl">
-                      <SheetHeader>
-                        <SheetTitle className="flex items-center gap-2">
-                          <User className="w-5 h-5 text-primary" />
-                          Mon Profil
-                        </SheetTitle>
-                      </SheetHeader>
-                      <div className="mt-4">
-                        <ProfileInfoSheet user={user} reviews={reviews} reviewsLoading={reviewsLoading} />
-                      </div>
-                    </SheetContent>
-                  </Sheet>
+                <div className="mt-4 flex flex-col gap-1">
+                  <div className="flex items-center gap-2">
+                    <Sheet open={showProfileSheet} onOpenChange={setShowProfileSheet}>
+                      <SheetTrigger asChild>
+                        <button 
+                          data-tutorial="profile-info"
+                          className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md hover:bg-primary/90 transition-colors"
+                        >
+                          <User className="w-4 h-4" />
+                        </button>
+                      </SheetTrigger>
+                      <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto rounded-t-2xl">
+                        <SheetHeader>
+                          <SheetTitle className="flex items-center gap-2">
+                            <User className="w-5 h-5 text-primary" />
+                            Mon Profil
+                          </SheetTitle>
+                        </SheetHeader>
+                        <div className="mt-4">
+                          <ProfileInfoSheet user={user} reviews={reviews} reviewsLoading={reviewsLoading} />
+                        </div>
+                      </SheetContent>
+                    </Sheet>
+                    <button
+                      onClick={() => navigate('/settings/edit-profile')}
+                      className="text-xs text-primary font-medium hover:underline"
+                    >
+                      Modifier le profil
+                    </button>
+                  </div>
                   <button
-                    onClick={() => navigate('/settings/edit-profile')}
-                    className="text-xs text-primary font-medium hover:underline"
+                    onClick={() => navigate('/credits')}
+                    className="flex items-center gap-1.5 text-xs text-amber-600 font-medium hover:underline ml-9"
                   >
-                    Modifier le profil
+                    <Coins className="w-3.5 h-3.5" />
+                    Mes Crédits
                   </button>
                 </div>
               </div>

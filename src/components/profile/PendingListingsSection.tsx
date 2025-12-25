@@ -10,7 +10,8 @@ import {
   Eye,
   Trash2,
   CreditCard,
-  AlertCircle
+  AlertCircle,
+  RefreshCw
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -18,6 +19,8 @@ import { useAppMode } from '@/hooks/useAppMode';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { toast } from '@/hooks/use-toast';
+import ListingPaymentDialog from '@/components/publish/ListingPaymentDialog';
+import { Button } from '@/components/ui/button';
 
 interface PendingProperty {
   id: string;
@@ -45,6 +48,8 @@ export const PendingListingsSection = () => {
   const { isResidence } = useAppMode();
   const [pendingProperties, setPendingProperties] = useState<PendingProperty[]>([]);
   const [loading, setLoading] = useState(true);
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
 
   const listingType = isResidence ? 'short_term' : 'long_term';
 
@@ -150,6 +155,18 @@ export const PendingListingsSection = () => {
     }
   };
 
+  const handleRetryPayment = (propertyId: string) => {
+    setSelectedPropertyId(propertyId);
+    setPaymentDialogOpen(true);
+  };
+
+  const handlePaymentComplete = () => {
+    setPaymentDialogOpen(false);
+    setSelectedPropertyId(null);
+    // Refresh the list to see if property was activated
+    fetchPendingProperties();
+  };
+
   const getPrimaryImage = (images: { url: string; is_primary: boolean }[]) => {
     const primary = images?.find(img => img.is_primary);
     return primary?.url || images?.[0]?.url || '/placeholder.svg';
@@ -194,89 +211,109 @@ export const PendingListingsSection = () => {
   }
 
   return (
-    <div className="mb-6">
-      <div className="flex items-center gap-2 mb-3">
-        <Clock className="w-5 h-5 text-amber-500" />
-        <h3 className="font-semibold text-amber-700 dark:text-amber-400">
-          En attente de validation ({pendingProperties.length})
-        </h3>
-      </div>
-
-      <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-3 mb-3">
-        <div className="flex items-start gap-2">
-          <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-amber-700 dark:text-amber-300">
-            Ces annonces seront publiées automatiquement une fois votre paiement validé par notre équipe.
-          </p>
+    <>
+      <div className="mb-6">
+        <div className="flex items-center gap-2 mb-3">
+          <Clock className="w-5 h-5 text-amber-500" />
+          <h3 className="font-semibold text-amber-700 dark:text-amber-400">
+            En attente de validation ({pendingProperties.length})
+          </h3>
         </div>
-      </div>
 
-      <div className="space-y-3">
-        {pendingProperties.map((property) => (
-          <div
-            key={property.id}
-            className="bg-amber-50/50 dark:bg-amber-900/10 border border-amber-200/50 dark:border-amber-800/50 rounded-xl overflow-hidden"
-          >
-            <div className="flex">
-              <div className="w-24 h-24 flex-shrink-0 relative">
-                <img
-                  src={getPrimaryImage(property.property_images)}
-                  alt={property.title}
-                  className="w-full h-full object-cover opacity-80"
-                />
-                <div className="absolute inset-0 bg-amber-500/20" />
-              </div>
-              <div className="flex-1 p-2">
-                <div className="flex items-start justify-between gap-1">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-sm truncate">{property.title}</h3>
-                    <p className="text-primary font-bold text-sm">{formatPrice(property)}</p>
+        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-3 mb-3">
+          <div className="flex items-start gap-2">
+            <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-amber-700 dark:text-amber-300">
+              Ces annonces seront publiées automatiquement une fois votre paiement validé. Si le paiement a échoué, vous pouvez le relancer.
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          {pendingProperties.map((property) => (
+            <div
+              key={property.id}
+              className="bg-amber-50/50 dark:bg-amber-900/10 border border-amber-200/50 dark:border-amber-800/50 rounded-xl overflow-hidden"
+            >
+              <div className="flex">
+                <div className="w-24 h-24 flex-shrink-0 relative">
+                  <img
+                    src={getPrimaryImage(property.property_images)}
+                    alt={property.title}
+                    className="w-full h-full object-cover opacity-80"
+                  />
+                  <div className="absolute inset-0 bg-amber-500/20" />
+                </div>
+                <div className="flex-1 p-2">
+                  <div className="flex items-start justify-between gap-1">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-sm truncate">{property.title}</h3>
+                      <p className="text-primary font-bold text-sm">{formatPrice(property)}</p>
+                    </div>
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 flex items-center gap-1">
+                      <CreditCard className="w-3 h-3" />
+                      En attente
+                    </span>
                   </div>
-                  <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 flex items-center gap-1">
-                    <CreditCard className="w-3 h-3" />
-                    Paiement en attente
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-0.5">
-                    <Bed className="w-3 h-3" />
-                    {property.bedrooms || 0}
-                  </span>
-                  <span className="flex items-center gap-0.5">
-                    <Bath className="w-3 h-3" />
-                    {property.bathrooms || 0}
-                  </span>
-                  <span className="flex items-center gap-0.5">
-                    <Maximize className="w-3 h-3" />
-                    {property.area}m²
-                  </span>
-                </div>
-                <div className="flex items-center justify-between mt-1">
-                  <p className="text-[10px] text-muted-foreground">
-                    Soumis le {format(new Date(property.payment_created_at), "d MMM yyyy", { locale: fr })}
-                  </p>
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => navigate(`/property/${property.id}`)}
-                      className="p-1 rounded bg-muted"
-                      title="Voir l'aperçu"
-                    >
-                      <Eye className="w-3 h-3 text-muted-foreground" />
-                    </button>
-                    <button
-                      onClick={() => deleteProperty(property.id)}
-                      className="p-1 rounded bg-red-50 dark:bg-red-900/20"
-                      title="Supprimer"
-                    >
-                      <Trash2 className="w-3 h-3 text-red-500" />
-                    </button>
+                  <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-0.5">
+                      <Bed className="w-3 h-3" />
+                      {property.bedrooms || 0}
+                    </span>
+                    <span className="flex items-center gap-0.5">
+                      <Bath className="w-3 h-3" />
+                      {property.bathrooms || 0}
+                    </span>
+                    <span className="flex items-center gap-0.5">
+                      <Maximize className="w-3 h-3" />
+                      {property.area}m²
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between mt-1">
+                    <p className="text-[10px] text-muted-foreground">
+                      Soumis le {format(new Date(property.payment_created_at), "d MMM yyyy", { locale: fr })}
+                    </p>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        size="sm"
+                        variant="default"
+                        className="h-6 px-2 text-[10px]"
+                        onClick={() => handleRetryPayment(property.id)}
+                      >
+                        <RefreshCw className="w-3 h-3 mr-1" />
+                        Payer
+                      </Button>
+                      <button
+                        onClick={() => navigate(`/property/${property.id}`)}
+                        className="p-1 rounded bg-muted"
+                        title="Voir l'aperçu"
+                      >
+                        <Eye className="w-3 h-3 text-muted-foreground" />
+                      </button>
+                      <button
+                        onClick={() => deleteProperty(property.id)}
+                        className="p-1 rounded bg-red-50 dark:bg-red-900/20"
+                        title="Supprimer"
+                      >
+                        <Trash2 className="w-3 h-3 text-red-500" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-    </div>
+
+      {/* Payment Dialog for retrying payment */}
+      <ListingPaymentDialog
+        open={paymentDialogOpen}
+        onOpenChange={setPaymentDialogOpen}
+        listingType={listingType as 'short_term' | 'long_term'}
+        propertyId={selectedPropertyId || undefined}
+        onPaymentComplete={handlePaymentComplete}
+      />
+    </>
   );
 };

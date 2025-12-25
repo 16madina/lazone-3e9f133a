@@ -66,6 +66,7 @@ const PaymentValidationTab = () => {
   } | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [activeTab, setActiveTab] = useState('pending');
+  const [modeFilter, setModeFilter] = useState<'all' | 'short_term' | 'long_term'>('all');
 
   const fetchPayments = async () => {
     setLoading(true);
@@ -370,7 +371,15 @@ const PaymentValidationTab = () => {
     </div>
   );
 
-  const pendingCount = payments.filter((p) => p.status === 'pending').length;
+  const getFilteredPayments = (status: string) => {
+    return payments.filter(p => {
+      const statusMatch = p.status === status;
+      const modeMatch = modeFilter === 'all' || p.listing_type === modeFilter;
+      return statusMatch && modeMatch;
+    });
+  };
+
+  const pendingCount = getFilteredPayments('pending').length;
 
   return (
     <div className="space-y-4">
@@ -390,6 +399,35 @@ const PaymentValidationTab = () => {
         >
           <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
           Actualiser
+        </Button>
+      </div>
+
+      {/* Mode Filter */}
+      <div className="flex gap-2">
+        <Button
+          variant={modeFilter === 'all' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setModeFilter('all')}
+        >
+          Tous
+        </Button>
+        <Button
+          variant={modeFilter === 'short_term' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setModeFilter('short_term')}
+          className={modeFilter === 'short_term' ? 'bg-purple-600 hover:bg-purple-700' : ''}
+        >
+          <Home className="w-3 h-3 mr-1" />
+          Résidence
+        </Button>
+        <Button
+          variant={modeFilter === 'long_term' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setModeFilter('long_term')}
+          className={modeFilter === 'long_term' ? 'bg-blue-600 hover:bg-blue-700' : ''}
+        >
+          <Building className="w-3 h-3 mr-1" />
+          Immobilier
         </Button>
       </div>
 
@@ -424,20 +462,19 @@ const PaymentValidationTab = () => {
           <PaymentNumbersSettings />
         </TabsContent>
 
-        {/* Pending Tab */}
         <TabsContent value="pending" className="mt-4">
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
-          ) : payments.filter(p => p.status === 'pending').length === 0 ? (
+          ) : getFilteredPayments('pending').length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <AlertCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>Aucun paiement en attente</p>
+              <p>Aucun paiement en attente {modeFilter !== 'all' ? `(${modeFilter === 'short_term' ? 'Résidence' : 'Immobilier'})` : ''}</p>
             </div>
           ) : (
             <div className="space-y-3">
-              {payments.filter(p => p.status === 'pending').map((payment) => (
+              {getFilteredPayments('pending').map((payment) => (
                 <PaymentCard key={payment.id} payment={payment} />
               ))}
             </div>
@@ -450,14 +487,14 @@ const PaymentValidationTab = () => {
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
-          ) : payments.filter(p => p.status === 'completed').length === 0 ? (
+          ) : getFilteredPayments('completed').length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <AlertCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>Aucun paiement validé</p>
+              <p>Aucun paiement validé {modeFilter !== 'all' ? `(${modeFilter === 'short_term' ? 'Résidence' : 'Immobilier'})` : ''}</p>
             </div>
           ) : (
             <div className="space-y-3">
-              {payments.filter(p => p.status === 'completed').map((payment) => (
+              {getFilteredPayments('completed').map((payment) => (
                 <PaymentCard key={payment.id} payment={payment} />
               ))}
             </div>
@@ -470,14 +507,14 @@ const PaymentValidationTab = () => {
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
-          ) : payments.filter(p => p.status === 'rejected').length === 0 ? (
+          ) : getFilteredPayments('rejected').length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <AlertCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>Aucun paiement rejeté</p>
+              <p>Aucun paiement rejeté {modeFilter !== 'all' ? `(${modeFilter === 'short_term' ? 'Résidence' : 'Immobilier'})` : ''}</p>
             </div>
           ) : (
             <div className="space-y-3">
-              {payments.filter(p => p.status === 'rejected').map((payment) => (
+              {getFilteredPayments('rejected').map((payment) => (
                 <PaymentCard key={payment.id} payment={payment} />
               ))}
             </div>

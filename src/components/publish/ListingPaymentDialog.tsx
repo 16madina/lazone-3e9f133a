@@ -250,6 +250,11 @@ const ListingPaymentDialog = ({
                 Limite d'annonces atteinte
               </DialogTitle>
               <DialogDescription className="space-y-3 pt-2">
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge variant={listingType === 'short_term' ? 'default' : 'secondary'} className={listingType === 'short_term' ? 'bg-blue-500' : 'bg-emerald-500'}>
+                    {listingType === 'short_term' ? '🏠 Résidence' : '🏢 Immobilier'}
+                  </Badge>
+                </div>
                 <p>
                   Vous n'avez plus d'annonces gratuites.
                 </p>
@@ -286,8 +291,13 @@ const ListingPaymentDialog = ({
                 <CreditCard className="w-5 h-5 text-primary" />
                 Choisir un mode de paiement
               </DialogTitle>
-              <DialogDescription>
-                Montant : <strong>{formatPrice(price.amount, price.symbol)}</strong>
+              <DialogDescription className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Badge variant={listingType === 'short_term' ? 'default' : 'secondary'} className={listingType === 'short_term' ? 'bg-blue-500' : 'bg-emerald-500'}>
+                    {listingType === 'short_term' ? '🏠 Résidence' : '🏢 Immobilier'}
+                  </Badge>
+                </div>
+                <p>Montant : <strong>{formatPrice(price.amount, price.symbol)}</strong></p>
               </DialogDescription>
             </DialogHeader>
 

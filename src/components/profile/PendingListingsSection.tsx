@@ -40,6 +40,8 @@ interface PendingProperty {
   property_images: { url: string; is_primary: boolean }[];
   payment_status: string;
   payment_created_at: string;
+  payment_method?: string;
+  transaction_ref?: string;
 }
 
 export const PendingListingsSection = () => {
@@ -66,7 +68,7 @@ export const PendingListingsSection = () => {
       // Get pending payments with their associated properties
       const { data: payments, error: paymentsError } = await supabase
         .from('listing_payments')
-        .select('property_id, status, created_at')
+        .select('property_id, status, created_at, transaction_ref, payment_method')
         .eq('user_id', user.id)
         .eq('status', 'pending')
         .eq('listing_type', listingType)
@@ -97,11 +99,16 @@ export const PendingListingsSection = () => {
 
       // Merge payment info with properties
       const pendingWithPayments: PendingProperty[] = (properties || []).map(prop => {
-        const payment = payments.find(p => p.property_id === prop.id);
+        const paymentForProp = (payments || [])
+          .filter(p => p.property_id === prop.id)
+          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+
         return {
           ...prop,
-          payment_status: payment?.status || 'pending',
-          payment_created_at: payment?.created_at || prop.created_at
+          payment_status: paymentForProp?.status || 'pending',
+          payment_created_at: paymentForProp?.created_at || prop.created_at,
+          payment_method: (paymentForProp as any)?.payment_method,
+          transaction_ref: (paymentForProp as any)?.transaction_ref,
         };
       });
 
@@ -158,6 +165,30 @@ export const PendingListingsSection = () => {
   const handleRetryPayment = (propertyId: string) => {
     setSelectedPropertyId(propertyId);
     setPaymentDialogOpen(true);
+  };
+
+  const confirmStripePayment = async (transactionRef: string) => {
+    try {
+      const { error } = await supabase.functions.invoke('confirm-stripe-payment', {
+        body: { transactionRef },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Paiement vérifié',
+        description: 'Nous mettons à jour votre annonce…',
+      });
+
+      fetchPendingProperties();
+    } catch (e) {
+      console.error('Error confirming Stripe payment:', e);
+      toast({
+        title: 'Toujours en attente',
+        description: 'Le paiement n\'est pas encore confirmé. Réessayez dans 1 minute.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handlePaymentComplete = () => {
@@ -273,16 +304,22 @@ export const PendingListingsSection = () => {
                     <p className="text-[10px] text-muted-foreground">
                       Soumis le {format(new Date(property.payment_created_at), "d MMM yyyy", { locale: fr })}
                     </p>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        size="sm"
-                        variant="default"
-                        className="h-6 px-2 text-[10px]"
-                        onClick={() => handleRetryPayment(property.id)}
-                      >
-                        <RefreshCw className="w-3 h-3 mr-1" />
-                        Payer
-                      </Button>
+                     <div className="flex items-center gap-1">
+                       <Button
+                         size="sm"
+                         variant="default"
+                         className="h-6 px-2 text-[10px]"
+                         onClick={() => {
+                           if (property.payment_method === 'stripe' && property.transaction_ref) {
+                             confirmStripePayment(property.transaction_ref);
+                           } else {
+                             handleRetryPayment(property.id);
+                           }
+                         }}
+                       >
+                         <RefreshCw className="w-3 h-3 mr-1" />
+                         {property.payment_method === 'stripe' ? 'Actualiser' : 'Payer'}
+                       </Button>
                       <button
                         onClick={() => navigate(`/property/${property.id}`)}
                         className="p-1 rounded bg-muted"

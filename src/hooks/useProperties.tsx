@@ -5,6 +5,7 @@ import { useAppStore } from '@/stores/appStore';
 export type BadgeLevel = 'none' | 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond';
 export type ListingType = 'long_term' | 'short_term';
 export type UserType = 'particulier' | 'proprietaire' | 'demarcheur' | 'agence' | null;
+export type SubscriptionType = 'pro' | 'premium' | null;
 
 export interface Property {
   id: string;
@@ -33,6 +34,10 @@ export interface Property {
   agencyName?: string | null;
   // Discount tiers
   hasDiscounts?: boolean;
+  // Subscription info
+  subscriptionType?: SubscriptionType;
+  isSponsored?: boolean;
+  sponsoredUntil?: string | null;
 }
 
 export const useProperties = () => {
@@ -83,6 +88,13 @@ export const useProperties = () => {
         .select('user_id, user_type, agency_name')
         .in('user_id', userIds);
 
+      // Fetch active subscriptions for users
+      const { data: subscriptionsData } = await supabase
+        .from('storekit_purchases')
+        .select('user_id, product_id, status, expiration_date')
+        .in('user_id', userIds)
+        .eq('status', 'active');
+
       const badgeMap = new Map(
         (badgesData || []).map(b => [b.user_id, b.badge_level as BadgeLevel])
       );
@@ -90,6 +102,19 @@ export const useProperties = () => {
       const profileMap = new Map(
         (profilesData || []).map(p => [p.user_id, { user_type: p.user_type as UserType, agency_name: p.agency_name }])
       );
+
+      // Build subscription map - check for active subscription
+      const subscriptionMap = new Map<string, SubscriptionType>();
+      (subscriptionsData || []).forEach(sub => {
+        const isActive = !sub.expiration_date || new Date(sub.expiration_date) > new Date();
+        if (isActive && (sub.product_id.includes('sub.') || sub.product_id.includes('agency.'))) {
+          if (sub.product_id.includes('premium')) {
+            subscriptionMap.set(sub.user_id, 'premium');
+          } else if (sub.product_id.includes('pro') && !subscriptionMap.has(sub.user_id)) {
+            subscriptionMap.set(sub.user_id, 'pro');
+          }
+        }
+      });
 
       const formattedProperties: Property[] = (propertiesData || []).map((p) => {
         // Sort images: primary first, then by display_order
@@ -138,6 +163,9 @@ export const useProperties = () => {
           userType: userProfile?.user_type || null,
           agencyName: userProfile?.agency_name || null,
           hasDiscounts,
+          subscriptionType: subscriptionMap.get(p.user_id) || null,
+          isSponsored: p.is_sponsored || false,
+          sponsoredUntil: p.sponsored_until || null,
         };
       });
 

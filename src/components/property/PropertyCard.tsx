@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Heart, Bed, Bath, Maximize, MapPin, Calendar, Star, Clock, Tag } from 'lucide-react';
+import { Heart, Bed, Bath, Maximize, MapPin, Calendar, Star, Clock, Tag, Crown, Sparkles } from 'lucide-react';
 import { Property } from '@/hooks/useProperties';
 import { useFavorites } from '@/hooks/useFavorites';
 import { Link } from 'react-router-dom';
@@ -151,6 +151,17 @@ export const PropertyCard = ({ property, userCountry, isFirst = false }: Propert
               <h3 className="font-display font-semibold text-lg leading-tight line-clamp-1">
                 {property.title}
               </h3>
+              {/* Subscription Badge */}
+              {property.subscriptionType && (
+                <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-semibold flex items-center gap-0.5 ${
+                  property.subscriptionType === 'premium' 
+                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white' 
+                    : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
+                }`}>
+                  <Crown className="w-2.5 h-2.5" />
+                  {property.subscriptionType === 'premium' ? 'Premium' : 'Pro'}
+                </span>
+              )}
               {property.vendorBadge && property.vendorBadge !== 'none' && (
                 <VendorBadge level={property.vendorBadge} size="sm" />
               )}

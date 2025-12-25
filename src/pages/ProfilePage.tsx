@@ -53,6 +53,7 @@ import {
 import { useAppStore } from '@/stores/appStore';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useAppMode } from '@/hooks/useAppMode';
+import { UserTypeBadge, getUserTypeLabel } from '@/components/UserTypeBadge';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/hooks/useTheme';
 import { useAdmin } from '@/hooks/useAdmin';
@@ -839,10 +840,18 @@ const ProfilePage = () => {
 
                 {/* Tags */}
                 <div className="flex flex-wrap gap-1.5 mt-2">
-                  <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-medium flex items-center gap-1">
-                    <Users className="w-3 h-3" />
-                    Particulier
-                  </span>
+                  {profile?.user_type && profile.user_type !== 'particulier' ? (
+                    <UserTypeBadge 
+                      userType={profile.user_type} 
+                      agencyName={profile.agency_name}
+                      size="md"
+                    />
+                  ) : (
+                    <span className="px-2 py-0.5 bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20 rounded-full text-xs font-medium flex items-center gap-1">
+                      <User className="w-3 h-3" />
+                      Particulier
+                    </span>
+                  )}
                   {!isEmailVerified && (
                     <>
                       <span className="px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full text-xs font-medium">

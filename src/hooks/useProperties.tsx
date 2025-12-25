@@ -4,6 +4,7 @@ import { useAppStore } from '@/stores/appStore';
 
 export type BadgeLevel = 'none' | 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond';
 export type ListingType = 'long_term' | 'short_term';
+export type UserType = 'particulier' | 'proprietaire' | 'demarcheur' | 'agence' | null;
 
 export interface Property {
   id: string;
@@ -28,6 +29,8 @@ export interface Property {
   createdAt: string;
   userId: string;
   vendorBadge?: BadgeLevel;
+  userType?: UserType;
+  agencyName?: string | null;
   // Discount tiers
   hasDiscounts?: boolean;
 }
@@ -74,8 +77,18 @@ export const useProperties = () => {
         .select('user_id, badge_level')
         .in('user_id', userIds);
 
+      // Fetch user profiles for user_type and agency_name
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('user_id, user_type, agency_name')
+        .in('user_id', userIds);
+
       const badgeMap = new Map(
         (badgesData || []).map(b => [b.user_id, b.badge_level as BadgeLevel])
+      );
+
+      const profileMap = new Map(
+        (profilesData || []).map(p => [p.user_id, { user_type: p.user_type as UserType, agency_name: p.agency_name }])
       );
 
       const formattedProperties: Property[] = (propertiesData || []).map((p) => {
@@ -96,6 +109,8 @@ export const useProperties = () => {
           p.discount_14_nights || 
           p.discount_30_nights
         );
+
+        const userProfile = profileMap.get(p.user_id);
 
         return {
           id: p.id,
@@ -120,6 +135,8 @@ export const useProperties = () => {
           createdAt: p.created_at,
           userId: p.user_id,
           vendorBadge: badgeMap.get(p.user_id) || 'none',
+          userType: userProfile?.user_type || null,
+          agencyName: userProfile?.agency_name || null,
           hasDiscounts,
         };
       });

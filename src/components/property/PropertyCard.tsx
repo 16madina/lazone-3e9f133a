@@ -7,6 +7,7 @@ import { formatPriceWithCurrency } from '@/data/currencies';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination } from 'swiper/modules';
 import { VendorBadge } from '@/components/VendorBadge';
+import { UserTypeBadge } from '@/components/UserTypeBadge';
 
 import 'swiper/css';
 import 'swiper/css/pagination';
@@ -146,12 +147,20 @@ export const PropertyCard = ({ property, userCountry, isFirst = false }: Propert
       <Link to={`/property/${property.id}`}>
         <div className="p-4">
           <div className="flex items-start justify-between mb-2">
-            <div className="flex items-center gap-2 flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-1 min-w-0 flex-wrap">
               <h3 className="font-display font-semibold text-lg leading-tight line-clamp-1">
                 {property.title}
               </h3>
               {property.vendorBadge && property.vendorBadge !== 'none' && (
                 <VendorBadge level={property.vendorBadge} size="sm" />
+              )}
+              {property.userType && property.userType !== 'particulier' && (
+                <UserTypeBadge 
+                  userType={property.userType} 
+                  agencyName={property.agencyName}
+                  size="sm"
+                  showLabel={true}
+                />
               )}
             </div>
           </div>

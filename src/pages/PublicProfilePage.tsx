@@ -17,6 +17,7 @@ import { africanCountries } from '@/data/africanCountries';
 import { Property } from '@/hooks/useProperties';
 import { toast } from '@/hooks/use-toast';
 import { VendorBadge, BadgeLevel } from '@/components/VendorBadge';
+import { UserTypeBadge } from '@/components/UserTypeBadge';
 
 interface UserProfile {
   id: string;
@@ -26,6 +27,8 @@ interface UserProfile {
   email_verified: boolean | null;
   country: string | null;
   created_at: string;
+  user_type: 'particulier' | 'proprietaire' | 'demarcheur' | 'agence' | null;
+  agency_name: string | null;
 }
 
 interface Review {
@@ -85,7 +88,7 @@ const PublicProfilePage = () => {
       // Only select non-sensitive public profile fields
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, user_id, full_name, avatar_url, email_verified, country, created_at')
+        .select('id, user_id, full_name, avatar_url, email_verified, country, created_at, user_type, agency_name')
         .eq('user_id', userId)
         .maybeSingle();
 
@@ -396,6 +399,17 @@ const PublicProfilePage = () => {
                   </span>
                 )}
               </div>
+
+              {/* User Type Badge */}
+              {profile.user_type && profile.user_type !== 'particulier' && (
+                <div className="mt-2">
+                  <UserTypeBadge 
+                    userType={profile.user_type} 
+                    agencyName={profile.agency_name}
+                    size="md"
+                  />
+                </div>
+              )}
 
               <div className="mt-2 space-y-1">
                 {profile.country && (

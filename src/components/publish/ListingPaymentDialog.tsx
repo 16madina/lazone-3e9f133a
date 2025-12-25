@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, CreditCard, AlertCircle, Check, Phone } from 'lucide-react';
+import { Loader2, CreditCard, AlertCircle, Check, Phone, Clock, Copy } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
@@ -25,6 +25,12 @@ interface ListingPaymentDialogProps {
   onPaymentComplete: () => void;
 }
 
+// Numéros de réception des paiements (à configurer)
+const PAYMENT_NUMBERS = {
+  mtn: '+229 XX XX XX XX',
+  moov: '+229 XX XX XX XX',
+};
+
 const ListingPaymentDialog = ({
   open,
   onOpenChange,
@@ -35,9 +41,8 @@ const ListingPaymentDialog = ({
 }: ListingPaymentDialogProps) => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<'mobile_money' | null>(null);
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [step, setStep] = useState<'info' | 'payment' | 'success'>('info');
+  const [step, setStep] = useState<'info' | 'payment' | 'pending'>('info');
 
   const formatPrice = (amount: number, symbol: string) => {
     return new Intl.NumberFormat('fr-FR').format(amount) + ' ' + symbol;
@@ -45,7 +50,14 @@ const ListingPaymentDialog = ({
 
   const handleProceedToPayment = () => {
     setStep('payment');
-    setPaymentMethod('mobile_money');
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({
+      title: 'Copié !',
+      description: 'Numéro copié dans le presse-papier',
+    });
   };
 
   const handleSubmitPayment = async () => {
@@ -62,42 +74,32 @@ const ListingPaymentDialog = ({
 
     setLoading(true);
     try {
-      // Create a pending payment record
+      // Create a PENDING payment record (will be validated by admin)
       const { data: payment, error: paymentError } = await supabase
         .from('listing_payments')
         .insert({
           user_id: user.id,
           amount: price.amount,
           currency: price.currency,
-          status: 'completed', // For now, auto-complete. In production, integrate with payment provider
+          status: 'pending', // Pending until admin validates
           payment_method: 'mobile_money',
           transaction_ref: `LZ-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          completed_at: new Date().toISOString(),
         })
         .select()
         .single();
 
       if (paymentError) throw paymentError;
 
-      setStep('success');
+      setStep('pending');
       
       toast({
-        title: 'Paiement réussi !',
-        description: 'Vous pouvez maintenant publier votre annonce',
+        title: 'Demande envoyée !',
+        description: 'Votre paiement sera validé sous peu par un administrateur',
       });
-
-      // Wait a moment before closing
-      setTimeout(() => {
-        onPaymentComplete();
-        onOpenChange(false);
-        setStep('info');
-        setPhoneNumber('');
-        setPaymentMethod(null);
-      }, 2000);
     } catch (error) {
       console.error('Payment error:', error);
       toast({
-        title: 'Erreur de paiement',
+        title: 'Erreur',
         description: 'Une erreur est survenue. Veuillez réessayer.',
         variant: 'destructive',
       });
@@ -109,9 +111,11 @@ const ListingPaymentDialog = ({
   const handleClose = () => {
     if (!loading) {
       onOpenChange(false);
-      setStep('info');
-      setPhoneNumber('');
-      setPaymentMethod(null);
+      // Reset after a delay to allow animation
+      setTimeout(() => {
+        setStep('info');
+        setPhoneNumber('');
+      }, 300);
     }
   };
 
@@ -163,20 +167,53 @@ const ListingPaymentDialog = ({
                 Paiement Mobile Money
               </DialogTitle>
               <DialogDescription>
-                Entrez votre numéro de téléphone pour effectuer le paiement
+                Effectuez un transfert vers l'un de nos numéros puis confirmez
               </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-4 py-4">
               <div className="bg-primary/10 p-3 rounded-lg text-center">
-                <p className="text-sm text-muted-foreground">Montant à payer</p>
+                <p className="text-sm text-muted-foreground">Montant à envoyer</p>
                 <p className="text-2xl font-bold text-primary">
                   {formatPrice(price.amount, price.symbol)}
                 </p>
               </div>
 
+              {/* Payment numbers */}
               <div className="space-y-2">
-                <Label htmlFor="phone">Numéro Mobile Money</Label>
+                <Label className="text-sm font-medium">Envoyez à l'un de ces numéros :</Label>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between bg-muted/50 p-3 rounded-lg">
+                    <div>
+                      <p className="text-xs text-muted-foreground">MTN Mobile Money</p>
+                      <p className="font-mono font-medium">{PAYMENT_NUMBERS.mtn}</p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copyToClipboard(PAYMENT_NUMBERS.mtn)}
+                    >
+                      <Copy className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <div className="flex items-center justify-between bg-muted/50 p-3 rounded-lg">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Moov Money</p>
+                      <p className="font-mono font-medium">{PAYMENT_NUMBERS.moov}</p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copyToClipboard(PAYMENT_NUMBERS.moov)}
+                    >
+                      <Copy className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="phone">Votre numéro (pour confirmation)</Label>
                 <Input
                   id="phone"
                   type="tel"
@@ -186,7 +223,7 @@ const ListingPaymentDialog = ({
                   disabled={loading}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Vous recevrez une demande de paiement sur ce numéro
+                  Entrez le numéro depuis lequel vous avez effectué le transfert
                 </p>
               </div>
             </div>
@@ -208,12 +245,12 @@ const ListingPaymentDialog = ({
                 {loading ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Traitement...
+                    Envoi...
                   </>
                 ) : (
                   <>
-                    <CreditCard className="w-4 h-4 mr-2" />
-                    Confirmer le paiement
+                    <Check className="w-4 h-4 mr-2" />
+                    J'ai effectué le transfert
                   </>
                 )}
               </Button>
@@ -221,15 +258,21 @@ const ListingPaymentDialog = ({
           </>
         )}
 
-        {step === 'success' && (
+        {step === 'pending' && (
           <div className="py-8 text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Check className="w-8 h-8 text-green-600" />
+            <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Clock className="w-8 h-8 text-amber-600" />
             </div>
-            <h3 className="text-lg font-semibold mb-2">Paiement réussi !</h3>
-            <p className="text-muted-foreground">
-              Vous pouvez maintenant publier votre annonce
+            <h3 className="text-lg font-semibold mb-2">Paiement en attente de validation</h3>
+            <p className="text-muted-foreground mb-4">
+              Un administrateur va vérifier votre paiement. Vous recevrez une notification une fois validé.
             </p>
+            <p className="text-sm text-muted-foreground">
+              Référence: <span className="font-mono">LZ-{Date.now().toString().slice(-6)}</span>
+            </p>
+            <Button onClick={handleClose} className="mt-4" variant="outline">
+              Fermer
+            </Button>
           </div>
         )}
       </DialogContent>

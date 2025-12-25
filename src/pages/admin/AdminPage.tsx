@@ -33,7 +33,8 @@ import {
   ExternalLink,
   Upload,
   GripVertical,
-  Wallet
+  Wallet,
+  CreditCard
 } from 'lucide-react';
 import { 
   DndContext, 
@@ -83,8 +84,9 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils';
 import { africanCountries } from '@/data/africanCountries';
 import ListingLimitsTab from '@/components/admin/ListingLimitsTab';
+import PaymentValidationTab from '@/components/admin/PaymentValidationTab';
 
-type TabType = 'users' | 'properties' | 'properties-residence' | 'reports' | 'admins' | 'sponsored' | 'notifications' | 'banners' | 'limits';
+type TabType = 'users' | 'properties' | 'properties-residence' | 'reports' | 'admins' | 'sponsored' | 'notifications' | 'banners' | 'limits' | 'payments';
 
 // Predefined notification templates
 const notificationTemplates = [
@@ -1226,6 +1228,7 @@ const AdminPage = () => {
     { id: 'banners' as TabType, label: 'Bannières', icon: Image },
     { id: 'notifications' as TabType, label: 'Notifs', icon: Bell },
     ...(isAdmin ? [
+      { id: 'payments' as TabType, label: 'Paiements', icon: CreditCard },
       { id: 'limits' as TabType, label: 'Limites', icon: Wallet },
       { id: 'admins' as TabType, label: 'Admins', icon: Shield },
     ] : []),
@@ -2343,6 +2346,11 @@ const AdminPage = () => {
             {/* Limits Tab */}
             {activeTab === 'limits' && isAdmin && (
               <ListingLimitsTab />
+            )}
+
+            {/* Payments Validation Tab */}
+            {activeTab === 'payments' && isAdmin && (
+              <PaymentValidationTab />
             )}
           </>
         )}

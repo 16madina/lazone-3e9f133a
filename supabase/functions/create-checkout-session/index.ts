@@ -103,6 +103,10 @@ serve(async (req) => {
       }
     );
 
+    const successUrlWithSessionId = successUrlFinal.includes("?")
+      ? `${successUrlFinal}&session_id={CHECKOUT_SESSION_ID}`
+      : `${successUrlFinal}?session_id={CHECKOUT_SESSION_ID}`;
+
     // Create checkout session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
@@ -122,7 +126,7 @@ serve(async (req) => {
         },
       ],
       mode: "payment",
-      success_url: successUrlFinal,
+      success_url: successUrlWithSessionId,
       cancel_url: cancelUrlFinal,
       metadata: {
         user_id: user.id,

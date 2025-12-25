@@ -305,9 +305,22 @@ const PublishPage = () => {
 
       const propertyIdFromUrl = searchParams.get('propertyId');
       const transactionRefFromUrl = searchParams.get('transactionRef');
+      const sessionIdFromUrl = searchParams.get('session_id');
       const targetPropertyId = restoredPropertyId || propertyIdFromUrl;
 
       let cancelled = false;
+
+      const confirmStripeIfPossible = async () => {
+        if (!transactionRefFromUrl) return;
+
+        try {
+          await supabase.functions.invoke('confirm-stripe-payment', {
+            body: { transactionRef: transactionRefFromUrl, sessionId: sessionIdFromUrl },
+          });
+        } catch (e) {
+          console.error('Error confirming Stripe payment:', e);
+        }
+      };
 
       const waitForActivation = async () => {
         if (!targetPropertyId) {
@@ -318,7 +331,10 @@ const PublishPage = () => {
           return;
         }
 
-        // Wait for backend to validate and activate the listing (webhook)
+        // Try to reconcile immediately (fallback when webhook is delayed)
+        await confirmStripeIfPossible();
+
+        // Wait for backend to validate and activate the listing
         for (let i = 0; i < 12; i++) {
           if (cancelled) return;
 
@@ -337,7 +353,6 @@ const PublishPage = () => {
             return;
           }
 
-          // If we have a transaction ref, we can at least refresh limits while waiting
           if (transactionRefFromUrl) {
             refetchLimits();
           }

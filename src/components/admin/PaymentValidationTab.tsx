@@ -35,6 +35,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useAuth } from '@/hooks/useAuth';
+import { useAppMode } from '@/hooks/useAppMode';
 import PaymentNumbersSettings from './PaymentNumbersSettings';
 
 interface Payment {
@@ -57,6 +58,7 @@ interface Payment {
 
 const PaymentValidationTab = () => {
   const { user } = useAuth();
+  const { isResidence } = useAppMode();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
@@ -66,7 +68,9 @@ const PaymentValidationTab = () => {
   } | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [activeTab, setActiveTab] = useState('pending');
-  const [modeFilter, setModeFilter] = useState<'all' | 'short_term' | 'long_term'>('all');
+  
+  // Filter automatically based on current app mode
+  const currentModeFilter: 'short_term' | 'long_term' = isResidence ? 'short_term' : 'long_term';
 
   const fetchPayments = async () => {
     setLoading(true);
@@ -374,7 +378,7 @@ const PaymentValidationTab = () => {
   const getFilteredPayments = (status: string) => {
     return payments.filter(p => {
       const statusMatch = p.status === status;
-      const modeMatch = modeFilter === 'all' || p.listing_type === modeFilter;
+      const modeMatch = p.listing_type === currentModeFilter;
       return statusMatch && modeMatch;
     });
   };
@@ -402,33 +406,19 @@ const PaymentValidationTab = () => {
         </Button>
       </div>
 
-      {/* Mode Filter */}
-      <div className="flex gap-2">
-        <Button
-          variant={modeFilter === 'all' ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => setModeFilter('all')}
-        >
-          Tous
-        </Button>
-        <Button
-          variant={modeFilter === 'short_term' ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => setModeFilter('short_term')}
-          className={modeFilter === 'short_term' ? 'bg-purple-600 hover:bg-purple-700' : ''}
-        >
-          <Home className="w-3 h-3 mr-1" />
-          Résidence
-        </Button>
-        <Button
-          variant={modeFilter === 'long_term' ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => setModeFilter('long_term')}
-          className={modeFilter === 'long_term' ? 'bg-blue-600 hover:bg-blue-700' : ''}
-        >
-          <Building className="w-3 h-3 mr-1" />
-          Immobilier
-        </Button>
+      {/* Current Mode Indicator */}
+      <div className={`flex items-center gap-2 p-3 rounded-lg border ${isResidence ? 'bg-purple-500/10 border-purple-500/30' : 'bg-blue-500/10 border-blue-500/30'}`}>
+        {isResidence ? (
+          <>
+            <Home className="w-4 h-4 text-purple-600" />
+            <span className="text-sm font-medium text-purple-700">Mode Résidence - Paiements short_term</span>
+          </>
+        ) : (
+          <>
+            <Building className="w-4 h-4 text-blue-600" />
+            <span className="text-sm font-medium text-blue-700">Mode Immobilier - Paiements long_term</span>
+          </>
+        )}
       </div>
 
       {/* Tabs */}
@@ -470,7 +460,7 @@ const PaymentValidationTab = () => {
           ) : getFilteredPayments('pending').length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <AlertCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>Aucun paiement en attente {modeFilter !== 'all' ? `(${modeFilter === 'short_term' ? 'Résidence' : 'Immobilier'})` : ''}</p>
+              <p>Aucun paiement en attente ({isResidence ? 'Résidence' : 'Immobilier'})</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -490,7 +480,7 @@ const PaymentValidationTab = () => {
           ) : getFilteredPayments('completed').length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <AlertCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>Aucun paiement validé {modeFilter !== 'all' ? `(${modeFilter === 'short_term' ? 'Résidence' : 'Immobilier'})` : ''}</p>
+              <p>Aucun paiement validé ({isResidence ? 'Résidence' : 'Immobilier'})</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -510,7 +500,7 @@ const PaymentValidationTab = () => {
           ) : getFilteredPayments('rejected').length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <AlertCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>Aucun paiement rejeté {modeFilter !== 'all' ? `(${modeFilter === 'short_term' ? 'Résidence' : 'Immobilier'})` : ''}</p>
+              <p>Aucun paiement rejeté ({isResidence ? 'Résidence' : 'Immobilier'})</p>
             </div>
           ) : (
             <div className="space-y-3">

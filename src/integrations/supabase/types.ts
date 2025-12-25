@@ -53,6 +53,27 @@ export type Database = {
         }
         Relationships: []
       }
+      app_settings: {
+        Row: {
+          id: string
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          id: string
+          updated_at?: string
+          updated_by?: string | null
+          value: Json
+        }
+        Update: {
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
       appointments: {
         Row: {
           check_in_date: string | null
@@ -286,6 +307,53 @@ export type Database = {
           updated_by?: string | null
         }
         Relationships: []
+      }
+      listing_payments: {
+        Row: {
+          amount: number
+          completed_at: string | null
+          created_at: string
+          currency: string
+          id: string
+          payment_method: string | null
+          property_id: string | null
+          status: string
+          transaction_ref: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          completed_at?: string | null
+          created_at?: string
+          currency: string
+          id?: string
+          payment_method?: string | null
+          property_id?: string | null
+          status?: string
+          transaction_ref?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          completed_at?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          payment_method?: string | null
+          property_id?: string | null
+          status?: string
+          transaction_ref?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_payments_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       message_reactions: {
         Row: {

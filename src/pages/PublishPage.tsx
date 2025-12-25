@@ -40,6 +40,9 @@ import LocationMapPicker, { countryCoordinates } from '@/components/publish/Loca
 import { useCamera, isNativePlatform } from '@/hooks/useNativePlugins';
 import SectionTutorialButton from '@/components/tutorial/SectionTutorialButton';
 import EmailVerificationRequired from '@/components/EmailVerificationRequired';
+import ListingPaymentDialog from '@/components/publish/ListingPaymentDialog';
+import { useListingLimit } from '@/hooks/useListingLimit';
+import { Badge } from '@/components/ui/badge';
 import heroBg3 from '@/assets/hero-bg-3.jpg';
 
 type PropertyType = 'house' | 'apartment' | 'land' | 'commercial';
@@ -120,12 +123,21 @@ const PublishPage = () => {
   const { user, profile, isEmailVerified } = useAuth();
   const { isResidence } = useAppMode();
   const { takePicture, pickMultiple, loading: cameraLoading } = useCamera();
+  const { 
+    settings: limitSettings, 
+    needsPayment, 
+    remainingFreeListings, 
+    priceForUser,
+    refetch: refetchLimits
+  } = useListingLimit();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [images, setImages] = useState<File[]>([]);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [hasPaid, setHasPaid] = useState(false);
   
   // Form state
   const [propertyType, setPropertyType] = useState<PropertyType>('house');
@@ -601,6 +613,12 @@ const PublishPage = () => {
       return;
     }
 
+    // Check listing limit - if user needs to pay and hasn't paid yet
+    if (needsPayment && !hasPaid) {
+      setShowPaymentDialog(true);
+      return;
+    }
+
     // Content filtering check
     const contentCheck = filterMultipleFields({
       title: title.trim(),
@@ -705,6 +723,13 @@ const PublishPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePaymentComplete = () => {
+    setHasPaid(true);
+    refetchLimits();
+    // Auto-submit after payment
+    setTimeout(() => handleSubmit(), 500);
   };
 
   const ErrorMessage = ({ message }: { message?: string }) => {
@@ -1887,6 +1912,16 @@ const PublishPage = () => {
       </div>
 
       {user && <SectionTutorialButton section="publish" />}
+
+      {/* Payment Dialog */}
+      <ListingPaymentDialog
+        open={showPaymentDialog}
+        onOpenChange={setShowPaymentDialog}
+        price={priceForUser}
+        freeListings={limitSettings?.free_listings || 3}
+        currentListings={limitSettings?.free_listings ? limitSettings.free_listings - remainingFreeListings : 0}
+        onPaymentComplete={handlePaymentComplete}
+      />
     </div>
   );
 };

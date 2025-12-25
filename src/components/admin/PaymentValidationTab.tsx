@@ -11,7 +11,9 @@ import {
   CheckCircle2,
   XCircle,
   RefreshCw,
-  Settings
+  Settings,
+  Home,
+  Building
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -45,6 +47,8 @@ interface Payment {
   transaction_ref: string | null;
   created_at: string;
   completed_at: string | null;
+  sender_phone: string | null;
+  listing_type: string | null;
   user_name: string | null;
   user_phone: string | null;
   user_email: string | null;
@@ -236,6 +240,23 @@ const PaymentValidationTab = () => {
     }
   };
 
+  const getListingTypeBadge = (listingType: string | null) => {
+    if (listingType === 'short_term') {
+      return (
+        <Badge variant="outline" className="bg-purple-500/10 text-purple-600 border-purple-500/30">
+          <Home className="w-3 h-3 mr-1" />
+          Résidence
+        </Badge>
+      );
+    }
+    return (
+      <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-500/30">
+        <Building className="w-3 h-3 mr-1" />
+        Immobilier
+      </Badge>
+    );
+  };
+
   const PaymentCard = ({ payment }: { payment: Payment }) => (
     <div className="bg-card border rounded-xl p-4 space-y-3">
       {/* Header */}
@@ -254,7 +275,10 @@ const PaymentValidationTab = () => {
             </div>
           </div>
         </div>
-        {getStatusBadge(payment.status)}
+        <div className="flex flex-col items-end gap-1">
+          {getStatusBadge(payment.status)}
+          {getListingTypeBadge(payment.listing_type)}
+        </div>
       </div>
 
       {/* Details */}
@@ -265,9 +289,18 @@ const PaymentValidationTab = () => {
             {formatPrice(payment.amount, payment.currency)}
           </p>
         </div>
-        {payment.user_phone && (
+        {payment.sender_phone && (
+          <div className="bg-green-500/10 p-2 rounded-lg border border-green-500/30">
+            <p className="text-green-700 text-xs font-medium">N° expéditeur</p>
+            <p className="font-medium flex items-center gap-1 text-green-800">
+              <Phone className="w-3 h-3" />
+              {payment.sender_phone}
+            </p>
+          </div>
+        )}
+        {payment.user_phone && !payment.sender_phone && (
           <div className="bg-muted/50 p-2 rounded-lg">
-            <p className="text-muted-foreground text-xs">Téléphone</p>
+            <p className="text-muted-foreground text-xs">Téléphone profil</p>
             <p className="font-medium flex items-center gap-1">
               <Phone className="w-3 h-3" />
               {payment.user_phone}
@@ -275,6 +308,13 @@ const PaymentValidationTab = () => {
           </div>
         )}
       </div>
+
+      {/* Show profile phone if sender phone is different */}
+      {payment.sender_phone && payment.user_phone && payment.sender_phone !== payment.user_phone && (
+        <div className="text-xs text-muted-foreground bg-muted/30 p-2 rounded">
+          Téléphone profil: {payment.user_phone}
+        </div>
+      )}
 
       {payment.transaction_ref && (
         <div className="text-xs text-muted-foreground">

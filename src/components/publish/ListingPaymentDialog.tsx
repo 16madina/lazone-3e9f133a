@@ -250,8 +250,7 @@ const ListingPaymentDialog = ({
               </DialogTitle>
               <DialogDescription className="space-y-3 pt-2">
                 <p>
-                  Vous avez déjà publié <strong>{currentListings}</strong> annonces.
-                  Les {freeListings} premières annonces sont gratuites.
+                  Vous n'avez plus d'annonces gratuites.
                 </p>
                 <div className="bg-muted p-4 rounded-lg">
                   <p className="text-sm text-muted-foreground mb-2">

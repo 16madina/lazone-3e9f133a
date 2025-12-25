@@ -5,7 +5,11 @@ import { countryCurrencyMap } from '@/data/currencies';
 
 export interface ListingLimitSettings {
   enabled: boolean;
-  free_listings: number;
+  free_listings_default: number;
+  free_listings_agence: number;
+  free_listings_particulier: number;
+  free_listings_proprietaire: number;
+  free_listings_demarcheur: number;
   price_per_extra: number;
   currency: string;
 }
@@ -56,7 +60,11 @@ export const useListingLimit = () => {
       // Default settings if not found
       setSettings({
         enabled: true,
-        free_listings: 3,
+        free_listings_default: 3,
+        free_listings_agence: 1,
+        free_listings_particulier: 3,
+        free_listings_proprietaire: 3,
+        free_listings_demarcheur: 3,
         price_per_extra: 1000,
         currency: 'XOF',
       });
@@ -169,8 +177,25 @@ export const useListingLimit = () => {
     }
   }, [user, fetchUserListingsCount, fetchAvailableCredits]);
 
-  // Get the free listings limit (use explicit check for 0)
-  const freeListingsLimit = settings?.free_listings !== undefined ? settings.free_listings : 3;
+  // Get the free listings limit based on user type
+  const getFreeListingsForUserType = (userType: string | null | undefined): number => {
+    if (!settings) return 3;
+    
+    switch (userType) {
+      case 'agence':
+        return settings.free_listings_agence ?? 1;
+      case 'particulier':
+        return settings.free_listings_particulier ?? 3;
+      case 'proprietaire':
+        return settings.free_listings_proprietaire ?? 3;
+      case 'demarcheur':
+        return settings.free_listings_demarcheur ?? 3;
+      default:
+        return settings.free_listings_default ?? 3;
+    }
+  };
+
+  const freeListingsLimit = getFreeListingsForUserType(profile?.user_type);
 
   // Calculate if user needs to pay (considering available credits)
   // Important: when free_listings is 0, payment is always required

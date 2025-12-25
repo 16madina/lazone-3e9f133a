@@ -1972,7 +1972,7 @@ const PublishPage = () => {
         open={showPaymentDialog}
         onOpenChange={setShowPaymentDialog}
         price={priceForUser}
-        freeListings={limitSettings?.free_listings ?? 3}
+        freeListings={remainingFreeListings + userListingsCount}
         currentListings={userListingsCount}
         onPaymentComplete={handlePaymentComplete}
         listingType={isResidence ? 'short_term' : 'long_term'}

@@ -357,8 +357,13 @@ const ListingPaymentDialog = ({
                 <Phone className="w-5 h-5 text-primary" />
                 Paiement Mobile Money
               </DialogTitle>
-              <DialogDescription>
-                {settings?.instructions || 'Effectuez un transfert vers l\'un de nos numéros puis confirmez'}
+              <DialogDescription className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Badge variant={listingType === 'short_term' ? 'default' : 'secondary'} className={listingType === 'short_term' ? 'bg-blue-500' : 'bg-emerald-500'}>
+                    {listingType === 'short_term' ? '🏠 Résidence' : '🏢 Immobilier'}
+                  </Badge>
+                </div>
+                <p>{settings?.instructions || "Effectuez un transfert vers l'un de nos numéros puis confirmez"}</p>
               </DialogDescription>
             </DialogHeader>
 

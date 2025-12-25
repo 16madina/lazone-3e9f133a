@@ -204,25 +204,82 @@ const ListingLimitsTab = () => {
             />
           </div>
 
-          {/* Free Listings */}
-          <div className="space-y-2">
-            <Label htmlFor="free_listings">Annonces gratuites par utilisateur</Label>
-            <Input
-              id="free_listings"
-              type="number"
-              min="0"
-              max="100"
-              value={localSettings.free_listings}
-              onChange={(e) =>
-                setLocalSettings({
-                  ...localSettings,
-                  free_listings: parseInt(e.target.value) || 0,
-                })
-              }
-              className="max-w-[200px]"
-            />
+          {/* Free Listings by User Type */}
+          <div className="space-y-4">
+            <Label className="font-medium">Annonces gratuites par type d'utilisateur</Label>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="free_listings_particulier" className="text-sm text-muted-foreground">Particuliers</Label>
+                <Input
+                  id="free_listings_particulier"
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={localSettings.free_listings_particulier}
+                  onChange={(e) =>
+                    setLocalSettings({
+                      ...localSettings,
+                      free_listings_particulier: parseInt(e.target.value) || 0,
+                    })
+                  }
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="free_listings_proprietaire" className="text-sm text-muted-foreground">Propriétaires</Label>
+                <Input
+                  id="free_listings_proprietaire"
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={localSettings.free_listings_proprietaire}
+                  onChange={(e) =>
+                    setLocalSettings({
+                      ...localSettings,
+                      free_listings_proprietaire: parseInt(e.target.value) || 0,
+                    })
+                  }
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="free_listings_demarcheur" className="text-sm text-muted-foreground">Démarcheurs</Label>
+                <Input
+                  id="free_listings_demarcheur"
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={localSettings.free_listings_demarcheur}
+                  onChange={(e) =>
+                    setLocalSettings({
+                      ...localSettings,
+                      free_listings_demarcheur: parseInt(e.target.value) || 0,
+                    })
+                  }
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="free_listings_agence" className="text-sm text-muted-foreground">Agences</Label>
+                <Input
+                  id="free_listings_agence"
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={localSettings.free_listings_agence}
+                  onChange={(e) =>
+                    setLocalSettings({
+                      ...localSettings,
+                      free_listings_agence: parseInt(e.target.value) || 0,
+                    })
+                  }
+                />
+              </div>
+            </div>
+            
             <p className="text-xs text-muted-foreground">
-              Nombre d'annonces qu'un utilisateur peut publier gratuitement
+              Chaque type d'utilisateur peut publier le nombre d'annonces gratuites indiqué ci-dessus
             </p>
           </div>
 

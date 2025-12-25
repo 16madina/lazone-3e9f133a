@@ -12,10 +12,9 @@ export const PRODUCT_IDS = {
   // Packs
   LISTING_PACK_5: 'com.lazone.listing.pack5',
   LISTING_PACK_10: 'com.lazone.listing.pack10',
-  // Agency subscriptions
-  AGENCY_BASIC_MONTHLY: 'com.lazone.agency.basic.monthly',
-  AGENCY_PRO_MONTHLY: 'com.lazone.agency.pro.monthly',
-  AGENCY_PREMIUM_MONTHLY: 'com.lazone.agency.premium.monthly',
+  // Subscriptions (for everyone)
+  SUB_PRO_MONTHLY: 'com.lazone.sub.pro.monthly',
+  SUB_PREMIUM_MONTHLY: 'com.lazone.sub.premium.monthly',
 };
 
 // Credits per product
@@ -23,9 +22,14 @@ export const CREDITS_PER_PRODUCT: Record<string, number> = {
   [PRODUCT_IDS.LISTING_SINGLE]: 1,
   [PRODUCT_IDS.LISTING_PACK_5]: 5,
   [PRODUCT_IDS.LISTING_PACK_10]: 10,
-  [PRODUCT_IDS.AGENCY_BASIC_MONTHLY]: 10,
-  [PRODUCT_IDS.AGENCY_PRO_MONTHLY]: 30,
-  [PRODUCT_IDS.AGENCY_PREMIUM_MONTHLY]: 999, // Unlimited
+  [PRODUCT_IDS.SUB_PRO_MONTHLY]: 30,
+  [PRODUCT_IDS.SUB_PREMIUM_MONTHLY]: 999, // Unlimited
+};
+
+// Sponsored listings per subscription
+export const SPONSORED_LISTINGS_PER_PRODUCT: Record<string, number> = {
+  [PRODUCT_IDS.SUB_PRO_MONTHLY]: 2,
+  [PRODUCT_IDS.SUB_PREMIUM_MONTHLY]: 4,
 };
 
 export interface StoreKitProduct {
@@ -102,27 +106,18 @@ const mockStoreKit: StoreKitPlugin = {
         type: 'consumable',
       },
       {
-        id: PRODUCT_IDS.AGENCY_BASIC_MONTHLY,
-        displayName: 'Agence Basic',
-        description: '10 annonces/mois',
-        price: '5000',
-        displayPrice: '5 000 FCFA/mois',
-        type: 'autoRenewable',
-        subscriptionPeriod: { unit: 'month', value: 1 },
-      },
-      {
-        id: PRODUCT_IDS.AGENCY_PRO_MONTHLY,
-        displayName: 'Agence Pro',
-        description: '30 annonces/mois + Badge Pro',
+        id: PRODUCT_IDS.SUB_PRO_MONTHLY,
+        displayName: 'Abonnement Pro',
+        description: '30 annonces/mois + Badge Pro + 2 sponsos',
         price: '12000',
         displayPrice: '12 000 FCFA/mois',
         type: 'autoRenewable',
         subscriptionPeriod: { unit: 'month', value: 1 },
       },
       {
-        id: PRODUCT_IDS.AGENCY_PREMIUM_MONTHLY,
-        displayName: 'Agence Premium',
-        description: 'Annonces illimitées + Mise en avant',
+        id: PRODUCT_IDS.SUB_PREMIUM_MONTHLY,
+        displayName: 'Abonnement Premium',
+        description: 'Annonces illimitées + 4 sponsos + Support prioritaire',
         price: '25000',
         displayPrice: '25 000 FCFA/mois',
         type: 'autoRenewable',

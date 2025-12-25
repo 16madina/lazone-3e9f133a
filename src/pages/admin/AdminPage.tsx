@@ -32,7 +32,8 @@ import {
   Edit2,
   ExternalLink,
   Upload,
-  GripVertical
+  GripVertical,
+  Wallet
 } from 'lucide-react';
 import { 
   DndContext, 
@@ -81,8 +82,9 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { africanCountries } from '@/data/africanCountries';
+import ListingLimitsTab from '@/components/admin/ListingLimitsTab';
 
-type TabType = 'users' | 'properties' | 'properties-residence' | 'reports' | 'admins' | 'sponsored' | 'notifications' | 'banners';
+type TabType = 'users' | 'properties' | 'properties-residence' | 'reports' | 'admins' | 'sponsored' | 'notifications' | 'banners' | 'limits';
 
 // Predefined notification templates
 const notificationTemplates = [
@@ -1223,7 +1225,10 @@ const AdminPage = () => {
     { id: 'sponsored' as TabType, label: 'Sponsorisés', icon: Star },
     { id: 'banners' as TabType, label: 'Bannières', icon: Image },
     { id: 'notifications' as TabType, label: 'Notifs', icon: Bell },
-    ...(isAdmin ? [{ id: 'admins' as TabType, label: 'Admins', icon: Shield }] : []),
+    ...(isAdmin ? [
+      { id: 'limits' as TabType, label: 'Limites', icon: Wallet },
+      { id: 'admins' as TabType, label: 'Admins', icon: Shield },
+    ] : []),
   ];
 
   const handleSendPushNotification = async () => {
@@ -2333,6 +2338,11 @@ const AdminPage = () => {
                   </div>
                 )}
               </div>
+            )}
+
+            {/* Limits Tab */}
+            {activeTab === 'limits' && isAdmin && (
+              <ListingLimitsTab />
             )}
           </>
         )}

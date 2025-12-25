@@ -15,7 +15,12 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.ico", "pwa-192x192.png", "pwa-512x512.png"],
+      includeAssets: [
+        "favicon.ico",
+        "pwa-192x192.png",
+        "pwa-512x512.png",
+        "images/logo-lazone.png",
+      ],
       manifest: {
         name: "LaZone - Immobilier en Afrique",
         short_name: "LaZone",

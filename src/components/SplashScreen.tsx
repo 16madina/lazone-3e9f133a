@@ -31,7 +31,9 @@ const backgroundImages = [
 
 export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
   const [phase, setPhase] = useState<'logo' | 'text' | 'exit'>('logo');
-  const [logoSrc, setLogoSrc] = useState<string>(logoLazone);
+  // Prefer a public path for the splash logo (more reliable for PWA/native), fallback to bundled asset.
+  const primaryLogoSrc = `${import.meta.env.BASE_URL}images/logo-lazone.png`;
+  const [logoSrc, setLogoSrc] = useState<string>(primaryLogoSrc);
 
   // Random background image selected once per mount
   const backgroundImage = useMemo(() => {
@@ -143,7 +145,10 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
               src={logoSrc}
               alt="LaZone"
               className="w-80 h-80 object-contain relative z-10 drop-shadow-2xl"
-              onError={() => setLogoSrc('/images/logo-lazone.png')}
+              onError={() => {
+                // If the public path fails for any reason, fall back to the bundled asset.
+                if (logoSrc !== logoLazone) setLogoSrc(logoLazone);
+              }}
               initial={{ filter: 'brightness(0) invert(1)', scale: 0.9 }}
               animate={{
                 filter: 'brightness(1) invert(0)',

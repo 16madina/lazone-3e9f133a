@@ -17,7 +17,7 @@ export type AppLogoProps = Omit<
 
 export function AppLogo({
   src,
-  fallbackSrc = "/images/logo-lazone.png",
+  fallbackSrc = `${import.meta.env.BASE_URL}images/logo-lazone.png`,
   alt = "LaZone",
   onError,
   loading = "eager",

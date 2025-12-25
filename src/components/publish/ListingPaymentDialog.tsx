@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Dialog, 
   DialogContent, 
@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, CreditCard, AlertCircle, Check, Phone, Clock, Copy } from 'lucide-react';
+import { Loader2, CreditCard, AlertCircle, Check, Phone, Clock, Copy, Apple, Smartphone } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -17,6 +17,8 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { usePaymentNumbers } from '@/hooks/usePaymentNumbers';
+import { usePlatformPayment, PaymentMethod } from '@/hooks/usePlatformPayment';
+import { PRODUCT_ID_LISTING_CREDIT } from '@/services/storeKitService';
 
 interface ListingPaymentDialogProps {
   open: boolean;
@@ -26,7 +28,7 @@ interface ListingPaymentDialogProps {
   currentListings: number;
   onPaymentComplete: () => void;
   listingType: 'short_term' | 'long_term';
-  propertyId?: string; // ID of the pending property to activate after payment
+  propertyId?: string;
 }
 
 const ListingPaymentDialog = ({
@@ -41,16 +43,72 @@ const ListingPaymentDialog = ({
 }: ListingPaymentDialogProps) => {
   const { user } = useAuth();
   const { activeNumbers, settings, loading: loadingNumbers } = usePaymentNumbers();
+  const { platform, preferredMethod, isLoading: paymentLoading, startStripePayment, startApplePayment } = usePlatformPayment();
+  
   const [loading, setLoading] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [step, setStep] = useState<'info' | 'payment' | 'pending'>('info');
+  const [step, setStep] = useState<'info' | 'choose' | 'mobile_money' | 'pending' | 'processing'>('info');
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
+
+  // Determine available payment methods
+  const availableMethods: PaymentMethod[] = [];
+  if (platform === 'ios') {
+    availableMethods.push('apple_iap');
+  }
+  availableMethods.push('stripe');
+  availableMethods.push('mobile_money');
 
   const formatPrice = (amount: number, symbol: string) => {
     return new Intl.NumberFormat('fr-FR').format(amount) + ' ' + symbol;
   };
 
   const handleProceedToPayment = () => {
-    setStep('payment');
+    // If only one digital method (not mobile money), go directly
+    if (platform === 'ios') {
+      setStep('choose');
+    } else if (platform === 'android' || platform === 'web') {
+      setStep('choose');
+    }
+  };
+
+  const handleSelectMethod = async (method: PaymentMethod) => {
+    setSelectedMethod(method);
+    
+    if (method === 'mobile_money') {
+      setStep('mobile_money');
+      return;
+    }
+
+    if (method === 'stripe') {
+      setStep('processing');
+      const result = await startStripePayment({
+        amount: price.amount,
+        currency: price.currency,
+        listingType,
+        propertyId,
+      });
+      
+      if (!result.success) {
+        setStep('choose');
+      }
+      // If success, user will be redirected to Stripe
+    }
+
+    if (method === 'apple_iap') {
+      setStep('processing');
+      const result = await startApplePayment({
+        productId: PRODUCT_ID_LISTING_CREDIT,
+        listingType,
+        propertyId,
+      });
+      
+      if (result.success) {
+        onPaymentComplete();
+        handleClose();
+      } else {
+        setStep('choose');
+      }
+    }
   };
 
   const copyToClipboard = (text: string) => {
@@ -61,7 +119,7 @@ const ListingPaymentDialog = ({
     });
   };
 
-  const handleSubmitPayment = async () => {
+  const handleSubmitMobilePayment = async () => {
     if (!phoneNumber || phoneNumber.length < 8) {
       toast({
         title: 'Numéro invalide',
@@ -75,20 +133,18 @@ const ListingPaymentDialog = ({
 
     setLoading(true);
     try {
-      // Create a PENDING payment record (will be validated by admin)
-      // Associate with the pending property if provided
       const { data: payment, error: paymentError } = await supabase
         .from('listing_payments')
         .insert({
           user_id: user.id,
           amount: price.amount,
           currency: price.currency,
-          status: 'pending', // Pending until admin validates
+          status: 'pending',
           payment_method: 'mobile_money',
           transaction_ref: `LZ-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          sender_phone: phoneNumber, // Phone used for the transfer
-          listing_type: listingType, // Mode: Immobilier or Résidence
-          property_id: propertyId || null, // Associate with the pending property
+          sender_phone: phoneNumber,
+          listing_type: listingType,
+          property_id: propertyId || null,
         })
         .select()
         .single();
@@ -114,19 +170,53 @@ const ListingPaymentDialog = ({
   };
 
   const handleClose = () => {
-    if (!loading) {
+    if (!loading && !paymentLoading) {
       onOpenChange(false);
-      // Reset after a delay to allow animation
       setTimeout(() => {
         setStep('info');
         setPhoneNumber('');
+        setSelectedMethod(null);
       }, 300);
+    }
+  };
+
+  const getMethodIcon = (method: PaymentMethod) => {
+    switch (method) {
+      case 'apple_iap':
+        return <Apple className="w-5 h-5" />;
+      case 'stripe':
+        return <CreditCard className="w-5 h-5" />;
+      case 'mobile_money':
+        return <Phone className="w-5 h-5" />;
+    }
+  };
+
+  const getMethodLabel = (method: PaymentMethod) => {
+    switch (method) {
+      case 'apple_iap':
+        return 'Apple Pay';
+      case 'stripe':
+        return 'Carte bancaire';
+      case 'mobile_money':
+        return 'Mobile Money';
+    }
+  };
+
+  const getMethodDescription = (method: PaymentMethod) => {
+    switch (method) {
+      case 'apple_iap':
+        return 'Paiement instantané via App Store';
+      case 'stripe':
+        return 'Visa, Mastercard, etc.';
+      case 'mobile_money':
+        return 'MTN, Moov, Orange Money';
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
+        {/* Step: Info */}
         {step === 'info' && (
           <>
             <DialogHeader>
@@ -164,7 +254,53 @@ const ListingPaymentDialog = ({
           </>
         )}
 
-        {step === 'payment' && (
+        {/* Step: Choose payment method */}
+        {step === 'choose' && (
+          <>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <CreditCard className="w-5 h-5 text-primary" />
+                Choisir un mode de paiement
+              </DialogTitle>
+              <DialogDescription>
+                Montant : <strong>{formatPrice(price.amount, price.symbol)}</strong>
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-3 py-4">
+              {availableMethods.map((method) => (
+                <button
+                  key={method}
+                  onClick={() => handleSelectMethod(method)}
+                  disabled={paymentLoading}
+                  className="w-full flex items-center gap-4 p-4 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-colors text-left disabled:opacity-50"
+                >
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                    {getMethodIcon(method)}
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium">{getMethodLabel(method)}</p>
+                    <p className="text-sm text-muted-foreground">{getMethodDescription(method)}</p>
+                  </div>
+                  {method === preferredMethod && (
+                    <Badge variant="secondary" className="text-xs">
+                      Recommandé
+                    </Badge>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setStep('info')} disabled={paymentLoading}>
+                Retour
+              </Button>
+            </DialogFooter>
+          </>
+        )}
+
+        {/* Step: Mobile Money */}
+        {step === 'mobile_money' && (
           <>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
@@ -184,7 +320,6 @@ const ListingPaymentDialog = ({
                 </p>
               </div>
 
-              {/* Payment numbers */}
               <div className="space-y-2">
                 <Label className="text-sm font-medium">Envoyez à l'un de ces numéros :</Label>
                 <div className="space-y-2">
@@ -239,14 +374,14 @@ const ListingPaymentDialog = ({
             <DialogFooter className="flex-col gap-2 sm:flex-row">
               <Button 
                 variant="outline" 
-                onClick={() => setStep('info')} 
+                onClick={() => setStep('choose')} 
                 disabled={loading}
                 className="w-full sm:w-auto"
               >
                 Retour
               </Button>
               <Button 
-                onClick={handleSubmitPayment} 
+                onClick={handleSubmitMobilePayment} 
                 disabled={loading || !phoneNumber || activeNumbers.length === 0}
                 className="w-full sm:w-auto"
               >
@@ -266,6 +401,22 @@ const ListingPaymentDialog = ({
           </>
         )}
 
+        {/* Step: Processing */}
+        {step === 'processing' && (
+          <div className="py-8 text-center">
+            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Loader2 className="w-8 h-8 text-primary animate-spin" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Traitement en cours...</h3>
+            <p className="text-muted-foreground">
+              {selectedMethod === 'stripe' 
+                ? 'Redirection vers la page de paiement...'
+                : 'Veuillez patienter...'}
+            </p>
+          </div>
+        )}
+
+        {/* Step: Pending (Mobile Money) */}
         {step === 'pending' && (
           <div className="py-8 text-center">
             <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">

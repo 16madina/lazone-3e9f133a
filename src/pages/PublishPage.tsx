@@ -122,7 +122,7 @@ const PublishPage = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user, profile, isEmailVerified } = useAuth();
-  const { isResidence } = useAppMode();
+  const { isResidence, switchMode } = useAppMode();
   const { takePicture, pickMultiple, loading: cameraLoading } = useCamera();
   const { 
     settings: limitSettings, 
@@ -282,11 +282,17 @@ const PublishPage = () => {
   // Handle payment return from Stripe
   useEffect(() => {
     const paymentStatus = searchParams.get('payment');
+    const modeParam = searchParams.get('mode');
+
+    // Ensure user returns to the correct app mode
+    if (modeParam === 'residence' || modeParam === 'lazone') {
+      switchMode(modeParam);
+    }
+
     if (paymentStatus === 'success') {
-      // Restore form data first to get pendingPropertyId
       const saved = sessionStorage.getItem('publish_form_data');
       let restoredPropertyId: string | null = null;
-      
+
       if (saved) {
         try {
           const data = JSON.parse(saved);
@@ -296,58 +302,87 @@ const PublishPage = () => {
           console.error('Error parsing saved form data:', e);
         }
       }
-      
-      // Activate the pending property if we have one
-      const activatePendingProperty = async () => {
-        if (restoredPropertyId) {
-          const { error } = await supabase
+
+      const propertyIdFromUrl = searchParams.get('propertyId');
+      const transactionRefFromUrl = searchParams.get('transactionRef');
+      const targetPropertyId = restoredPropertyId || propertyIdFromUrl;
+
+      let cancelled = false;
+
+      const waitForActivation = async () => {
+        if (!targetPropertyId) {
+          toast({
+            title: 'Paiement réussi !',
+            description: 'Paiement reçu. Votre annonce sera publiée automatiquement sous quelques instants.',
+          });
+          return;
+        }
+
+        // Wait for backend to validate and activate the listing (webhook)
+        for (let i = 0; i < 12; i++) {
+          if (cancelled) return;
+
+          const { data: prop } = await supabase
             .from('properties')
-            .update({ is_active: true })
-            .eq('id', restoredPropertyId);
-          
-          if (error) {
-            console.error('Error activating property:', error);
-            toast({
-              title: 'Paiement réussi !',
-              description: 'Votre crédit a été ajouté mais l\'annonce n\'a pas pu être activée. Contactez le support.',
-              variant: 'destructive',
-            });
-          } else {
+            .select('is_active')
+            .eq('id', targetPropertyId)
+            .maybeSingle();
+
+          if (prop?.is_active) {
             toast({
               title: 'Annonce publiée !',
               description: 'Votre paiement a été validé et votre annonce est maintenant en ligne.',
             });
-            // Redirect to home page to see the published listing
             navigate('/');
+            return;
           }
-        } else {
-          toast({
-            title: 'Paiement réussi !',
-            description: 'Votre crédit a été ajouté. Vous pouvez maintenant publier votre annonce.',
-          });
+
+          // If we have a transaction ref, we can at least refresh limits while waiting
+          if (transactionRefFromUrl) {
+            refetchLimits();
+          }
+
+          await new Promise((r) => setTimeout(r, 2000));
         }
+
+        toast({
+          title: 'Paiement reçu',
+          description: 'Votre annonce est en cours de validation. Revenez dans "En attente" dans quelques minutes.',
+        });
       };
-      
-      activatePendingProperty();
+
+      waitForActivation();
       refetchLimits();
       setHasPaid(true);
+
       // Clean up URL
-      searchParams.delete('payment');
-      setSearchParams(searchParams, { replace: true });
-    } else if (paymentStatus === 'cancelled') {
+      const next = new URLSearchParams(searchParams);
+      next.delete('payment');
+      next.delete('transactionRef');
+      setSearchParams(next, { replace: true });
+
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    if (paymentStatus === 'cancelled') {
       // Restore form data even if cancelled
       restoreFormFromStorage();
-      
+
       toast({
         title: 'Paiement annulé',
         description: 'Vos données ont été conservées. Vous pouvez réessayer.',
         variant: 'destructive',
       });
+
       // Clean up URL
-      searchParams.delete('payment');
-      setSearchParams(searchParams, { replace: true });
+      const next = new URLSearchParams(searchParams);
+      next.delete('payment');
+      next.delete('transactionRef');
+      setSearchParams(next, { replace: true });
     }
-  }, [searchParams, setSearchParams, refetchLimits, navigate]);
+  }, [searchParams, setSearchParams, refetchLimits, navigate, switchMode]);
 
   // Pre-fill country from user profile
   useEffect(() => {

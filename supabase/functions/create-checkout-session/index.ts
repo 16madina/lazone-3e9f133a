@@ -66,6 +66,43 @@ serve(async (req) => {
 
     console.log(`Creating checkout: amount=${amount}, currency=${currencyLower}, unitAmount=${unitAmount}`);
 
+    const modeParam = listingType === "short_term" ? "residence" : "lazone";
+
+    const withParams = (baseUrl: string, params: Record<string, string>) => {
+      try {
+        const url = new URL(baseUrl);
+        for (const [key, value] of Object.entries(params)) {
+          if (value !== undefined && value !== null && value !== "") {
+            url.searchParams.set(key, value);
+          }
+        }
+        return url.toString();
+      } catch {
+        return baseUrl;
+      }
+    };
+
+    const defaultOrigin = req.headers.get("origin") || "";
+    const successUrlFinal = withParams(
+      successUrl || `${defaultOrigin}/publish?payment=success`,
+      {
+        mode: modeParam,
+        listingType,
+        propertyId: propertyId || "",
+        transactionRef,
+      }
+    );
+
+    const cancelUrlFinal = withParams(
+      cancelUrl || `${defaultOrigin}/publish?payment=cancelled`,
+      {
+        mode: modeParam,
+        listingType,
+        propertyId: propertyId || "",
+        transactionRef,
+      }
+    );
+
     // Create checkout session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
@@ -75,8 +112,8 @@ serve(async (req) => {
             currency: currencyLower,
             product_data: {
               name: "Crédit annonce LaZone",
-              description: listingType === "short_term" 
-                ? "1 crédit pour publier une annonce (Mode Résidence)" 
+              description: listingType === "short_term"
+                ? "1 crédit pour publier une annonce (Mode Résidence)"
                 : "1 crédit pour publier une annonce (Mode Immobilier)",
             },
             unit_amount: unitAmount,
@@ -85,8 +122,8 @@ serve(async (req) => {
         },
       ],
       mode: "payment",
-      success_url: successUrl || `${req.headers.get("origin")}/publish?payment=success`,
-      cancel_url: cancelUrl || `${req.headers.get("origin")}/publish?payment=cancelled`,
+      success_url: successUrlFinal,
+      cancel_url: cancelUrlFinal,
       metadata: {
         user_id: user.id,
         listing_type: listingType,

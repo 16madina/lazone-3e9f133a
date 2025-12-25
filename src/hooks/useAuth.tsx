@@ -10,6 +10,8 @@ interface Profile {
   phone: string | null;
   email_verified: boolean;
   country: string | null;
+  user_type: 'particulier' | 'proprietaire' | 'demarcheur' | 'agence' | null;
+  agency_name: string | null;
 }
 
 interface AuthContextType {
@@ -48,7 +50,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, user_id, full_name, avatar_url, phone, email_verified, country')
+        .select('id, user_id, full_name, avatar_url, phone, email_verified, country, user_type, agency_name')
         .eq('user_id', userId)
         .single();
 

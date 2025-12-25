@@ -411,6 +411,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          agency_name: string | null
           avatar_url: string | null
           country: string | null
           created_at: string
@@ -422,10 +423,12 @@ export type Database = {
           push_token: string | null
           updated_at: string
           user_id: string
+          user_type: Database["public"]["Enums"]["user_type"] | null
           verification_token: string | null
           verification_token_expires_at: string | null
         }
         Insert: {
+          agency_name?: string | null
           avatar_url?: string | null
           country?: string | null
           created_at?: string
@@ -437,10 +440,12 @@ export type Database = {
           push_token?: string | null
           updated_at?: string
           user_id: string
+          user_type?: Database["public"]["Enums"]["user_type"] | null
           verification_token?: string | null
           verification_token_expires_at?: string | null
         }
         Update: {
+          agency_name?: string | null
           avatar_url?: string | null
           country?: string | null
           created_at?: string
@@ -452,6 +457,7 @@ export type Database = {
           push_token?: string | null
           updated_at?: string
           user_id?: string
+          user_type?: Database["public"]["Enums"]["user_type"] | null
           verification_token?: string | null
           verification_token_expires_at?: string | null
         }
@@ -979,28 +985,34 @@ export type Database = {
       }
       public_profiles: {
         Row: {
+          agency_name: string | null
           avatar_url: string | null
           country: string | null
           created_at: string | null
           full_name: string | null
           last_seen_at: string | null
           user_id: string | null
+          user_type: Database["public"]["Enums"]["user_type"] | null
         }
         Insert: {
+          agency_name?: string | null
           avatar_url?: string | null
           country?: string | null
           created_at?: string | null
           full_name?: string | null
           last_seen_at?: string | null
           user_id?: string | null
+          user_type?: Database["public"]["Enums"]["user_type"] | null
         }
         Update: {
+          agency_name?: string | null
           avatar_url?: string | null
           country?: string | null
           created_at?: string | null
           full_name?: string | null
           last_seen_at?: string | null
           user_id?: string | null
+          user_type?: Database["public"]["Enums"]["user_type"] | null
         }
         Relationships: []
       }
@@ -1034,6 +1046,7 @@ export type Database = {
         | "fraud"
         | "false_info"
         | "other"
+      user_type: "particulier" | "proprietaire" | "demarcheur" | "agence"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1169,6 +1182,7 @@ export const Constants = {
         "false_info",
         "other",
       ],
+      user_type: ["particulier", "proprietaire", "demarcheur", "agence"],
     },
   },
 } as const

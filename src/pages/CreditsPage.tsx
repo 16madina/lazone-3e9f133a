@@ -211,99 +211,97 @@ const CreditsPage = () => {
           )}
         </motion.div>
 
-        {/* Subscriptions Section (for agencies) */}
-        {isAgency && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <div className="flex items-center gap-2 mb-4">
-              <Building2 className="w-5 h-5 text-amber-500" />
-              <h2 className="font-semibold text-lg">Abonnements Agence</h2>
+        {/* Subscriptions Section (for everyone) */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <Crown className="w-5 h-5 text-amber-500" />
+            <h2 className="font-semibold text-lg">Abonnements</h2>
+          </div>
+
+          {loading || !initialized ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map(i => (
+                <Skeleton key={i} className="h-32 rounded-xl" />
+              ))}
             </div>
+          ) : (
+            <div className="space-y-3">
+              {subscriptions.map((product, index) => {
+                const isActive = activeSubscription?.product_id === product.id;
+                const isPro = product.id.includes('pro');
+                const isPremium = product.id.includes('premium');
+                
+                const features = isPremium 
+                  ? ['Annonces illimitées', 'Mise en avant', 'Support prioritaire', 'Badge Premium']
+                  : isPro
+                  ? ['30 annonces/mois', 'Badge Pro', 'Statistiques avancées']
+                  : ['10 annonces/mois', 'Support email'];
 
-            {loading || !initialized ? (
-              <div className="space-y-3">
-                {[1, 2, 3].map(i => (
-                  <Skeleton key={i} className="h-32 rounded-xl" />
-                ))}
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {subscriptions.map((product, index) => {
-                  const isActive = activeSubscription?.product_id === product.id;
-                  const isPro = product.id.includes('pro');
-                  const isPremium = product.id.includes('premium');
-                  
-                  const features = isPremium 
-                    ? ['Annonces illimitées', 'Mise en avant', 'Support prioritaire', 'Badge Premium']
-                    : isPro
-                    ? ['30 annonces/mois', 'Badge Pro', 'Statistiques avancées']
-                    : ['10 annonces/mois', 'Support email'];
-
-                  return (
-                    <motion.div
-                      key={product.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.1 * index }}
-                    >
-                      <Card className={`relative overflow-hidden transition-all ${
-                        isPremium ? 'bg-gradient-to-br from-amber-500/10 to-orange-500/10 border-amber-500/30' :
-                        isPro ? 'bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/30' :
-                        ''
-                      } ${isActive ? 'ring-2 ring-green-500' : ''}`}>
-                        {isPremium && (
-                          <div className="absolute top-0 right-0">
-                            <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-none rounded-bl-lg">
-                              <Star className="w-3 h-3 mr-1" />
-                              Populaire
-                            </Badge>
-                          </div>
-                        )}
-                        {isActive && (
-                          <div className="absolute top-0 left-0">
-                            <Badge className="bg-green-500 rounded-none rounded-br-lg">
-                              <Check className="w-3 h-3 mr-1" />
-                              Actif
-                            </Badge>
-                          </div>
-                        )}
-                        <CardHeader className="pb-2">
-                          <CardTitle className="flex items-center gap-2">
-                            {isPremium && <Crown className="w-5 h-5 text-amber-500" />}
-                            {isPro && <Zap className="w-5 h-5 text-purple-500" />}
-                            {product.displayName}
-                          </CardTitle>
-                          <CardDescription>{product.description}</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <ul className="space-y-1 mb-4">
-                            {features.map((feature, i) => (
-                              <li key={i} className="flex items-center gap-2 text-sm">
-                                <Check className="w-4 h-4 text-green-500" />
-                                {feature}
-                              </li>
-                            ))}
-                          </ul>
-                          <Button
-                            className="w-full"
-                            variant={isPremium ? 'default' : 'outline'}
-                            onClick={() => handlePurchase(product.id)}
-                            disabled={purchasing || isActive}
-                          >
-                            {isActive ? 'Abonnement actif' : product.displayPrice}
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            )}
-          </motion.div>
-        )}
+                return (
+                  <motion.div
+                    key={product.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 * index }}
+                  >
+                    <Card className={`relative overflow-hidden transition-all ${
+                      isPremium ? 'bg-gradient-to-br from-amber-500/10 to-orange-500/10 border-amber-500/30' :
+                      isPro ? 'bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/30' :
+                      ''
+                    } ${isActive ? 'ring-2 ring-green-500' : ''}`}>
+                      {isPremium && (
+                        <div className="absolute top-0 right-0">
+                          <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-none rounded-bl-lg">
+                            <Star className="w-3 h-3 mr-1" />
+                            Populaire
+                          </Badge>
+                        </div>
+                      )}
+                      {isActive && (
+                        <div className="absolute top-0 left-0">
+                          <Badge className="bg-green-500 rounded-none rounded-br-lg">
+                            <Check className="w-3 h-3 mr-1" />
+                            Actif
+                          </Badge>
+                        </div>
+                      )}
+                      <CardHeader className="pb-2">
+                        <CardTitle className="flex items-center gap-2">
+                          {isPremium && <Crown className="w-5 h-5 text-amber-500" />}
+                          {isPro && <Zap className="w-5 h-5 text-purple-500" />}
+                          {product.displayName}
+                        </CardTitle>
+                        <CardDescription>{product.description}</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <ul className="space-y-1 mb-4">
+                          {features.map((feature, i) => (
+                            <li key={i} className="flex items-center gap-2 text-sm">
+                              <Check className="w-4 h-4 text-green-500" />
+                              {feature}
+                            </li>
+                          ))}
+                        </ul>
+                        <Button
+                          className="w-full"
+                          variant={isPremium ? 'default' : 'outline'}
+                          onClick={() => handlePurchase(product.id)}
+                          disabled={purchasing || isActive}
+                        >
+                          {isActive ? 'Abonnement actif' : product.displayPrice}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
+        </motion.div>
 
         {/* Help Text */}
         <motion.p
@@ -312,8 +310,7 @@ const CreditsPage = () => {
           transition={{ delay: 0.3 }}
           className="text-center text-sm text-muted-foreground px-4"
         >
-          Les crédits sont utilisés pour publier des annonces.
-          {isAgency ? ' Les abonnements se renouvellent automatiquement chaque mois.' : ''}
+          Les crédits sont utilisés pour publier des annonces. Les abonnements se renouvellent automatiquement chaque mois.
         </motion.p>
       </div>
     </div>

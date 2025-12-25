@@ -236,12 +236,82 @@ const PaymentValidationTab = () => {
     }
   };
 
-  const filteredPayments = payments.filter((p) => {
-    if (activeTab === 'pending') return p.status === 'pending';
-    if (activeTab === 'completed') return p.status === 'completed';
-    if (activeTab === 'rejected') return p.status === 'rejected';
-    return true;
-  });
+  const PaymentCard = ({ payment }: { payment: Payment }) => (
+    <div className="bg-card border rounded-xl p-4 space-y-3">
+      {/* Header */}
+      <div className="flex items-start justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+            <User className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <p className="font-medium">{payment.user_name}</p>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Calendar className="w-3 h-3" />
+              {format(new Date(payment.created_at), 'dd MMM yyyy à HH:mm', {
+                locale: fr,
+              })}
+            </div>
+          </div>
+        </div>
+        {getStatusBadge(payment.status)}
+      </div>
+
+      {/* Details */}
+      <div className="grid grid-cols-2 gap-3 text-sm">
+        <div className="bg-muted/50 p-2 rounded-lg">
+          <p className="text-muted-foreground text-xs">Montant</p>
+          <p className="font-semibold text-primary">
+            {formatPrice(payment.amount, payment.currency)}
+          </p>
+        </div>
+        {payment.user_phone && (
+          <div className="bg-muted/50 p-2 rounded-lg">
+            <p className="text-muted-foreground text-xs">Téléphone</p>
+            <p className="font-medium flex items-center gap-1">
+              <Phone className="w-3 h-3" />
+              {payment.user_phone}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {payment.transaction_ref && (
+        <div className="text-xs text-muted-foreground">
+          Réf: {payment.transaction_ref}
+        </div>
+      )}
+
+      {/* Actions for pending payments */}
+      {payment.status === 'pending' && (
+        <div className="flex gap-2 pt-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+            onClick={() => setConfirmAction({ type: 'reject', payment })}
+            disabled={processingId === payment.id}
+          >
+            <X className="w-4 h-4 mr-1" />
+            Rejeter
+          </Button>
+          <Button
+            size="sm"
+            className="flex-1 bg-green-600 hover:bg-green-700"
+            onClick={() => setConfirmAction({ type: 'approve', payment })}
+            disabled={processingId === payment.id}
+          >
+            {processingId === payment.id ? (
+              <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+            ) : (
+              <Check className="w-4 h-4 mr-1" />
+            )}
+            Valider
+          </Button>
+        </div>
+      )}
+    </div>
+  );
 
   const pendingCount = payments.filter((p) => p.status === 'pending').length;
 
@@ -297,96 +367,61 @@ const PaymentValidationTab = () => {
           <PaymentNumbersSettings />
         </TabsContent>
 
-        <TabsContent value={activeTab} className="mt-4">
+        {/* Pending Tab */}
+        <TabsContent value="pending" className="mt-4">
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
-          ) : filteredPayments.length === 0 ? (
+          ) : payments.filter(p => p.status === 'pending').length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <AlertCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>Aucun paiement {activeTab === 'pending' ? 'en attente' : activeTab === 'completed' ? 'validé' : 'rejeté'}</p>
+              <p>Aucun paiement en attente</p>
             </div>
           ) : (
             <div className="space-y-3">
-              {filteredPayments.map((payment) => (
-                <div
-                  key={payment.id}
-                  className="bg-card border rounded-xl p-4 space-y-3"
-                >
-                  {/* Header */}
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                        <User className="w-5 h-5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="font-medium">{payment.user_name}</p>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Calendar className="w-3 h-3" />
-                          {format(new Date(payment.created_at), 'dd MMM yyyy à HH:mm', {
-                            locale: fr,
-                          })}
-                        </div>
-                      </div>
-                    </div>
-                    {getStatusBadge(payment.status)}
-                  </div>
+              {payments.filter(p => p.status === 'pending').map((payment) => (
+                <PaymentCard key={payment.id} payment={payment} />
+              ))}
+            </div>
+          )}
+        </TabsContent>
 
-                  {/* Details */}
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div className="bg-muted/50 p-2 rounded-lg">
-                      <p className="text-muted-foreground text-xs">Montant</p>
-                      <p className="font-semibold text-primary">
-                        {formatPrice(payment.amount, payment.currency)}
-                      </p>
-                    </div>
-                    {payment.user_phone && (
-                      <div className="bg-muted/50 p-2 rounded-lg">
-                        <p className="text-muted-foreground text-xs">Téléphone</p>
-                        <p className="font-medium flex items-center gap-1">
-                          <Phone className="w-3 h-3" />
-                          {payment.user_phone}
-                        </p>
-                      </div>
-                    )}
-                  </div>
+        {/* Completed Tab */}
+        <TabsContent value="completed" className="mt-4">
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : payments.filter(p => p.status === 'completed').length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <AlertCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>Aucun paiement validé</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {payments.filter(p => p.status === 'completed').map((payment) => (
+                <PaymentCard key={payment.id} payment={payment} />
+              ))}
+            </div>
+          )}
+        </TabsContent>
 
-                  {payment.transaction_ref && (
-                    <div className="text-xs text-muted-foreground">
-                      Réf: {payment.transaction_ref}
-                    </div>
-                  )}
-
-                  {/* Actions for pending payments */}
-                  {payment.status === 'pending' && (
-                    <div className="flex gap-2 pt-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50"
-                        onClick={() => setConfirmAction({ type: 'reject', payment })}
-                        disabled={processingId === payment.id}
-                      >
-                        <X className="w-4 h-4 mr-1" />
-                        Rejeter
-                      </Button>
-                      <Button
-                        size="sm"
-                        className="flex-1 bg-green-600 hover:bg-green-700"
-                        onClick={() => setConfirmAction({ type: 'approve', payment })}
-                        disabled={processingId === payment.id}
-                      >
-                        {processingId === payment.id ? (
-                          <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                        ) : (
-                          <Check className="w-4 h-4 mr-1" />
-                        )}
-                        Valider
-                      </Button>
-                    </div>
-                  )}
-                </div>
+        {/* Rejected Tab */}
+        <TabsContent value="rejected" className="mt-4">
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : payments.filter(p => p.status === 'rejected').length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <AlertCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>Aucun paiement rejeté</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {payments.filter(p => p.status === 'rejected').map((payment) => (
+                <PaymentCard key={payment.id} payment={payment} />
               ))}
             </div>
           )}

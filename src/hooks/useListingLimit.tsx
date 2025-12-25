@@ -169,18 +169,24 @@ export const useListingLimit = () => {
     }
   }, [user, fetchUserListingsCount, fetchAvailableCredits]);
 
+  // Get the free listings limit (use explicit check for 0)
+  const freeListingsLimit = settings?.free_listings !== undefined ? settings.free_listings : 3;
+
   // Calculate if user needs to pay (considering available credits)
+  // Important: when free_listings is 0, payment is always required
   const needsPayment = settings?.enabled && 
-    userListingsCount >= (settings?.free_listings ?? 3) && 
+    !loading &&
+    userListingsCount >= freeListingsLimit && 
     availableCredits === 0;
 
   // User has exceeded free limit but has credits
   const canUseCredit = settings?.enabled && 
-    userListingsCount >= (settings?.free_listings ?? 3) && 
+    !loading &&
+    userListingsCount >= freeListingsLimit && 
     availableCredits > 0;
 
   // Get remaining free listings
-  const remainingFreeListings = Math.max(0, (settings?.free_listings ?? 3) - userListingsCount);
+  const remainingFreeListings = Math.max(0, freeListingsLimit - userListingsCount);
 
   // Convert price to user's currency
   const getConvertedPrice = useCallback((countryCode: string | null | undefined): { amount: number; currency: string; symbol: string } => {

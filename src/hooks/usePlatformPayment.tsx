@@ -93,14 +93,27 @@ export const usePlatformPayment = (): UsePlatformPaymentReturn => {
         throw new Error('Non authentifié');
       }
 
+      const mode = params.listingType === 'short_term' ? 'residence' : 'lazone';
+      const successUrl = new URL(`${window.location.origin}/publish`);
+      successUrl.searchParams.set('payment', 'success');
+      successUrl.searchParams.set('mode', mode);
+      successUrl.searchParams.set('listingType', params.listingType);
+      if (params.propertyId) successUrl.searchParams.set('propertyId', params.propertyId);
+
+      const cancelUrl = new URL(`${window.location.origin}/publish`);
+      cancelUrl.searchParams.set('payment', 'cancelled');
+      cancelUrl.searchParams.set('mode', mode);
+      cancelUrl.searchParams.set('listingType', params.listingType);
+      if (params.propertyId) cancelUrl.searchParams.set('propertyId', params.propertyId);
+
       const { data, error } = await supabase.functions.invoke('create-checkout-session', {
         body: {
           amount: params.amount,
           currency: params.currency,
           listingType: params.listingType,
           propertyId: params.propertyId,
-          successUrl: `${window.location.origin}/publish?payment=success`,
-          cancelUrl: `${window.location.origin}/publish?payment=cancelled`,
+          successUrl: successUrl.toString(),
+          cancelUrl: cancelUrl.toString(),
         },
       });
 

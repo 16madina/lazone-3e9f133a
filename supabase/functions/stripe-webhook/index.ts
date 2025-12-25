@@ -36,7 +36,8 @@ serve(async (req) => {
     // Verify webhook signature if secret is configured
     if (STRIPE_WEBHOOK_SECRET && signature) {
       try {
-        event = stripe.webhooks.constructEvent(body, signature, STRIPE_WEBHOOK_SECRET);
+        // Deno uses WebCrypto; Stripe requires async verification here
+        event = await stripe.webhooks.constructEventAsync(body, signature, STRIPE_WEBHOOK_SECRET);
       } catch (err) {
         console.error("Webhook signature verification failed:", err);
         return new Response(JSON.stringify({ error: "Invalid signature" }), {
@@ -131,6 +132,19 @@ serve(async (req) => {
           console.error("Error activating property:", propertyError);
         } else {
           console.log(`Property ${propertyId} activated for user ${userId}`);
+
+          // Clean up other pending attempts for the same property
+          const { error: cleanupError } = await supabase
+            .from("listing_payments")
+            .update({ status: "failed" })
+            .eq("user_id", userId)
+            .eq("property_id", propertyId)
+            .eq("status", "pending")
+            .neq("transaction_ref", transactionRef);
+
+          if (cleanupError) {
+            console.error("Error cleaning up duplicate pending payments:", cleanupError);
+          }
         }
       }
 

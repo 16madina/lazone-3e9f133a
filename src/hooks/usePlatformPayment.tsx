@@ -174,31 +174,51 @@ export const usePlatformPayment = (): UsePlatformPaymentReturn => {
       // Purchase the product
       const purchase = await storeKitService.purchaseProduct(params.productId);
 
-      if (!purchase.success || !purchase.receiptData) {
-        throw new Error(purchase.error || 'Achat annulé');
+      if (!purchase.success) {
+        if (purchase.cancelled) {
+          return { success: false, error: 'Achat annulé' };
+        }
+        if (purchase.pending) {
+          toast({
+            title: 'Achat en attente',
+            description: 'Votre achat est en cours de traitement',
+          });
+          return { success: false, error: 'Achat en attente' };
+        }
+        throw new Error(purchase.error || 'Achat échoué');
       }
 
-      // Validate receipt on server
+      // Get current user session
       const { data: { session } } = await supabase.auth.getSession();
 
       if (!session?.access_token) {
         throw new Error('Non authentifié');
       }
 
-      const { data, error } = await supabase.functions.invoke('validate-apple-receipt', {
-        body: {
-          receiptData: purchase.receiptData,
-          productId: params.productId,
-          listingType: params.listingType,
-          propertyId: params.propertyId,
-        },
-      });
+      // Save the purchase to the database
+      const { CREDITS_PER_PRODUCT } = await import('@/services/storeKitService');
+      const creditsAmount = CREDITS_PER_PRODUCT[params.productId] || 1;
+
+      const { data, error } = await supabase
+        .from('storekit_purchases')
+        .insert({
+          user_id: session.user.id,
+          product_id: params.productId,
+          transaction_id: purchase.transactionId || `tx_${Date.now()}`,
+          original_transaction_id: purchase.originalTransactionId,
+          credits_amount: creditsAmount,
+          credits_used: 0,
+          purchase_date: purchase.purchaseDate || new Date().toISOString(),
+          is_subscription: params.productId.includes('agency'),
+          status: 'active',
+        })
+        .select()
+        .single();
 
       if (error) {
-        throw new Error(error.message || 'Erreur de validation');
+        console.error('Error saving purchase:', error);
+        // Still consider success if purchase went through
       }
-
-      const result = data as any;
 
       toast({
         title: 'Paiement réussi !',
@@ -207,8 +227,8 @@ export const usePlatformPayment = (): UsePlatformPaymentReturn => {
 
       return {
         success: true,
-        paymentId: result?.paymentId,
-        transactionRef: result?.transactionId,
+        paymentId: data?.id,
+        transactionRef: purchase.transactionId,
       };
     } catch (error) {
       console.error('Apple payment error:', error);

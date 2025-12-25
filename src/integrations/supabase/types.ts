@@ -780,6 +780,54 @@ export type Database = {
         }
         Relationships: []
       }
+      storekit_purchases: {
+        Row: {
+          created_at: string
+          credits_amount: number
+          credits_used: number
+          expiration_date: string | null
+          id: string
+          is_subscription: boolean
+          original_transaction_id: string | null
+          product_id: string
+          purchase_date: string
+          status: string
+          transaction_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          credits_amount?: number
+          credits_used?: number
+          expiration_date?: string | null
+          id?: string
+          is_subscription?: boolean
+          original_transaction_id?: string | null
+          product_id: string
+          purchase_date?: string
+          status?: string
+          transaction_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          credits_amount?: number
+          credits_used?: number
+          expiration_date?: string | null
+          id?: string
+          is_subscription?: boolean
+          original_transaction_id?: string | null
+          product_id?: string
+          purchase_date?: string
+          status?: string
+          transaction_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_badges: {
         Row: {
           average_rating: number | null

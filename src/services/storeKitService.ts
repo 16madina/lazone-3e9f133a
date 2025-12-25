@@ -1,74 +1,154 @@
 /**
  * StoreKit Service for iOS In-App Purchases
- * Uses Capacitor's native bridge to interact with StoreKit
+ * Uses Capacitor's native bridge to interact with StoreKit 2
  */
 
 import { Capacitor, registerPlugin } from '@capacitor/core';
 
-// Product ID for listing credits
-export const PRODUCT_ID_LISTING_CREDIT = 'com.lazone.listing_credit';
+// Product IDs
+export const PRODUCT_IDS = {
+  // Single credits
+  LISTING_SINGLE: 'com.lazone.listing.single',
+  // Packs
+  LISTING_PACK_5: 'com.lazone.listing.pack5',
+  LISTING_PACK_10: 'com.lazone.listing.pack10',
+  // Agency subscriptions
+  AGENCY_BASIC_MONTHLY: 'com.lazone.agency.basic.monthly',
+  AGENCY_PRO_MONTHLY: 'com.lazone.agency.pro.monthly',
+  AGENCY_PREMIUM_MONTHLY: 'com.lazone.agency.premium.monthly',
+};
 
-interface StoreKitProduct {
-  productId: string;
-  localizedTitle: string;
-  localizedDescription: string;
+// Credits per product
+export const CREDITS_PER_PRODUCT: Record<string, number> = {
+  [PRODUCT_IDS.LISTING_SINGLE]: 1,
+  [PRODUCT_IDS.LISTING_PACK_5]: 5,
+  [PRODUCT_IDS.LISTING_PACK_10]: 10,
+  [PRODUCT_IDS.AGENCY_BASIC_MONTHLY]: 10,
+  [PRODUCT_IDS.AGENCY_PRO_MONTHLY]: 30,
+  [PRODUCT_IDS.AGENCY_PREMIUM_MONTHLY]: 999, // Unlimited
+};
+
+export interface StoreKitProduct {
+  id: string;
+  displayName: string;
+  description: string;
   price: string;
-  priceLocale: string;
+  displayPrice: string;
+  type: 'consumable' | 'nonConsumable' | 'autoRenewable' | 'nonRenewable' | 'unknown';
+  subscriptionPeriod?: {
+    unit: 'day' | 'week' | 'month' | 'year' | 'unknown';
+    value: number;
+  };
 }
 
-interface StoreKitPurchaseResult {
+export interface StoreKitPurchaseResult {
   success: boolean;
+  cancelled?: boolean;
+  pending?: boolean;
   productId?: string;
   transactionId?: string;
-  receiptData?: string;
+  originalTransactionId?: string;
+  purchaseDate?: string;
   error?: string;
 }
 
+export interface StoreKitEntitlement {
+  productId: string;
+  transactionId: string;
+  originalTransactionId: string;
+  purchaseDate: string;
+  expirationDate?: string;
+}
+
 interface StoreKitPlugin {
-  initialize(): Promise<void>;
+  initialize(): Promise<{ success: boolean }>;
   getProducts(options: { productIds: string[] }): Promise<{ products: StoreKitProduct[] }>;
   purchaseProduct(options: { productId: string }): Promise<StoreKitPurchaseResult>;
-  restorePurchases(): Promise<{ transactions: StoreKitPurchaseResult[] }>;
-  getReceiptData(): Promise<{ receiptData: string }>;
+  restorePurchases(): Promise<{ success: boolean; transactions: StoreKitEntitlement[] }>;
+  getReceiptData(): Promise<{ success: boolean; entitlements: StoreKitEntitlement[] }>;
 }
 
 // Mock implementation for web/development
 const mockStoreKit: StoreKitPlugin = {
   async initialize() {
     console.log('[StoreKit Mock] Initialized');
+    return { success: true };
   },
   async getProducts({ productIds }) {
     console.log('[StoreKit Mock] Getting products:', productIds);
+    const mockProducts: StoreKitProduct[] = [
+      {
+        id: PRODUCT_IDS.LISTING_SINGLE,
+        displayName: '1 Crédit Annonce',
+        description: 'Publiez une annonce',
+        price: '500',
+        displayPrice: '500 FCFA',
+        type: 'consumable',
+      },
+      {
+        id: PRODUCT_IDS.LISTING_PACK_5,
+        displayName: 'Pack 5 Crédits',
+        description: '5 annonces - Économisez 10%',
+        price: '2250',
+        displayPrice: '2 250 FCFA',
+        type: 'consumable',
+      },
+      {
+        id: PRODUCT_IDS.LISTING_PACK_10,
+        displayName: 'Pack 10 Crédits',
+        description: '10 annonces - Économisez 20%',
+        price: '4000',
+        displayPrice: '4 000 FCFA',
+        type: 'consumable',
+      },
+      {
+        id: PRODUCT_IDS.AGENCY_BASIC_MONTHLY,
+        displayName: 'Agence Basic',
+        description: '10 annonces/mois',
+        price: '5000',
+        displayPrice: '5 000 FCFA/mois',
+        type: 'autoRenewable',
+        subscriptionPeriod: { unit: 'month', value: 1 },
+      },
+      {
+        id: PRODUCT_IDS.AGENCY_PRO_MONTHLY,
+        displayName: 'Agence Pro',
+        description: '30 annonces/mois + Badge Pro',
+        price: '12000',
+        displayPrice: '12 000 FCFA/mois',
+        type: 'autoRenewable',
+        subscriptionPeriod: { unit: 'month', value: 1 },
+      },
+      {
+        id: PRODUCT_IDS.AGENCY_PREMIUM_MONTHLY,
+        displayName: 'Agence Premium',
+        description: 'Annonces illimitées + Mise en avant',
+        price: '25000',
+        displayPrice: '25 000 FCFA/mois',
+        type: 'autoRenewable',
+        subscriptionPeriod: { unit: 'month', value: 1 },
+      },
+    ];
     return {
-      products: productIds.map(id => ({
-        productId: id,
-        localizedTitle: 'Crédit annonce',
-        localizedDescription: '1 crédit pour publier une annonce',
-        price: '1000',
-        priceLocale: 'XOF',
-      })),
+      products: mockProducts.filter(p => productIds.includes(p.id)),
     };
   },
   async purchaseProduct({ productId }) {
     console.log('[StoreKit Mock] Purchasing:', productId);
-    // In development, simulate a successful purchase
     return {
       success: true,
       productId,
       transactionId: `mock_${Date.now()}`,
-      receiptData: btoa(JSON.stringify({
-        mock: true,
-        productId,
-        timestamp: Date.now(),
-      })),
+      originalTransactionId: `mock_orig_${Date.now()}`,
+      purchaseDate: new Date().toISOString(),
     };
   },
   async restorePurchases() {
     console.log('[StoreKit Mock] Restoring purchases');
-    return { transactions: [] };
+    return { success: true, transactions: [] };
   },
   async getReceiptData() {
-    return { receiptData: '' };
+    return { success: true, entitlements: [] };
   },
 };
 
@@ -85,6 +165,13 @@ class StoreKitService {
   }
 
   /**
+   * Check if we're in mock mode (web/dev)
+   */
+  isMockMode(): boolean {
+    return !this.isAvailable();
+  }
+
+  /**
    * Initialize the StoreKit service
    */
   async initialize(): Promise<void> {
@@ -92,24 +179,23 @@ class StoreKitService {
 
     try {
       if (this.isAvailable()) {
-        // Try to use native plugin
         try {
           this.plugin = registerPlugin<StoreKitPlugin>('StoreKit');
           await this.plugin.initialize();
+          console.log('[StoreKit] Native plugin initialized');
         } catch (e) {
           console.warn('[StoreKit] Native plugin not available, using mock');
           this.plugin = mockStoreKit;
         }
       } else {
-        // Use mock for web/development
         this.plugin = mockStoreKit;
+        console.log('[StoreKit] Using mock for web/development');
       }
 
       this.initialized = true;
-      console.log('[StoreKit] Service initialized');
 
-      // Pre-fetch products
-      await this.fetchProducts([PRODUCT_ID_LISTING_CREDIT]);
+      // Pre-fetch all products
+      await this.fetchProducts(Object.values(PRODUCT_IDS));
     } catch (error) {
       console.error('[StoreKit] Initialization error:', error);
       throw error;
@@ -127,16 +213,37 @@ class StoreKitService {
     try {
       const { products } = await this.plugin.getProducts({ productIds });
       
-      // Cache products
       products.forEach(product => {
-        this.products.set(product.productId, product);
+        this.products.set(product.id, product);
       });
 
+      console.log('[StoreKit] Fetched products:', products.length);
       return products;
     } catch (error) {
       console.error('[StoreKit] Error fetching products:', error);
       throw error;
     }
+  }
+
+  /**
+   * Get all cached products
+   */
+  getAllProducts(): StoreKitProduct[] {
+    return Array.from(this.products.values());
+  }
+
+  /**
+   * Get credit packs (consumables)
+   */
+  getCreditPacks(): StoreKitProduct[] {
+    return this.getAllProducts().filter(p => p.type === 'consumable');
+  }
+
+  /**
+   * Get subscriptions
+   */
+  getSubscriptions(): StoreKitProduct[] {
+    return this.getAllProducts().filter(p => p.type === 'autoRenewable');
   }
 
   /**
@@ -147,10 +254,10 @@ class StoreKitService {
   }
 
   /**
-   * Get the listing credit product
+   * Get credits amount for a product
    */
-  getListingCreditProduct(): StoreKitProduct | undefined {
-    return this.getProduct(PRODUCT_ID_LISTING_CREDIT);
+  getCreditsForProduct(productId: string): number {
+    return CREDITS_PER_PRODUCT[productId] || 0;
   }
 
   /**
@@ -167,6 +274,10 @@ class StoreKitService {
       
       if (result.success) {
         console.log('[StoreKit] Purchase successful:', result.transactionId);
+      } else if (result.cancelled) {
+        console.log('[StoreKit] Purchase cancelled by user');
+      } else if (result.pending) {
+        console.log('[StoreKit] Purchase pending');
       } else {
         console.log('[StoreKit] Purchase failed:', result.error);
       }
@@ -182,22 +293,16 @@ class StoreKitService {
   }
 
   /**
-   * Purchase listing credit
-   */
-  async purchaseListingCredit(): Promise<StoreKitPurchaseResult> {
-    return this.purchaseProduct(PRODUCT_ID_LISTING_CREDIT);
-  }
-
-  /**
    * Restore previous purchases
    */
-  async restorePurchases(): Promise<StoreKitPurchaseResult[]> {
+  async restorePurchases(): Promise<StoreKitEntitlement[]> {
     if (!this.plugin) {
       throw new Error('StoreKit not initialized');
     }
 
     try {
       const { transactions } = await this.plugin.restorePurchases();
+      console.log('[StoreKit] Restored transactions:', transactions.length);
       return transactions;
     } catch (error) {
       console.error('[StoreKit] Restore error:', error);
@@ -206,18 +311,18 @@ class StoreKitService {
   }
 
   /**
-   * Get the current receipt data (for server validation)
+   * Get current entitlements (active purchases/subscriptions)
    */
-  async getReceiptData(): Promise<string> {
+  async getEntitlements(): Promise<StoreKitEntitlement[]> {
     if (!this.plugin) {
       throw new Error('StoreKit not initialized');
     }
 
     try {
-      const { receiptData } = await this.plugin.getReceiptData();
-      return receiptData;
+      const { entitlements } = await this.plugin.getReceiptData();
+      return entitlements;
     } catch (error) {
-      console.error('[StoreKit] Error getting receipt:', error);
+      console.error('[StoreKit] Error getting entitlements:', error);
       throw error;
     }
   }

@@ -46,7 +46,21 @@ serve(async (req) => {
       }
     } else {
       // For development without webhook secret
-      event = JSON.parse(body);
+      if (!body || body.trim() === '') {
+        console.log("Empty body received, likely a test ping");
+        return new Response(JSON.stringify({ received: true, message: "Empty body - test ping" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      try {
+        event = JSON.parse(body);
+      } catch (parseError) {
+        console.error("Failed to parse webhook body:", parseError);
+        return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       console.log("Warning: Processing webhook without signature verification");
     }
 

@@ -34,6 +34,7 @@ export const useListingLimit = () => {
   const { user, profile } = useAuth();
   const [settings, setSettings] = useState<ListingLimitSettings | null>(null);
   const [userListingsCount, setUserListingsCount] = useState<number>(0);
+  const [availableCredits, setAvailableCredits] = useState<number>(0);
   const [loading, setLoading] = useState(true);
 
   // Fetch settings
@@ -84,25 +85,99 @@ export const useListingLimit = () => {
     }
   }, [user]);
 
+  // Fetch available credits (completed payments without associated property)
+  const fetchAvailableCredits = useCallback(async () => {
+    if (!user) {
+      setAvailableCredits(0);
+      return;
+    }
+
+    try {
+      const { count, error } = await supabase
+        .from('listing_payments')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('status', 'completed')
+        .is('property_id', null);
+
+      if (error) throw error;
+      setAvailableCredits(count || 0);
+    } catch (error) {
+      console.error('Error counting available credits:', error);
+      setAvailableCredits(0);
+    }
+  }, [user]);
+
+  // Use a credit for a property
+  const useCredit = useCallback(async (propertyId: string): Promise<boolean> => {
+    if (!user || availableCredits === 0) {
+      return false;
+    }
+
+    try {
+      // Find the oldest unused credit
+      const { data: credit, error: fetchError } = await supabase
+        .from('listing_payments')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('status', 'completed')
+        .is('property_id', null)
+        .order('completed_at', { ascending: true })
+        .limit(1)
+        .single();
+
+      if (fetchError || !credit) {
+        console.error('No credit found:', fetchError);
+        return false;
+      }
+
+      // Associate the credit with the property
+      const { error: updateError } = await supabase
+        .from('listing_payments')
+        .update({ property_id: propertyId })
+        .eq('id', credit.id);
+
+      if (updateError) {
+        console.error('Error using credit:', updateError);
+        return false;
+      }
+
+      // Refresh credits count
+      await fetchAvailableCredits();
+      return true;
+    } catch (error) {
+      console.error('Error using credit:', error);
+      return false;
+    }
+  }, [user, availableCredits, fetchAvailableCredits]);
+
   // Initialize
   useEffect(() => {
     const init = async () => {
       setLoading(true);
-      await Promise.all([fetchSettings(), fetchUserListingsCount()]);
+      await Promise.all([fetchSettings(), fetchUserListingsCount(), fetchAvailableCredits()]);
       setLoading(false);
     };
     init();
-  }, [fetchSettings, fetchUserListingsCount]);
+  }, [fetchSettings, fetchUserListingsCount, fetchAvailableCredits]);
 
   // Refresh count when user changes
   useEffect(() => {
     if (user) {
       fetchUserListingsCount();
+      fetchAvailableCredits();
     }
-  }, [user, fetchUserListingsCount]);
+  }, [user, fetchUserListingsCount, fetchAvailableCredits]);
 
-  // Calculate if user needs to pay
-  const needsPayment = settings?.enabled && userListingsCount >= (settings?.free_listings || 3);
+  // Calculate if user needs to pay (considering available credits)
+  const needsPayment = settings?.enabled && 
+    userListingsCount >= (settings?.free_listings || 3) && 
+    availableCredits === 0;
+
+  // User has exceeded free limit but has credits
+  const canUseCredit = settings?.enabled && 
+    userListingsCount >= (settings?.free_listings || 3) && 
+    availableCredits > 0;
 
   // Get remaining free listings
   const remainingFreeListings = Math.max(0, (settings?.free_listings || 3) - userListingsCount);
@@ -164,12 +239,15 @@ export const useListingLimit = () => {
   return {
     settings,
     userListingsCount,
+    availableCredits,
     loading,
     needsPayment,
+    canUseCredit,
     remainingFreeListings,
     priceForUser,
     getConvertedPrice,
     updateSettings,
-    refetch: () => Promise.all([fetchSettings(), fetchUserListingsCount()]),
+    useCredit,
+    refetch: () => Promise.all([fetchSettings(), fetchUserListingsCount(), fetchAvailableCredits()]),
   };
 };

@@ -126,8 +126,11 @@ const PublishPage = () => {
   const { 
     settings: limitSettings, 
     needsPayment, 
+    canUseCredit,
+    availableCredits,
     remainingFreeListings, 
     priceForUser,
+    useCredit,
     refetch: refetchLimits
   } = useListingLimit();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -686,6 +689,14 @@ const PublishPage = () => {
 
       if (propertyError) throw propertyError;
 
+      // If user used a credit (exceeded limit but had validated payment), associate it
+      if (canUseCredit && property.id) {
+        const creditUsed = await useCredit(property.id);
+        if (creditUsed) {
+          console.log('Credit used for property:', property.id);
+        }
+      }
+
       // Upload images
       for (let i = 0; i < images.length; i++) {
         const file = images[i];
@@ -892,6 +903,27 @@ const PublishPage = () => {
             ? 'Proposez votre logement en location courte durée' 
             : 'Vendez ou louez votre propriété'}
         </p>
+        
+        {/* Credits and listings info */}
+        <div className="mt-3 flex flex-wrap gap-2">
+          {remainingFreeListings > 0 && (
+            <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
+              {remainingFreeListings} annonce{remainingFreeListings > 1 ? 's' : ''} gratuite{remainingFreeListings > 1 ? 's' : ''} restante{remainingFreeListings > 1 ? 's' : ''}
+            </Badge>
+          )}
+          {canUseCredit && (
+            <Badge className="bg-green-500 text-white border-green-400 animate-pulse">
+              <Check className="w-3 h-3 mr-1" />
+              {availableCredits} crédit{availableCredits > 1 ? 's' : ''} disponible{availableCredits > 1 ? 's' : ''}
+            </Badge>
+          )}
+          {needsPayment && !canUseCredit && (
+            <Badge variant="secondary" className="bg-amber-500/20 text-amber-100 border-amber-400/30">
+              <Wallet className="w-3 h-3 mr-1" />
+              Paiement requis
+            </Badge>
+          )}
+        </div>
       </div>
 
       <div className="px-4 py-4 space-y-4">

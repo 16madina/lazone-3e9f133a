@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react';
-import { Loader2, Settings, DollarSign, Users, TrendingUp } from 'lucide-react';
+import { Loader2, Settings, DollarSign, Users, TrendingUp, BarChart3 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useListingLimit, ListingLimitSettings } from '@/hooks/useListingLimit';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import RevenueDashboard from './RevenueDashboard';
 
 interface PaymentStats {
   totalPayments: number;
@@ -130,7 +132,23 @@ const ListingLimitsTab = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <Tabs defaultValue="dashboard" className="space-y-4">
+      <TabsList className="grid w-full grid-cols-2">
+        <TabsTrigger value="dashboard" className="text-xs">
+          <BarChart3 className="w-3 h-3 mr-1" />
+          Tableau de bord
+        </TabsTrigger>
+        <TabsTrigger value="settings" className="text-xs">
+          <Settings className="w-3 h-3 mr-1" />
+          Paramètres
+        </TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="dashboard">
+        <RevenueDashboard />
+      </TabsContent>
+
+      <TabsContent value="settings" className="space-y-6">
       {/* Stats Cards */}
       <div className="grid grid-cols-2 gap-4">
         <div className="bg-card p-4 rounded-xl border">
@@ -284,7 +302,8 @@ const ListingLimitsTab = () => {
           </div>
         )}
       </div>
-    </div>
+      </TabsContent>
+    </Tabs>
   );
 };
 

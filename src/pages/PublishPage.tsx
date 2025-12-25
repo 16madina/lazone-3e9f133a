@@ -201,30 +201,153 @@ const PublishPage = () => {
   const [documentsOpen, setDocumentsOpen] = useState(false);
   const [restrictionsOpen, setRestrictionsOpen] = useState(false);
 
+  // Save form data to sessionStorage before Stripe redirect
+  const saveFormToStorage = () => {
+    const formDataToSave = {
+      propertyType,
+      transactionType,
+      title,
+      description,
+      address,
+      city,
+      postalCode,
+      price,
+      area,
+      selectedCountry,
+      markerPosition,
+      bedrooms,
+      bathrooms,
+      selectedAmenities,
+      selectedDocuments,
+      leaseDuration,
+      depositMonths,
+      pricePerNight,
+      minimumStay,
+      selectedRestrictions,
+      discount3Nights,
+      discount5Nights,
+      discount7Nights,
+      discount14Nights,
+      discount30Nights,
+      whatsappEnabled,
+      pendingPropertyId,
+    };
+    sessionStorage.setItem('publish_form_data', JSON.stringify(formDataToSave));
+  };
+
+  // Restore form data from sessionStorage after Stripe return
+  const restoreFormFromStorage = () => {
+    const saved = sessionStorage.getItem('publish_form_data');
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        if (data.propertyType) setPropertyType(data.propertyType);
+        if (data.transactionType) setTransactionType(data.transactionType);
+        if (data.title) setTitle(data.title);
+        if (data.description) setDescription(data.description);
+        if (data.address) setAddress(data.address);
+        if (data.city) setCity(data.city);
+        if (data.postalCode) setPostalCode(data.postalCode);
+        if (data.price) setPrice(data.price);
+        if (data.area) setArea(data.area);
+        if (data.selectedCountry) setSelectedCountry(data.selectedCountry);
+        if (data.markerPosition) setMarkerPosition(data.markerPosition);
+        if (data.bedrooms) setBedrooms(data.bedrooms);
+        if (data.bathrooms) setBathrooms(data.bathrooms);
+        if (data.selectedAmenities) setSelectedAmenities(data.selectedAmenities);
+        if (data.selectedDocuments) setSelectedDocuments(data.selectedDocuments);
+        if (data.leaseDuration) setLeaseDuration(data.leaseDuration);
+        if (data.depositMonths) setDepositMonths(data.depositMonths);
+        if (data.pricePerNight) setPricePerNight(data.pricePerNight);
+        if (data.minimumStay) setMinimumStay(data.minimumStay);
+        if (data.selectedRestrictions) setSelectedRestrictions(data.selectedRestrictions);
+        if (data.discount3Nights) setDiscount3Nights(data.discount3Nights);
+        if (data.discount5Nights) setDiscount5Nights(data.discount5Nights);
+        if (data.discount7Nights) setDiscount7Nights(data.discount7Nights);
+        if (data.discount14Nights) setDiscount14Nights(data.discount14Nights);
+        if (data.discount30Nights) setDiscount30Nights(data.discount30Nights);
+        if (data.whatsappEnabled !== undefined) setWhatsappEnabled(data.whatsappEnabled);
+        if (data.pendingPropertyId) setPendingPropertyId(data.pendingPropertyId);
+        
+        // Clear storage after restore
+        sessionStorage.removeItem('publish_form_data');
+        return true;
+      } catch (e) {
+        console.error('Error restoring form data:', e);
+      }
+    }
+    return false;
+  };
+
   // Handle payment return from Stripe
   useEffect(() => {
     const paymentStatus = searchParams.get('payment');
     if (paymentStatus === 'success') {
-      toast({
-        title: 'Paiement réussi !',
-        description: 'Votre crédit a été ajouté. Vous pouvez maintenant publier votre annonce.',
-      });
+      // Restore form data first to get pendingPropertyId
+      const saved = sessionStorage.getItem('publish_form_data');
+      let restoredPropertyId: string | null = null;
+      
+      if (saved) {
+        try {
+          const data = JSON.parse(saved);
+          restoredPropertyId = data.pendingPropertyId || null;
+          sessionStorage.removeItem('publish_form_data');
+        } catch (e) {
+          console.error('Error parsing saved form data:', e);
+        }
+      }
+      
+      // Activate the pending property if we have one
+      const activatePendingProperty = async () => {
+        if (restoredPropertyId) {
+          const { error } = await supabase
+            .from('properties')
+            .update({ is_active: true })
+            .eq('id', restoredPropertyId);
+          
+          if (error) {
+            console.error('Error activating property:', error);
+            toast({
+              title: 'Paiement réussi !',
+              description: 'Votre crédit a été ajouté mais l\'annonce n\'a pas pu être activée. Contactez le support.',
+              variant: 'destructive',
+            });
+          } else {
+            toast({
+              title: 'Annonce publiée !',
+              description: 'Votre paiement a été validé et votre annonce est maintenant en ligne.',
+            });
+            // Redirect to profile after success
+            navigate('/profile');
+          }
+        } else {
+          toast({
+            title: 'Paiement réussi !',
+            description: 'Votre crédit a été ajouté. Vous pouvez maintenant publier votre annonce.',
+          });
+        }
+      };
+      
+      activatePendingProperty();
       refetchLimits();
       setHasPaid(true);
       // Clean up URL
       searchParams.delete('payment');
       setSearchParams(searchParams, { replace: true });
     } else if (paymentStatus === 'cancelled') {
+      // Restore form data even if cancelled
+      restoreFormFromStorage();
+      
       toast({
         title: 'Paiement annulé',
-        description: 'Vous pouvez réessayer quand vous voulez.',
+        description: 'Vos données ont été conservées. Vous pouvez réessayer.',
         variant: 'destructive',
       });
       // Clean up URL
       searchParams.delete('payment');
       setSearchParams(searchParams, { replace: true });
     }
-  }, [searchParams, setSearchParams, refetchLimits]);
+  }, [searchParams, setSearchParams, refetchLimits, navigate]);
 
   // Pre-fill country from user profile
   useEffect(() => {
@@ -2003,6 +2126,7 @@ const PublishPage = () => {
         onPaymentComplete={handlePaymentComplete}
         listingType={isResidence ? 'short_term' : 'long_term'}
         propertyId={pendingPropertyId || undefined}
+        onBeforeStripeRedirect={saveFormToStorage}
       />
     </div>
   );

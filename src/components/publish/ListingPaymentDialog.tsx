@@ -29,6 +29,7 @@ interface ListingPaymentDialogProps {
   onPaymentComplete: () => void;
   listingType: 'short_term' | 'long_term';
   propertyId?: string;
+  onBeforeStripeRedirect?: () => void;
 }
 
 const ListingPaymentDialog = ({
@@ -40,6 +41,7 @@ const ListingPaymentDialog = ({
   onPaymentComplete,
   listingType,
   propertyId,
+  onBeforeStripeRedirect,
 }: ListingPaymentDialogProps) => {
   const { user } = useAuth();
   const { activeNumbers, settings, loading: loadingNumbers } = usePaymentNumbers();
@@ -81,6 +83,9 @@ const ListingPaymentDialog = ({
     }
 
     if (method === 'stripe') {
+      // Save form data before Stripe redirect
+      onBeforeStripeRedirect?.();
+      
       setStep('processing');
       const result = await startStripePayment({
         amount: price.amount,

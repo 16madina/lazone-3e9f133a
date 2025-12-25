@@ -57,20 +57,29 @@ serve(async (req) => {
     // Create a unique reference for this payment
     const transactionRef = `LZ-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
+    // Zero-decimal currencies don't need to multiply by 100
+    const zeroDecimalCurrencies = ['xof', 'xaf', 'xpf', 'bif', 'clp', 'djf', 'gnf', 'jpy', 'kmf', 'krw', 'mga', 'pyg', 'rwf', 'ugx', 'vnd', 'vuv'];
+    const currencyLower = currency.toLowerCase();
+    const unitAmount = zeroDecimalCurrencies.includes(currencyLower) 
+      ? Math.round(amount) 
+      : Math.round(amount * 100);
+
+    console.log(`Creating checkout: amount=${amount}, currency=${currencyLower}, unitAmount=${unitAmount}`);
+
     // Create checkout session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: [
         {
           price_data: {
-            currency: currency.toLowerCase(),
+            currency: currencyLower,
             product_data: {
               name: "Crédit annonce LaZone",
               description: listingType === "short_term" 
                 ? "1 crédit pour publier une annonce (Mode Résidence)" 
                 : "1 crédit pour publier une annonce (Mode Immobilier)",
             },
-            unit_amount: Math.round(amount * 100), // Stripe uses cents
+            unit_amount: unitAmount,
           },
           quantity: 1,
         },

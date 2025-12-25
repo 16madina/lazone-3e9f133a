@@ -26,6 +26,7 @@ interface ListingPaymentDialogProps {
   currentListings: number;
   onPaymentComplete: () => void;
   listingType: 'short_term' | 'long_term';
+  propertyId?: string; // ID of the pending property to activate after payment
 }
 
 const ListingPaymentDialog = ({
@@ -36,6 +37,7 @@ const ListingPaymentDialog = ({
   currentListings,
   onPaymentComplete,
   listingType,
+  propertyId,
 }: ListingPaymentDialogProps) => {
   const { user } = useAuth();
   const { activeNumbers, settings, loading: loadingNumbers } = usePaymentNumbers();
@@ -74,6 +76,7 @@ const ListingPaymentDialog = ({
     setLoading(true);
     try {
       // Create a PENDING payment record (will be validated by admin)
+      // Associate with the pending property if provided
       const { data: payment, error: paymentError } = await supabase
         .from('listing_payments')
         .insert({
@@ -85,6 +88,7 @@ const ListingPaymentDialog = ({
           transaction_ref: `LZ-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           sender_phone: phoneNumber, // Phone used for the transfer
           listing_type: listingType, // Mode: Immobilier or Résidence
+          property_id: propertyId || null, // Associate with the pending property
         })
         .select()
         .single();

@@ -128,6 +128,7 @@ const PublishPage = () => {
     needsPayment, 
     canUseCredit,
     availableCredits,
+    userListingsCount,
     remainingFreeListings, 
     priceForUser,
     useCredit,
@@ -140,6 +141,7 @@ const PublishPage = () => {
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [pendingPropertyId, setPendingPropertyId] = useState<string | null>(null);
   const [hasPaid, setHasPaid] = useState(false);
   
   // Form state
@@ -616,12 +618,6 @@ const PublishPage = () => {
       return;
     }
 
-    // Check listing limit - if user needs to pay and hasn't paid yet
-    if (needsPayment && !hasPaid) {
-      setShowPaymentDialog(true);
-      return;
-    }
-
     // Content filtering check
     const contentCheck = filterMultipleFields({
       title: title.trim(),
@@ -640,6 +636,9 @@ const PublishPage = () => {
 
     setLoading(true);
     try {
+      // Determine if this property should be active immediately or pending payment
+      const shouldBeActive = !needsPayment || canUseCredit || hasPaid;
+      
       // Create property with coordinates and country code
       // In Residence mode, use pricePerNight as the main price if price is not set
       const finalPrice = isResidence && !price && pricePerNight 
@@ -683,21 +682,15 @@ const PublishPage = () => {
           discount_7_nights: isResidence && discount7Nights ? parseFloat(discount7Nights) : null,
           discount_14_nights: isResidence && discount14Nights ? parseFloat(discount14Nights) : null,
           discount_30_nights: isResidence && discount30Nights ? parseFloat(discount30Nights) : null,
+          // Set is_active based on payment status
+          is_active: shouldBeActive,
         })
         .select()
         .single();
 
       if (propertyError) throw propertyError;
 
-      // If user used a credit (exceeded limit but had validated payment), associate it
-      if (canUseCredit && property.id) {
-        const creditUsed = await useCredit(property.id);
-        if (creditUsed) {
-          console.log('Credit used for property:', property.id);
-        }
-      }
-
-      // Upload images
+      // Upload images first (needed for both paid and pending)
       for (let i = 0; i < images.length; i++) {
         const file = images[i];
         const fileExt = file.name.split('.').pop();
@@ -726,6 +719,22 @@ const PublishPage = () => {
           });
       }
 
+      // If user needs to pay, show payment dialog with property ID
+      if (needsPayment && !canUseCredit && !hasPaid) {
+        setLoading(false);
+        setPendingPropertyId(property.id);
+        setShowPaymentDialog(true);
+        return;
+      }
+
+      // If user used a credit (exceeded limit but had validated payment), associate it
+      if (canUseCredit && property.id) {
+        const creditUsed = await useCredit(property.id);
+        if (creditUsed) {
+          console.log('Credit used for property:', property.id);
+        }
+      }
+
       toast({ title: 'Annonce publiée avec succès!' });
       navigate('/profile');
     } catch (error) {
@@ -739,8 +748,11 @@ const PublishPage = () => {
   const handlePaymentComplete = () => {
     setHasPaid(true);
     refetchLimits();
-    // Auto-submit after payment
-    setTimeout(() => handleSubmit(), 500);
+    toast({ 
+      title: 'Demande de paiement enregistrée',
+      description: 'Votre annonce sera publiée après validation du paiement par un administrateur',
+    });
+    navigate('/profile');
   };
 
   const ErrorMessage = ({ message }: { message?: string }) => {
@@ -1950,10 +1962,11 @@ const PublishPage = () => {
         open={showPaymentDialog}
         onOpenChange={setShowPaymentDialog}
         price={priceForUser}
-        freeListings={limitSettings?.free_listings || 3}
-        currentListings={limitSettings?.free_listings ? limitSettings.free_listings - remainingFreeListings : 0}
+        freeListings={limitSettings?.free_listings ?? 3}
+        currentListings={userListingsCount}
         onPaymentComplete={handlePaymentComplete}
         listingType={isResidence ? 'short_term' : 'long_term'}
+        propertyId={pendingPropertyId || undefined}
       />
     </div>
   );

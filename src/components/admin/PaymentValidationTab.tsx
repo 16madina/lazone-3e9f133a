@@ -49,6 +49,7 @@ interface Payment {
   completed_at: string | null;
   sender_phone: string | null;
   listing_type: string | null;
+  property_id: string | null;
   user_name: string | null;
   user_phone: string | null;
   user_email: string | null;
@@ -129,6 +130,20 @@ const PaymentValidationTab = () => {
 
       if (updateError) throw updateError;
 
+      // If payment has an associated property, activate it
+      if (payment.property_id) {
+        const { error: propertyError } = await supabase
+          .from('properties')
+          .update({ is_active: true })
+          .eq('id', payment.property_id);
+
+        if (propertyError) {
+          console.error('Error activating property:', propertyError);
+        } else {
+          console.log('Property activated:', payment.property_id);
+        }
+      }
+
       // Create notification for user
       const { error: notifError } = await supabase
         .from('notifications')
@@ -136,14 +151,16 @@ const PaymentValidationTab = () => {
           user_id: payment.user_id,
           actor_id: user?.id || payment.user_id,
           type: 'payment_approved',
-          entity_id: payment.id,
+          entity_id: payment.property_id || payment.id, // Link to property if available
         });
 
       if (notifError) console.error('Notification error:', notifError);
 
       toast({
         title: 'Paiement validé',
-        description: `Le paiement de ${payment.user_name} a été approuvé`,
+        description: payment.property_id 
+          ? `Le paiement de ${payment.user_name} a été approuvé et l'annonce est maintenant active`
+          : `Le paiement de ${payment.user_name} a été approuvé`,
       });
 
       // Refresh list

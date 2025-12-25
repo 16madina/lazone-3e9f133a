@@ -224,7 +224,7 @@ const CreditsPage = () => {
 
           {loading || !initialized ? (
             <div className="space-y-3">
-              {[1, 2, 3].map(i => (
+              {[1, 2].map(i => (
                 <Skeleton key={i} className="h-32 rounded-xl" />
               ))}
             </div>
@@ -236,10 +236,8 @@ const CreditsPage = () => {
                 const isPremium = product.id.includes('premium');
                 
                 const features = isPremium 
-                  ? ['Annonces illimitées', 'Mise en avant', 'Support prioritaire', 'Badge Premium']
-                  : isPro
-                  ? ['30 annonces/mois', 'Badge Pro', 'Statistiques avancées']
-                  : ['10 annonces/mois', 'Support email'];
+                  ? ['Annonces illimitées', '4 annonces sponsorisées/mois', 'Mise en avant', 'Support prioritaire', 'Badge Premium']
+                  : ['30 annonces/mois', '2 annonces sponsorisées/mois', 'Badge Pro'];
 
                 return (
                   <motion.div

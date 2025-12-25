@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   Camera, MapPin, Home, DollarSign, Upload, Plus, X, 
   Bed, Bath, Maximize, FileText, Clock, Wallet, Check,
@@ -120,6 +120,7 @@ const createValidationSchema = (propertyType: PropertyType, transactionType: Tra
 
 const PublishPage = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user, profile, isEmailVerified } = useAuth();
   const { isResidence } = useAppMode();
   const { takePicture, pickMultiple, loading: cameraLoading } = useCamera();
@@ -199,6 +200,31 @@ const PublishPage = () => {
   const [amenitiesOpen, setAmenitiesOpen] = useState(false);
   const [documentsOpen, setDocumentsOpen] = useState(false);
   const [restrictionsOpen, setRestrictionsOpen] = useState(false);
+
+  // Handle payment return from Stripe
+  useEffect(() => {
+    const paymentStatus = searchParams.get('payment');
+    if (paymentStatus === 'success') {
+      toast({
+        title: 'Paiement réussi !',
+        description: 'Votre crédit a été ajouté. Vous pouvez maintenant publier votre annonce.',
+      });
+      refetchLimits();
+      setHasPaid(true);
+      // Clean up URL
+      searchParams.delete('payment');
+      setSearchParams(searchParams, { replace: true });
+    } else if (paymentStatus === 'cancelled') {
+      toast({
+        title: 'Paiement annulé',
+        description: 'Vous pouvez réessayer quand vous voulez.',
+        variant: 'destructive',
+      });
+      // Clean up URL
+      searchParams.delete('payment');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams, refetchLimits]);
 
   // Pre-fill country from user profile
   useEffect(() => {

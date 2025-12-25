@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, CreditCard, AlertCircle, Check, Phone, Clock, Copy, Apple, Smartphone } from 'lucide-react';
+import { Loader2, CreditCard, AlertCircle, Check, Phone, Clock, Copy, Apple, Smartphone, ExternalLink } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -47,8 +47,9 @@ const ListingPaymentDialog = ({
   
   const [loading, setLoading] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [step, setStep] = useState<'info' | 'choose' | 'mobile_money' | 'pending' | 'processing'>('info');
+  const [step, setStep] = useState<'info' | 'choose' | 'mobile_money' | 'pending' | 'processing' | 'stripe_fallback'>('info');
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
+  const [stripeUrl, setStripeUrl] = useState<string | null>(null);
 
   // Determine available payment methods
   const availableMethods: PaymentMethod[] = [];
@@ -88,10 +89,16 @@ const ListingPaymentDialog = ({
         propertyId,
       });
       
-      if (!result.success) {
+      if (result.success && result.stripeUrl) {
+        // Give time for popup/redirect, then show fallback
+        setTimeout(() => {
+          setStripeUrl(result.stripeUrl || null);
+          setStep('stripe_fallback');
+        }, 2000);
+      } else if (!result.success) {
         setStep('choose');
       }
-      // If success, user will be redirected to Stripe
+      // If success without URL, user was redirected
     }
 
     if (method === 'apple_iap') {
@@ -176,6 +183,7 @@ const ListingPaymentDialog = ({
         setStep('info');
         setPhoneNumber('');
         setSelectedMethod(null);
+        setStripeUrl(null);
       }, 300);
     }
   };
@@ -410,9 +418,55 @@ const ListingPaymentDialog = ({
             <h3 className="text-lg font-semibold mb-2">Traitement en cours...</h3>
             <p className="text-muted-foreground">
               {selectedMethod === 'stripe' 
-                ? 'Redirection vers la page de paiement...'
+                ? 'Ouverture de la page de paiement...'
                 : 'Veuillez patienter...'}
             </p>
+          </div>
+        )}
+
+        {/* Step: Stripe Fallback - Manual open button if popup was blocked */}
+        {step === 'stripe_fallback' && stripeUrl && (
+          <div className="py-6 text-center">
+            <div className="w-16 h-16 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <ExternalLink className="w-8 h-8 text-amber-600" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Page de paiement prête</h3>
+            <p className="text-muted-foreground mb-4">
+              Si la page ne s'est pas ouverte, cliquez sur le bouton ci-dessous.
+            </p>
+            
+            <div className="space-y-3">
+              <Button 
+                onClick={() => window.open(stripeUrl, '_blank', 'noopener,noreferrer')}
+                className="w-full"
+              >
+                <ExternalLink className="w-4 h-4 mr-2" />
+                Ouvrir la page de paiement
+              </Button>
+              
+              <Button
+                variant="outline"
+                onClick={() => {
+                  navigator.clipboard.writeText(stripeUrl);
+                  toast({
+                    title: 'Lien copié !',
+                    description: 'Collez-le dans votre navigateur',
+                  });
+                }}
+                className="w-full"
+              >
+                <Copy className="w-4 h-4 mr-2" />
+                Copier le lien
+              </Button>
+            </div>
+
+            <p className="text-xs text-muted-foreground mt-4">
+              Après le paiement, revenez sur cette page et actualisez.
+            </p>
+            
+            <Button onClick={() => setStep('choose')} variant="ghost" className="mt-4">
+              Retour
+            </Button>
           </div>
         )}
 

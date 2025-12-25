@@ -854,9 +854,21 @@ const ProfilePage = () => {
                 </div>
                 
                 {/* User Name - on separate line */}
-                <h1 className="text-lg font-bold text-foreground mt-2">
-                  {user.user_metadata?.full_name || profile?.full_name || 'Utilisateur'}
-                </h1>
+                <div className="flex items-center gap-2 mt-2">
+                  <h1 className="text-lg font-bold text-foreground">
+                    {user.user_metadata?.full_name || profile?.full_name || 'Utilisateur'}
+                  </h1>
+                  {activeSubscription && (
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold flex items-center gap-1 ${
+                      activeSubscription.product_id.includes('premium') 
+                        ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white' 
+                        : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
+                    }`}>
+                      <Crown className="w-3 h-3" />
+                      {activeSubscription.product_id.includes('premium') ? 'Premium' : 'Pro'}
+                    </span>
+                  )}
+                </div>
 
                 {/* Tags */}
                 <div className="flex flex-wrap gap-1.5 mt-2">

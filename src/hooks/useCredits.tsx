@@ -67,9 +67,10 @@ export function useCredits(): UseCreditsReturn {
   const availableCredits = totalCredits - usedCredits;
   const freeCreditsRemaining = Math.max(0, freeCreditsLimit - freeListingsUsed);
 
-  // Get active subscription
+  // Get active subscription (check both is_subscription flag and product_id pattern)
   const activeSubscription = purchases.find(
-    p => p.is_subscription && p.status === 'active' && 
+    p => (p.is_subscription || p.product_id.includes('sub.') || p.product_id.includes('agency.')) && 
+    p.status === 'active' && 
     (!p.expiration_date || new Date(p.expiration_date) > new Date())
   ) || null;
 

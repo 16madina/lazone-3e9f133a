@@ -13,11 +13,14 @@ import {
   Eye,
   EyeOff,
   Loader2,
-  Calendar
+  Calendar,
+  Sparkles,
+  Crown
 } from 'lucide-react';
 import { BlockedDatesManager } from '@/components/appointment/BlockedDatesManager';
 import { useAuth } from '@/hooks/useAuth';
 import { useAppMode } from '@/hooks/useAppMode';
+import { useSponsoredListings } from '@/hooks/useSponsoredListings';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -36,6 +39,8 @@ interface Property {
   property_type: string;
   type: string;
   is_active: boolean;
+  is_sponsored: boolean;
+  sponsored_until: string | null;
   created_at: string;
   listing_type: string;
   property_images: { url: string; is_primary: boolean }[];
@@ -45,6 +50,15 @@ const MyListingsPage = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { appMode, isResidence } = useAppMode();
+  const { 
+    sponsoredQuota, 
+    sponsoredUsed, 
+    sponsoredRemaining, 
+    subscriptionType,
+    sponsorProperty, 
+    unsponsorProperty,
+    refreshSponsoredData 
+  } = useSponsoredListings();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -149,6 +163,36 @@ const MyListingsPage = () => {
     }
   };
 
+  const handleSponsor = async (property: Property) => {
+    if (property.is_sponsored && property.sponsored_until && new Date(property.sponsored_until) > new Date()) {
+      // Already sponsored - unsponsor
+      const success = await unsponsorProperty(property.id);
+      if (success) {
+        setProperties(prev => 
+          prev.map(p => 
+            p.id === property.id ? { ...p, is_sponsored: false, sponsored_until: null } : p
+          )
+        );
+      }
+    } else {
+      // Sponsor the property
+      const success = await sponsorProperty(property.id);
+      if (success) {
+        const sponsoredUntil = new Date();
+        sponsoredUntil.setDate(sponsoredUntil.getDate() + 30);
+        setProperties(prev => 
+          prev.map(p => 
+            p.id === property.id ? { ...p, is_sponsored: true, sponsored_until: sponsoredUntil.toISOString() } : p
+          )
+        );
+      }
+    }
+  };
+
+  const isPropertySponsored = (property: Property) => {
+    return property.is_sponsored && property.sponsored_until && new Date(property.sponsored_until) > new Date();
+  };
+
   const getPrimaryImage = (images: { url: string; is_primary: boolean }[]) => {
     const primary = images?.find(img => img.is_primary);
     return primary?.url || images?.[0]?.url || '/placeholder.svg';
@@ -218,6 +262,35 @@ const MyListingsPage = () => {
           </div>
         ) : (
           <div className="space-y-4">
+            {/* Sponsored Quota Banner */}
+            {subscriptionType && (
+              <div className={`p-3 rounded-xl ${
+                subscriptionType === 'premium' 
+                  ? 'bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20' 
+                  : 'bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20'
+              }`}>
+                <div className="flex items-center gap-2 mb-1">
+                  <Crown className={`w-4 h-4 ${subscriptionType === 'premium' ? 'text-amber-500' : 'text-purple-500'}`} />
+                  <span className="text-sm font-medium">
+                    Annonces sponsorisées
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {sponsoredRemaining} sur {sponsoredQuota} disponibles ce mois
+                </p>
+                <div className="mt-2 h-1.5 bg-muted rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full transition-all ${
+                      subscriptionType === 'premium' 
+                        ? 'bg-gradient-to-r from-amber-500 to-orange-500' 
+                        : 'bg-gradient-to-r from-purple-500 to-pink-500'
+                    }`}
+                    style={{ width: `${sponsoredQuota > 0 ? ((sponsoredQuota - sponsoredRemaining) / sponsoredQuota) * 100 : 0}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Summary */}
             <div className="flex items-center justify-between mb-4">
               <p className="text-sm text-muted-foreground">
@@ -236,16 +309,23 @@ const MyListingsPage = () => {
             {properties.map((property) => (
               <div
                 key={property.id}
-                className="bg-card rounded-xl shadow-sm overflow-hidden"
+                className={`bg-card rounded-xl shadow-sm overflow-hidden ${
+                  isPropertySponsored(property) ? 'ring-2 ring-amber-500/50' : ''
+                }`}
               >
                 <div className="flex">
                   {/* Image */}
-                  <div className="w-32 h-32 flex-shrink-0">
+                  <div className="w-32 h-32 flex-shrink-0 relative">
                     <img
                       src={getPrimaryImage(property.property_images)}
                       alt={property.title}
                       className="w-full h-full object-cover"
                     />
+                    {isPropertySponsored(property) && (
+                      <div className="absolute top-1 left-1 px-1.5 py-0.5 bg-amber-500 rounded-full">
+                        <Sparkles className="w-3 h-3 text-white" />
+                      </div>
+                    )}
                   </div>
 
                   {/* Info */}
@@ -314,6 +394,31 @@ const MyListingsPage = () => {
                             </button>
                           }
                         />
+                      )}
+                      {/* Sponsor Button */}
+                      {subscriptionType && property.is_active && (
+                        <button
+                          onClick={() => handleSponsor(property)}
+                          className={`p-1.5 rounded-lg transition-colors ${
+                            isPropertySponsored(property)
+                              ? 'bg-amber-100 hover:bg-amber-200'
+                              : sponsoredRemaining > 0
+                                ? 'bg-amber-50 hover:bg-amber-100'
+                                : 'bg-muted opacity-50 cursor-not-allowed'
+                          }`}
+                          title={
+                            isPropertySponsored(property) 
+                              ? 'Annuler le sponsoring' 
+                              : sponsoredRemaining > 0 
+                                ? 'Sponsoriser cette annonce' 
+                                : 'Quota de sponsoring atteint'
+                          }
+                          disabled={!isPropertySponsored(property) && sponsoredRemaining === 0}
+                        >
+                          <Sparkles className={`w-4 h-4 ${
+                            isPropertySponsored(property) ? 'text-amber-600' : 'text-amber-500'
+                          }`} />
+                        </button>
                       )}
                       <button
                         onClick={() => togglePropertyStatus(property.id, property.is_active)}

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Loader2, Settings, DollarSign, Users, TrendingUp, BarChart3 } from 'lucide-react';
+import { Loader2, Settings, DollarSign, Users, TrendingUp, BarChart3, Home, Building } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -8,10 +8,11 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useListingLimit, ListingLimitSettings } from '@/hooks/useListingLimit';
+import { useListingLimit, ListingLimitSettings, ModeLimitSettings } from '@/hooks/useListingLimit';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import RevenueDashboard from './RevenueDashboard';
+import { useAppMode } from '@/hooks/useAppMode';
 
 interface PaymentStats {
   totalPayments: number;
@@ -28,8 +29,10 @@ interface PaymentStats {
 
 const ListingLimitsTab = () => {
   const { settings, updateSettings, loading: settingsLoading } = useListingLimit();
+  const { isResidence } = useAppMode();
   const [localSettings, setLocalSettings] = useState<ListingLimitSettings | null>(null);
   const [saving, setSaving] = useState(false);
+  const [modeTab, setModeTab] = useState<'long_term' | 'short_term'>('long_term');
   const [stats, setStats] = useState<PaymentStats>({
     totalPayments: 0,
     totalRevenue: 0,
@@ -37,10 +40,38 @@ const ListingLimitsTab = () => {
   });
   const [loadingStats, setLoadingStats] = useState(true);
 
-  // Sync local settings with fetched settings
+  // Initialize mode tab based on current app mode
+  useEffect(() => {
+    setModeTab(isResidence ? 'short_term' : 'long_term');
+  }, [isResidence]);
+
+  // Sync local settings with fetched settings and ensure mode-specific settings exist
   useEffect(() => {
     if (settings) {
-      setLocalSettings(settings);
+      // Ensure mode-specific settings exist
+      const defaultModeSettings: ModeLimitSettings = {
+        free_listings_default: 3,
+        free_listings_agence: 1,
+        free_listings_particulier: 3,
+        free_listings_proprietaire: 3,
+        free_listings_demarcheur: 3,
+        price_per_extra: 1000,
+      };
+      
+      const updatedSettings: ListingLimitSettings = {
+        ...settings,
+        long_term: settings.long_term || {
+          free_listings_default: settings.free_listings_default,
+          free_listings_agence: settings.free_listings_agence,
+          free_listings_particulier: settings.free_listings_particulier,
+          free_listings_proprietaire: settings.free_listings_proprietaire,
+          free_listings_demarcheur: settings.free_listings_demarcheur,
+          price_per_extra: settings.price_per_extra,
+        },
+        short_term: settings.short_term || defaultModeSettings,
+      };
+      
+      setLocalSettings(updatedSettings);
     }
   }, [settings]);
 
@@ -204,109 +235,253 @@ const ListingLimitsTab = () => {
             />
           </div>
 
-          {/* Free Listings by User Type */}
-          <div className="space-y-4">
-            <Label className="font-medium">Annonces gratuites par type d'utilisateur</Label>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="free_listings_particulier" className="text-sm text-muted-foreground">Particuliers</Label>
-                <Input
-                  id="free_listings_particulier"
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={localSettings.free_listings_particulier}
-                  onChange={(e) =>
-                    setLocalSettings({
-                      ...localSettings,
-                      free_listings_particulier: parseInt(e.target.value) || 0,
-                    })
-                  }
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="free_listings_proprietaire" className="text-sm text-muted-foreground">Propriétaires</Label>
-                <Input
-                  id="free_listings_proprietaire"
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={localSettings.free_listings_proprietaire}
-                  onChange={(e) =>
-                    setLocalSettings({
-                      ...localSettings,
-                      free_listings_proprietaire: parseInt(e.target.value) || 0,
-                    })
-                  }
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="free_listings_demarcheur" className="text-sm text-muted-foreground">Démarcheurs</Label>
-                <Input
-                  id="free_listings_demarcheur"
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={localSettings.free_listings_demarcheur}
-                  onChange={(e) =>
-                    setLocalSettings({
-                      ...localSettings,
-                      free_listings_demarcheur: parseInt(e.target.value) || 0,
-                    })
-                  }
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="free_listings_agence" className="text-sm text-muted-foreground">Agences</Label>
-                <Input
-                  id="free_listings_agence"
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={localSettings.free_listings_agence}
-                  onChange={(e) =>
-                    setLocalSettings({
-                      ...localSettings,
-                      free_listings_agence: parseInt(e.target.value) || 0,
-                    })
-                  }
-                />
-              </div>
-            </div>
-            
-            <p className="text-xs text-muted-foreground">
-              Chaque type d'utilisateur peut publier le nombre d'annonces gratuites indiqué ci-dessus
-            </p>
-          </div>
+          {/* Mode Tabs for Settings */}
+          <Tabs value={modeTab} onValueChange={(v) => setModeTab(v as 'long_term' | 'short_term')}>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="long_term" className="text-xs">
+                <Building className="w-3 h-3 mr-1" />
+                Immobilier
+              </TabsTrigger>
+              <TabsTrigger value="short_term" className="text-xs">
+                <Home className="w-3 h-3 mr-1" />
+                Résidence
+              </TabsTrigger>
+            </TabsList>
 
-          {/* Price per Extra */}
-          <div className="space-y-2">
-            <Label htmlFor="price_per_extra" className="flex items-center gap-2">
-              <DollarSign className="w-4 h-4" />
-              Prix par annonce supplémentaire (FCFA)
-            </Label>
-            <Input
-              id="price_per_extra"
-              type="number"
-              min="0"
-              step="100"
-              value={localSettings.price_per_extra}
-              onChange={(e) =>
-                setLocalSettings({
-                  ...localSettings,
-                  price_per_extra: parseInt(e.target.value) || 0,
-                })
-              }
-              className="max-w-[200px]"
-            />
-            <p className="text-xs text-muted-foreground">
-              Ce prix sera automatiquement converti selon le pays de l'utilisateur
-            </p>
-          </div>
+            {/* Long Term Settings */}
+            <TabsContent value="long_term" className="space-y-4 mt-4">
+              <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
+                <p className="text-sm text-blue-700 font-medium">Mode Immobilier (long_term)</p>
+                <p className="text-xs text-blue-600">Paramètres pour les annonces de vente et location longue durée</p>
+              </div>
+              
+              {/* Free Listings by User Type */}
+              <div className="space-y-4">
+                <Label className="font-medium">Annonces gratuites par type d'utilisateur</Label>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm text-muted-foreground">Particuliers</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={localSettings.long_term?.free_listings_particulier ?? 3}
+                      onChange={(e) =>
+                        setLocalSettings({
+                          ...localSettings,
+                          long_term: {
+                            ...localSettings.long_term!,
+                            free_listings_particulier: parseInt(e.target.value) || 0,
+                          },
+                        })
+                      }
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-sm text-muted-foreground">Propriétaires</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={localSettings.long_term?.free_listings_proprietaire ?? 3}
+                      onChange={(e) =>
+                        setLocalSettings({
+                          ...localSettings,
+                          long_term: {
+                            ...localSettings.long_term!,
+                            free_listings_proprietaire: parseInt(e.target.value) || 0,
+                          },
+                        })
+                      }
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-sm text-muted-foreground">Démarcheurs</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={localSettings.long_term?.free_listings_demarcheur ?? 3}
+                      onChange={(e) =>
+                        setLocalSettings({
+                          ...localSettings,
+                          long_term: {
+                            ...localSettings.long_term!,
+                            free_listings_demarcheur: parseInt(e.target.value) || 0,
+                          },
+                        })
+                      }
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-sm text-muted-foreground">Agences</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={localSettings.long_term?.free_listings_agence ?? 1}
+                      onChange={(e) =>
+                        setLocalSettings({
+                          ...localSettings,
+                          long_term: {
+                            ...localSettings.long_term!,
+                            free_listings_agence: parseInt(e.target.value) || 0,
+                          },
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Price per Extra */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <DollarSign className="w-4 h-4" />
+                  Prix par annonce supplémentaire (FCFA)
+                </Label>
+                <Input
+                  type="number"
+                  min="0"
+                  step="100"
+                  value={localSettings.long_term?.price_per_extra ?? 1000}
+                  onChange={(e) =>
+                    setLocalSettings({
+                      ...localSettings,
+                      long_term: {
+                        ...localSettings.long_term!,
+                        price_per_extra: parseInt(e.target.value) || 0,
+                      },
+                    })
+                  }
+                  className="max-w-[200px]"
+                />
+              </div>
+            </TabsContent>
+
+            {/* Short Term Settings */}
+            <TabsContent value="short_term" className="space-y-4 mt-4">
+              <div className="p-3 rounded-lg bg-purple-500/10 border border-purple-500/30">
+                <p className="text-sm text-purple-700 font-medium">Mode Résidence (short_term)</p>
+                <p className="text-xs text-purple-600">Paramètres pour les annonces de location courte durée</p>
+              </div>
+              
+              {/* Free Listings by User Type */}
+              <div className="space-y-4">
+                <Label className="font-medium">Annonces gratuites par type d'utilisateur</Label>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm text-muted-foreground">Particuliers</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={localSettings.short_term?.free_listings_particulier ?? 3}
+                      onChange={(e) =>
+                        setLocalSettings({
+                          ...localSettings,
+                          short_term: {
+                            ...localSettings.short_term!,
+                            free_listings_particulier: parseInt(e.target.value) || 0,
+                          },
+                        })
+                      }
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-sm text-muted-foreground">Propriétaires</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={localSettings.short_term?.free_listings_proprietaire ?? 3}
+                      onChange={(e) =>
+                        setLocalSettings({
+                          ...localSettings,
+                          short_term: {
+                            ...localSettings.short_term!,
+                            free_listings_proprietaire: parseInt(e.target.value) || 0,
+                          },
+                        })
+                      }
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-sm text-muted-foreground">Démarcheurs</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={localSettings.short_term?.free_listings_demarcheur ?? 3}
+                      onChange={(e) =>
+                        setLocalSettings({
+                          ...localSettings,
+                          short_term: {
+                            ...localSettings.short_term!,
+                            free_listings_demarcheur: parseInt(e.target.value) || 0,
+                          },
+                        })
+                      }
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-sm text-muted-foreground">Agences</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={localSettings.short_term?.free_listings_agence ?? 1}
+                      onChange={(e) =>
+                        setLocalSettings({
+                          ...localSettings,
+                          short_term: {
+                            ...localSettings.short_term!,
+                            free_listings_agence: parseInt(e.target.value) || 0,
+                          },
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Price per Extra */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <DollarSign className="w-4 h-4" />
+                  Prix par annonce supplémentaire (FCFA)
+                </Label>
+                <Input
+                  type="number"
+                  min="0"
+                  step="100"
+                  value={localSettings.short_term?.price_per_extra ?? 1000}
+                  onChange={(e) =>
+                    setLocalSettings({
+                      ...localSettings,
+                      short_term: {
+                        ...localSettings.short_term!,
+                        price_per_extra: parseInt(e.target.value) || 0,
+                      },
+                    })
+                  }
+                  className="max-w-[200px]"
+                />
+              </div>
+            </TabsContent>
+          </Tabs>
+
+          <p className="text-xs text-muted-foreground">
+            Les limites sont appliquées séparément pour chaque mode. Un utilisateur peut avoir des limites différentes en mode Immobilier et Résidence.
+          </p>
 
           {/* Save Button */}
           <Button onClick={handleSave} disabled={saving} className="w-full">

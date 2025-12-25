@@ -69,6 +69,7 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { AppointmentsTab } from '@/components/appointment/AppointmentsTab';
+import { PendingListingsSection } from '@/components/profile/PendingListingsSection';
 import { BlockedDatesManager } from '@/components/appointment/BlockedDatesManager';
 
 type TabType = 'annonces' | 'rdv' | 'favoris' | 'parametres';
@@ -976,6 +977,9 @@ const ProfilePage = () => {
           <div className="p-4">
             {activeTab === 'annonces' && (
               <div>
+                {/* Pending listings section */}
+                <PendingListingsSection />
+
                 {/* Add new listing button */}
                 <button
                   onClick={() => navigate('/publish')}

@@ -25,6 +25,7 @@ interface ListingPaymentDialogProps {
   freeListings: number;
   currentListings: number;
   onPaymentComplete: () => void;
+  listingType: 'short_term' | 'long_term';
 }
 
 const ListingPaymentDialog = ({
@@ -34,6 +35,7 @@ const ListingPaymentDialog = ({
   freeListings,
   currentListings,
   onPaymentComplete,
+  listingType,
 }: ListingPaymentDialogProps) => {
   const { user } = useAuth();
   const { activeNumbers, settings, loading: loadingNumbers } = usePaymentNumbers();
@@ -81,6 +83,8 @@ const ListingPaymentDialog = ({
           status: 'pending', // Pending until admin validates
           payment_method: 'mobile_money',
           transaction_ref: `LZ-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          sender_phone: phoneNumber, // Phone used for the transfer
+          listing_type: listingType, // Mode: Immobilier or Résidence
         })
         .select()
         .single();

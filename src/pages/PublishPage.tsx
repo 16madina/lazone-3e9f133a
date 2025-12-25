@@ -1921,6 +1921,7 @@ const PublishPage = () => {
         freeListings={limitSettings?.free_listings || 3}
         currentListings={limitSettings?.free_listings ? limitSettings.free_listings - remainingFreeListings : 0}
         onPaymentComplete={handlePaymentComplete}
+        listingType={isResidence ? 'short_term' : 'long_term'}
       />
     </div>
   );

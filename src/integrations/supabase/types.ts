@@ -315,8 +315,10 @@ export type Database = {
           created_at: string
           currency: string
           id: string
+          listing_type: string | null
           payment_method: string | null
           property_id: string | null
+          sender_phone: string | null
           status: string
           transaction_ref: string | null
           user_id: string
@@ -327,8 +329,10 @@ export type Database = {
           created_at?: string
           currency: string
           id?: string
+          listing_type?: string | null
           payment_method?: string | null
           property_id?: string | null
+          sender_phone?: string | null
           status?: string
           transaction_ref?: string | null
           user_id: string
@@ -339,8 +343,10 @@ export type Database = {
           created_at?: string
           currency?: string
           id?: string
+          listing_type?: string | null
           payment_method?: string | null
           property_id?: string | null
+          sender_phone?: string | null
           status?: string
           transaction_ref?: string | null
           user_id?: string

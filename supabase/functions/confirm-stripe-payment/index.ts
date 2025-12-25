@@ -85,7 +85,7 @@ serve(async (req) => {
 
     // Find the matching checkout session by metadata.transaction_ref
     const sessions = await stripe.checkout.sessions.list({ limit: 100 });
-    const session = sessions.data.find((s) => s.metadata?.transaction_ref === transactionRef);
+    const session = sessions.data.find((s: Stripe.Checkout.Session) => s.metadata?.transaction_ref === transactionRef);
 
     if (!session) {
       console.warn(`[confirm-stripe-payment] No session found for transactionRef=${transactionRef}`);
@@ -170,7 +170,7 @@ serve(async (req) => {
       }
     }
 
-    console.log(`[confirm-stripe-payment] Completed and activated property=${propertyId ?? """}`);
+    console.log(`[confirm-stripe-payment] Completed and activated property=${propertyId ?? ""}`);
 
     return new Response(
       JSON.stringify({ ok: true, propertyId }),

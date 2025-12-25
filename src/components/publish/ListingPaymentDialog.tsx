@@ -306,7 +306,18 @@ const ListingPaymentDialog = ({
                     <div className="flex items-center gap-2">
                       <p className="font-medium">{getMethodLabel(method)}</p>
                       {method === 'stripe' && (
-                        <img src={waveLogo} alt="Wave" className="w-5 h-5 rounded-full" />
+                        <div className="flex items-center gap-1">
+                          <img src={waveLogo} alt="Wave" className="w-5 h-5 rounded-full" />
+                          <svg viewBox="0 0 48 48" className="w-5 h-5" aria-label="Visa">
+                            <rect fill="#1A1F71" width="48" height="48" rx="6"/>
+                            <text x="24" y="30" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold" fontFamily="Arial">VISA</text>
+                          </svg>
+                          <svg viewBox="0 0 48 48" className="w-5 h-5" aria-label="Mastercard">
+                            <circle cx="18" cy="24" r="14" fill="#EB001B"/>
+                            <circle cx="30" cy="24" r="14" fill="#F79E1B"/>
+                            <path d="M24 12.5a14 14 0 0 0 0 23" fill="#FF5F00"/>
+                          </svg>
+                        </div>
                       )}
                     </div>
                     <p className="text-sm text-muted-foreground">{getMethodDescription(method)}</p>

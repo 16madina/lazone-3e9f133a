@@ -402,6 +402,7 @@ const AdminPage = () => {
     pendingUserReports: 0,
     activeSponsored: 0,
     bannedUsers: 0,
+    pendingPayments: 0,
   });
   const [loadingStats, setLoadingStats] = useState(true);
 
@@ -476,6 +477,7 @@ const AdminPage = () => {
         userReportsResult,
         sponsoredResult,
         bannedResult,
+        pendingPaymentsResult,
       ] = await Promise.all([
         supabase.from('profiles').select('id', { count: 'exact', head: true }),
         supabase.from('properties').select('id', { count: 'exact', head: true }).eq('listing_type', 'long_term'),
@@ -485,6 +487,7 @@ const AdminPage = () => {
         supabase.from('user_reports').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
         supabase.from('properties').select('id', { count: 'exact', head: true }).eq('is_sponsored', true),
         supabase.from('user_bans').select('id', { count: 'exact', head: true }).eq('is_active', true),
+        supabase.from('listing_payments').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
       ]);
 
       setStats({
@@ -496,6 +499,7 @@ const AdminPage = () => {
         pendingUserReports: userReportsResult.count || 0,
         activeSponsored: sponsoredResult.count || 0,
         bannedUsers: bannedResult.count || 0,
+        pendingPayments: pendingPaymentsResult.count || 0,
       });
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -1228,7 +1232,7 @@ const AdminPage = () => {
     { id: 'banners' as TabType, label: 'Bannières', icon: Image },
     { id: 'notifications' as TabType, label: 'Notifs', icon: Bell },
     ...(isAdmin ? [
-      { id: 'payments' as TabType, label: 'Paiements', icon: CreditCard },
+      { id: 'payments' as TabType, label: 'Paiements', icon: CreditCard, badge: stats.pendingPayments },
       { id: 'limits' as TabType, label: 'Limites', icon: Wallet },
       { id: 'admins' as TabType, label: 'Admins', icon: Shield },
     ] : []),
@@ -1442,7 +1446,7 @@ const AdminPage = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`py-2 px-2 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1 ${
+                className={`py-2 px-2 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1 relative ${
                   activeTab === tab.id
                     ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:bg-muted'
@@ -1450,6 +1454,11 @@ const AdminPage = () => {
               >
                 <tab.icon className="w-4 h-4 flex-shrink-0" />
                 <span className="truncate">{tab.label}</span>
+                {'badge' in tab && tab.badge > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                    {tab.badge}
+                  </span>
+                )}
               </button>
             ))}
           </div>

@@ -10,7 +10,8 @@ import {
   AlertCircle,
   CheckCircle2,
   XCircle,
-  RefreshCw
+  RefreshCw,
+  Settings
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -32,6 +33,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useAuth } from '@/hooks/useAuth';
+import PaymentNumbersSettings from './PaymentNumbersSettings';
 
 interface Payment {
   id: string;
@@ -266,7 +268,7 @@ const PaymentValidationTab = () => {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="pending" className="text-xs relative">
             <Clock className="w-3 h-3 mr-1" />
             En attente
@@ -284,7 +286,16 @@ const PaymentValidationTab = () => {
             <XCircle className="w-3 h-3 mr-1" />
             Rejetés
           </TabsTrigger>
+          <TabsTrigger value="settings" className="text-xs">
+            <Settings className="w-3 h-3 mr-1" />
+            Config
+          </TabsTrigger>
         </TabsList>
+
+        {/* Settings Tab */}
+        <TabsContent value="settings" className="mt-4">
+          <PaymentNumbersSettings />
+        </TabsContent>
 
         <TabsContent value={activeTab} className="mt-4">
           {loading ? (

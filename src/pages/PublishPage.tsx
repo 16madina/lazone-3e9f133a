@@ -317,8 +317,8 @@ const PublishPage = () => {
               title: 'Annonce publiée !',
               description: 'Votre paiement a été validé et votre annonce est maintenant en ligne.',
             });
-            // Redirect to profile after success
-            navigate('/profile');
+            // Redirect to home page to see the published listing
+            navigate('/');
           }
         } else {
           toast({

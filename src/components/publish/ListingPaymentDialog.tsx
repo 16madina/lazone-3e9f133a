@@ -10,6 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, CreditCard, AlertCircle, Check, Phone, Clock, Copy, Apple, Smartphone, ExternalLink } from 'lucide-react';
+import waveLogo from '@/assets/wave-logo.png';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -231,7 +232,7 @@ const ListingPaymentDialog = ({
       case 'apple_iap':
         return 'Paiement instantané via App Store';
       case 'stripe':
-        return 'Visa, Mastercard, etc.';
+        return 'Disponible avec Wave, Visa';
       case 'mobile_money':
         return 'MTN, Moov, Orange Money';
     }
@@ -302,7 +303,12 @@ const ListingPaymentDialog = ({
                     {getMethodIcon(method)}
                   </div>
                   <div className="flex-1">
-                    <p className="font-medium">{getMethodLabel(method)}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium">{getMethodLabel(method)}</p>
+                      {method === 'stripe' && (
+                        <img src={waveLogo} alt="Wave" className="w-5 h-5 rounded-full" />
+                      )}
+                    </div>
                     <p className="text-sm text-muted-foreground">{getMethodDescription(method)}</p>
                   </div>
                   {method === preferredMethod && (

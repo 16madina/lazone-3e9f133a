@@ -13,7 +13,8 @@ import {
   RefreshCw,
   Settings,
   Home,
-  Building
+  Building,
+  Zap
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -54,6 +55,8 @@ interface Payment {
   user_name: string | null;
   user_phone: string | null;
   user_email: string | null;
+  property_title?: string | null;
+  property_is_active?: boolean | null;
 }
 
 const PaymentValidationTab = () => {
@@ -82,7 +85,7 @@ const PaymentValidationTab = () => {
 
       if (error) throw error;
 
-      // Fetch user details for each payment
+      // Fetch user details and property info for each payment
       const paymentsWithUsers = await Promise.all(
         (paymentsData || []).map(async (payment) => {
           const { data: profile } = await supabase
@@ -95,11 +98,26 @@ const PaymentValidationTab = () => {
           const { data: authData } = await supabase
             .rpc('get_user_email_by_phone', { phone_number: profile?.phone || '' });
 
+          // Get property info if available
+          let propertyTitle: string | null = null;
+          let propertyIsActive: boolean | null = null;
+          if (payment.property_id) {
+            const { data: property } = await supabase
+              .from('properties')
+              .select('title, is_active')
+              .eq('id', payment.property_id)
+              .maybeSingle();
+            propertyTitle = property?.title || null;
+            propertyIsActive = property?.is_active ?? null;
+          }
+
           return {
             ...payment,
             user_name: profile?.full_name || 'Utilisateur',
             user_phone: profile?.phone || null,
             user_email: authData || null,
+            property_title: propertyTitle,
+            property_is_active: propertyIsActive,
           };
         })
       );
@@ -229,6 +247,45 @@ const PaymentValidationTab = () => {
     }
   };
 
+  const handleForceActivate = async (payment: Payment) => {
+    if (!payment.property_id) {
+      toast({
+        title: 'Erreur',
+        description: 'Aucune annonce associée à ce paiement',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setProcessingId(payment.id);
+    try {
+      const { error } = await supabase
+        .from('properties')
+        .update({ is_active: true })
+        .eq('id', payment.property_id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Annonce activée',
+        description: `L'annonce "${payment.property_title || 'Sans titre'}" est maintenant visible`,
+      });
+
+      fetchPayments();
+    } catch (error) {
+      console.error('Error force activating:', error);
+      toast({
+        title: 'Erreur',
+        description: "Impossible d'activer l'annonce",
+        variant: 'destructive',
+      });
+    } finally {
+      setProcessingId(null);
+      setConfirmAction(null);
+      setRejectReason('');
+    }
+  };
+
   const formatPrice = (amount: number, currency: string) => {
     const symbol = currency === 'XOF' || currency === 'XAF' ? 'FCFA' : currency;
     return new Intl.NumberFormat('fr-FR').format(amount) + ' ' + symbol;
@@ -342,6 +399,32 @@ const PaymentValidationTab = () => {
         <div className="text-xs text-muted-foreground">
           Réf: {payment.transaction_ref}
         </div>
+      )}
+
+      {/* Property info */}
+      {payment.property_id && (
+        <div className={`text-xs p-2 rounded ${payment.property_is_active ? 'bg-green-500/10 text-green-700' : 'bg-amber-500/10 text-amber-700'}`}>
+          Annonce: {payment.property_title || payment.property_id.slice(0, 8)}
+          {payment.property_is_active ? ' ✓ Active' : ' ⏳ Inactive'}
+        </div>
+      )}
+
+      {/* Force activate button for completed payments with inactive property */}
+      {payment.status === 'completed' && payment.property_id && payment.property_is_active === false && (
+        <Button
+          size="sm"
+          variant="outline"
+          className="w-full bg-amber-500/10 text-amber-700 border-amber-500/30 hover:bg-amber-500/20"
+          onClick={() => handleForceActivate(payment)}
+          disabled={processingId === payment.id}
+        >
+          {processingId === payment.id ? (
+            <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+          ) : (
+            <Zap className="w-4 h-4 mr-1" />
+          )}
+          Forcer l'activation
+        </Button>
       )}
 
       {/* Actions for pending payments */}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { 
   Dialog, 
   DialogContent, 
@@ -18,14 +18,16 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { usePaymentNumbers } from '@/hooks/usePaymentNumbers';
 import { usePlatformPayment, PaymentMethod } from '@/hooks/usePlatformPayment';
+import { useListingLimit } from '@/hooks/useListingLimit';
 import { PRODUCT_ID_LISTING_CREDIT } from '@/services/storeKitService';
 
 interface ListingPaymentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  price: { amount: number; currency: string; symbol: string };
-  freeListings: number;
-  currentListings: number;
+  // These props are now optional - will be fetched internally if not provided
+  price?: { amount: number; currency: string; symbol: string };
+  freeListings?: number;
+  currentListings?: number;
   onPaymentComplete: () => void;
   listingType: 'short_term' | 'long_term';
   propertyId?: string;
@@ -35,9 +37,9 @@ interface ListingPaymentDialogProps {
 const ListingPaymentDialog = ({
   open,
   onOpenChange,
-  price,
-  freeListings,
-  currentListings,
+  price: priceFromProps,
+  freeListings: freeListingsFromProps,
+  currentListings: currentListingsFromProps,
   onPaymentComplete,
   listingType,
   propertyId,
@@ -46,6 +48,15 @@ const ListingPaymentDialog = ({
   const { user } = useAuth();
   const { activeNumbers, settings, loading: loadingNumbers } = usePaymentNumbers();
   const { platform, preferredMethod, isLoading: paymentLoading, startStripePayment, startApplePayment } = usePlatformPayment();
+  const { priceForUser, remainingFreeListings, userListingsCount, loading: loadingLimits } = useListingLimit();
+  
+  // Use props if provided, otherwise use values from hook
+  const price = useMemo(() => 
+    priceFromProps || priceForUser,
+    [priceFromProps, priceForUser]
+  );
+  const freeListings = freeListingsFromProps ?? remainingFreeListings;
+  const currentListings = currentListingsFromProps ?? userListingsCount;
   
   const [loading, setLoading] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');

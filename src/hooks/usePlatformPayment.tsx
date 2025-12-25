@@ -14,6 +14,7 @@ interface PaymentResult {
   paymentId?: string;
   transactionRef?: string;
   error?: string;
+  stripeUrl?: string; // For fallback UI if redirect fails
 }
 
 interface UsePlatformPaymentReturn {
@@ -53,26 +54,27 @@ export const usePlatformPayment = (): UsePlatformPaymentReturn => {
   // Determine preferred payment method based on platform
   const preferredMethod: PaymentMethod = platform === 'ios' ? 'apple_iap' : 'stripe';
 
-  const isInIframe = () => {
+  // Opens an external URL, working around iframe restrictions
+  const openExternalUrl = (url: string): { opened: boolean; url: string } => {
+    // Try window.open first (works best in iframes)
+    const popup = window.open(url, '_blank', 'noopener,noreferrer');
+    if (popup) {
+      return { opened: true, url };
+    }
+
+    // Fallback: try top-level navigation if in iframe
     try {
-      return window.self !== window.top;
-    } catch {
-      return true;
-    }
-  };
-
-  const redirectToExternal = (url: string) => {
-    // Stripe Checkout must be top-level (Stripe blocks iframing)
-    if (isInIframe()) {
-      try {
-        window.top?.location.assign(url);
-        return;
-      } catch {
-        // ignore
+      if (window.self !== window.top && window.top) {
+        window.top.location.assign(url);
+        return { opened: true, url };
       }
+    } catch {
+      // Cross-origin iframe, can't access top
     }
 
+    // Final fallback: direct navigation
     window.location.assign(url);
+    return { opened: true, url };
   };
 
   // Start Stripe payment (for Android and Web)
@@ -113,11 +115,12 @@ export const usePlatformPayment = (): UsePlatformPaymentReturn => {
         throw new Error('URL de paiement non reçue');
       }
 
-      redirectToExternal(url);
+      const result = openExternalUrl(url);
 
       return {
         success: true,
         transactionRef,
+        stripeUrl: result.opened ? url : undefined,
       };
     } catch (error) {
       console.error('Stripe payment error:', error);

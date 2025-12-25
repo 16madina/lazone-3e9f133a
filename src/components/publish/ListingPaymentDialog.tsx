@@ -12,9 +12,11 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, CreditCard, AlertCircle, Check, Phone, Clock, Copy } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { usePaymentNumbers } from '@/hooks/usePaymentNumbers';
 
 interface ListingPaymentDialogProps {
   open: boolean;
@@ -25,12 +27,6 @@ interface ListingPaymentDialogProps {
   onPaymentComplete: () => void;
 }
 
-// Numéros de réception des paiements (à configurer)
-const PAYMENT_NUMBERS = {
-  mtn: '+229 XX XX XX XX',
-  moov: '+229 XX XX XX XX',
-};
-
 const ListingPaymentDialog = ({
   open,
   onOpenChange,
@@ -40,6 +36,7 @@ const ListingPaymentDialog = ({
   onPaymentComplete,
 }: ListingPaymentDialogProps) => {
   const { user } = useAuth();
+  const { activeNumbers, settings, loading: loadingNumbers } = usePaymentNumbers();
   const [loading, setLoading] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [step, setStep] = useState<'info' | 'payment' | 'pending'>('info');
@@ -167,7 +164,7 @@ const ListingPaymentDialog = ({
                 Paiement Mobile Money
               </DialogTitle>
               <DialogDescription>
-                Effectuez un transfert vers l'un de nos numéros puis confirmez
+                {settings?.instructions || 'Effectuez un transfert vers l\'un de nos numéros puis confirmez'}
               </DialogDescription>
             </DialogHeader>
 
@@ -183,32 +180,35 @@ const ListingPaymentDialog = ({
               <div className="space-y-2">
                 <Label className="text-sm font-medium">Envoyez à l'un de ces numéros :</Label>
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between bg-muted/50 p-3 rounded-lg">
-                    <div>
-                      <p className="text-xs text-muted-foreground">MTN Mobile Money</p>
-                      <p className="font-mono font-medium">{PAYMENT_NUMBERS.mtn}</p>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => copyToClipboard(PAYMENT_NUMBERS.mtn)}
-                    >
-                      <Copy className="w-4 h-4" />
-                    </Button>
-                  </div>
-                  <div className="flex items-center justify-between bg-muted/50 p-3 rounded-lg">
-                    <div>
-                      <p className="text-xs text-muted-foreground">Moov Money</p>
-                      <p className="font-mono font-medium">{PAYMENT_NUMBERS.moov}</p>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => copyToClipboard(PAYMENT_NUMBERS.moov)}
-                    >
-                      <Copy className="w-4 h-4" />
-                    </Button>
-                  </div>
+                  {loadingNumbers ? (
+                    <>
+                      <Skeleton className="h-16 w-full" />
+                      <Skeleton className="h-16 w-full" />
+                    </>
+                  ) : activeNumbers.length === 0 ? (
+                    <p className="text-sm text-muted-foreground p-3 bg-muted/50 rounded-lg text-center">
+                      Aucun numéro de paiement configuré. Contactez l'administrateur.
+                    </p>
+                  ) : (
+                    activeNumbers.map((num) => (
+                      <div 
+                        key={num.id} 
+                        className="flex items-center justify-between bg-muted/50 p-3 rounded-lg"
+                      >
+                        <div>
+                          <p className="text-xs text-muted-foreground">{num.label}</p>
+                          <p className="font-mono font-medium">{num.number}</p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => copyToClipboard(num.number)}
+                        >
+                          <Copy className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
 
@@ -239,7 +239,7 @@ const ListingPaymentDialog = ({
               </Button>
               <Button 
                 onClick={handleSubmitPayment} 
-                disabled={loading || !phoneNumber}
+                disabled={loading || !phoneNumber || activeNumbers.length === 0}
                 className="w-full sm:w-auto"
               >
                 {loading ? (

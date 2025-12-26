@@ -131,7 +131,7 @@ public class StoreKitPlugin: CAPPlugin, CAPBridgedPlugin {
                         "pending": true
                     ])
                     
-                @unknown default:
+                default:
                     call.reject("Unknown purchase result")
                 }
             } catch {
@@ -227,7 +227,7 @@ public class StoreKitPlugin: CAPPlugin, CAPBridgedPlugin {
             return "autoRenewable"
         case .nonRenewable:
             return "nonRenewable"
-        @unknown default:
+        default:
             return "unknown"
         }
     }
@@ -242,7 +242,7 @@ public class StoreKitPlugin: CAPPlugin, CAPBridgedPlugin {
             return "month"
         case .year:
             return "year"
-        @unknown default:
+        default:
             return "unknown"
         }
     }

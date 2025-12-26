@@ -107,10 +107,13 @@ export const useProperties = () => {
       const subscriptionMap = new Map<string, SubscriptionType>();
       (subscriptionsData || []).forEach(sub => {
         const isActive = !sub.expiration_date || new Date(sub.expiration_date) > new Date();
-        if (isActive && (sub.product_id.includes('sub.') || sub.product_id.includes('agency.'))) {
-          if (sub.product_id.includes('premium')) {
+        // Check for subscription products by looking for 'sub' anywhere in product_id
+        const isSubscription = sub.product_id.toLowerCase().includes('sub');
+        
+        if (isActive && isSubscription) {
+          if (sub.product_id.toLowerCase().includes('premium')) {
             subscriptionMap.set(sub.user_id, 'premium');
-          } else if (sub.product_id.includes('pro') && !subscriptionMap.has(sub.user_id)) {
+          } else if (sub.product_id.toLowerCase().includes('pro') && !subscriptionMap.has(sub.user_id)) {
             subscriptionMap.set(sub.user_id, 'pro');
           }
         }

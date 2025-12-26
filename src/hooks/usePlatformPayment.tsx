@@ -209,7 +209,7 @@ export const usePlatformPayment = (): UsePlatformPaymentReturn => {
           credits_amount: creditsAmount,
           credits_used: 0,
           purchase_date: purchase.purchaseDate || new Date().toISOString(),
-          is_subscription: params.productId.includes('agency'),
+          is_subscription: params.productId.includes('agency') || params.productId.includes('sub'),
           status: 'active',
         })
         .select()

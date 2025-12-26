@@ -148,7 +148,7 @@ export function useCredits(): UseCreditsReturn {
       if (result.success && result.transactionId) {
         // Save purchase to database
         const creditsAmount = CREDITS_PER_PRODUCT[productId] || 1;
-        const isSubscription = productId.includes('agency');
+        const isSubscription = productId.includes('agency') || productId.includes('sub');
         
         const { error } = await supabase
           .from('storekit_purchases')
@@ -222,7 +222,7 @@ export function useCredits(): UseCreditsReturn {
       // Process each restored entitlement
       for (const entitlement of entitlements) {
         const creditsAmount = CREDITS_PER_PRODUCT[entitlement.productId] || 1;
-        const isSubscription = entitlement.productId.includes('agency');
+        const isSubscription = entitlement.productId.includes('agency') || entitlement.productId.includes('sub');
 
         // Check if already exists
         const { data: existing } = await supabase

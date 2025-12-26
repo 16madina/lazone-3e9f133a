@@ -1005,6 +1005,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_subscriptions: {
+        Row: {
+          active_until: string | null
+          created_at: string
+          is_active: boolean
+          subscription_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active_until?: string | null
+          created_at?: string
+          is_active?: boolean
+          subscription_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active_until?: string | null
+          created_at?: string
+          is_active?: boolean
+          subscription_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_warnings: {
         Row: {
           admin_id: string
@@ -1158,6 +1185,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      recalc_user_subscription: {
+        Args: { p_user_id: string }
+        Returns: undefined
       }
     }
     Enums: {

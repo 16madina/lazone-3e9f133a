@@ -39,49 +39,19 @@ export function useSponsoredListings(): SponsoredListingsReturn {
 
     setLoading(true);
     try {
-      // Fetch user's active subscription
-      const { data: purchases, error } = await supabase
-        .from('storekit_purchases')
-        .select('product_id, status, expiration_date')
+      // Read public subscription status (safe) instead of private purchase rows
+      const { data: subRow, error: subError } = await supabase
+        .from('user_subscriptions')
+        .select('subscription_type, is_active')
         .eq('user_id', user.id)
-        .eq('status', 'active');
+        .maybeSingle();
 
-      console.log('[useSponsoredListings] User ID:', user.id);
-      console.log('[useSponsoredListings] Purchases data:', purchases);
-      console.log('[useSponsoredListings] Error:', error);
+      if (subError) {
+        console.error('[useSponsoredListings] Failed to load subscription status:', subError);
+      }
 
-      // Find active subscription and determine quota
-      let quota = 0;
-      let subType: 'pro' | 'premium' | null = null;
-      
-      (purchases || []).forEach(sub => {
-        const isActive = !sub.expiration_date || new Date(sub.expiration_date) > new Date();
-        // Check for subscription products by looking for 'sub' anywhere in product_id
-        const isSubscription = sub.product_id.toLowerCase().includes('sub');
-        
-        console.log('[useSponsoredListings] Processing:', {
-          product_id: sub.product_id,
-          isActive,
-          isSubscription
-        });
-        
-        if (isActive && isSubscription) {
-          // Determine subscription type and quota based on product_id content
-          if (sub.product_id.toLowerCase().includes('premium')) {
-            if (quota < 4) {
-              quota = 4; // Premium gets 4 sponsored listings
-              subType = 'premium';
-            }
-          } else if (sub.product_id.toLowerCase().includes('pro')) {
-            if (quota < 2 && subType !== 'premium') {
-              quota = 2; // Pro gets 2 sponsored listings
-              subType = 'pro';
-            }
-          }
-        }
-      });
-
-      console.log('[useSponsoredListings] Final quota:', quota, 'subType:', subType);
+      const subType = subRow?.is_active ? (subRow.subscription_type as 'pro' | 'premium') : null;
+      const quota = subType === 'premium' ? 4 : subType === 'pro' ? 2 : 0;
 
       setSponsoredQuota(quota);
       setSubscriptionType(subType);

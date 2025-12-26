@@ -409,16 +409,16 @@ const MyListingsPage = () => {
                               ? 'bg-amber-100 hover:bg-amber-200'
                               : sponsoredRemaining > 0
                                 ? 'bg-amber-50 hover:bg-amber-100'
-                                : 'bg-muted opacity-50 cursor-not-allowed'
+                                : 'bg-muted opacity-50'
                           }`}
                           title={
-                            isPropertySponsored(property) 
-                              ? 'Annuler le sponsoring' 
-                              : sponsoredRemaining > 0 
-                                ? 'Sponsoriser cette annonce' 
+                            isPropertySponsored(property)
+                              ? 'Annuler le sponsoring'
+                              : sponsoredRemaining > 0
+                                ? 'Sponsoriser cette annonce'
                                 : 'Quota de sponsoring atteint'
                           }
-                          disabled={!isPropertySponsored(property) && sponsoredRemaining === 0}
+                          aria-disabled={!isPropertySponsored(property) && sponsoredRemaining === 0}
                         >
                           <Sparkles className={`w-4 h-4 ${
                             isPropertySponsored(property) ? 'text-amber-600' : 'text-amber-500'

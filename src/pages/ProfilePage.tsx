@@ -827,14 +827,7 @@ const ProfilePage = () => {
                   >
                     <Coins className="w-3.5 h-3.5" />
                     Mes Crédits
-                    {activeSubscription ? (
-                      <span className="ml-1.5 px-1.5 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-semibold rounded-full flex items-center gap-0.5">
-                        <Crown className="w-2.5 h-2.5" />
-                        Abonné
-                      </span>
-                    ) : (
-                      <span className="ml-1.5 text-muted-foreground">({freeCreditsRemaining + availableCredits})</span>
-                    )}
+                    <span className="ml-1.5 text-muted-foreground">({freeCreditsRemaining + availableCredits})</span>
                   </button>
                 </div>
               </div>

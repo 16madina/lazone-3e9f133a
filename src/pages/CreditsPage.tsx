@@ -22,7 +22,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/hooks/useAuth';
 import { useCredits } from '@/hooks/useCredits';
 import { useListingLimit } from '@/hooks/useListingLimit';
-import { CREDITS_PER_PRODUCT } from '@/services/storeKitService';
+import { CREDITS_PER_PRODUCT, SPONSORED_LISTINGS_PER_PRODUCT } from '@/services/storeKitService';
 import { CreditPaymentDialog } from '@/components/credits/CreditPaymentDialog';
 
 const CreditsPage = () => {
@@ -309,9 +309,13 @@ const CreditsPage = () => {
                 const isPro = product.id.includes('pro');
                 const isPremium = product.id.includes('premium');
                 
+                // Get credits and sponsorings from constants
+                const credits = CREDITS_PER_PRODUCT[product.id] || 0;
+                const sponsorings = SPONSORED_LISTINGS_PER_PRODUCT[product.id] || 0;
+                
                 const features = isPremium 
-                  ? [`${premiumMonthlyLimit} annonces/mois`, `${premiumSponsoredQuota} annonces sponsorisées/mois`, 'Mise en avant', 'Support prioritaire', 'Badge Premium']
-                  : [`${proMonthlyLimit} annonces/mois`, `${proSponsoredQuota} annonce sponsorisée/mois`, 'Badge Pro'];
+                  ? [`${credits} crédits/mois`, `${sponsorings} sponsorings/mois`, 'Mise en avant', 'Support prioritaire', 'Badge Premium']
+                  : [`${credits} crédits/mois`, `${sponsorings} sponsoring/mois`, 'Badge Pro'];
 
                 return (
                   <motion.div

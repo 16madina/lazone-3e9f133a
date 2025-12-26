@@ -65,13 +65,17 @@ const ListingPaymentDialog = ({
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
   const [stripeUrl, setStripeUrl] = useState<string | null>(null);
 
-  // Determine available payment methods
+  // Determine available payment methods based on platform
+  // iOS: Only StoreKit (Apple requirement - no third-party payment processors)
+  // Android/Web: Stripe and Mobile Money
   const availableMethods: PaymentMethod[] = [];
   if (platform === 'ios') {
     availableMethods.push('apple_iap');
+  } else {
+    // Android and Web use Stripe and Mobile Money
+    availableMethods.push('stripe');
+    availableMethods.push('mobile_money');
   }
-  availableMethods.push('stripe');
-  availableMethods.push('mobile_money');
 
   const formatPrice = (amount: number, symbol: string) => {
     return new Intl.NumberFormat('fr-FR').format(amount) + ' ' + symbol;

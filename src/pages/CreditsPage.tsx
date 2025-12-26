@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -36,14 +36,18 @@ const CreditsPage = () => {
     subscriptions,
     activeSubscription,
     purchaseProduct,
+    purchaseWithStripe,
     restorePurchases,
     loading,
     purchasing,
     initialized,
+    isIosNative,
     isMockMode,
     isPurchaseAvailable,
     storeKitError,
   } = useCredits();
+
+  const [stripeUrl, setStripeUrl] = useState<string | null>(null);
 
   // Get subscription limits from admin settings
   const proMonthlyLimit = listingSettings?.pro_monthly_limit ?? 15;
@@ -57,13 +61,35 @@ const CreditsPage = () => {
     }
   }, [user, navigate]);
 
+  // Check for payment success/cancel in URL params
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const payment = params.get('payment');
+    if (payment === 'success') {
+      // Clear params and show success message
+      window.history.replaceState({}, '', '/credits');
+    } else if (payment === 'cancelled') {
+      window.history.replaceState({}, '', '/credits');
+    }
+  }, []);
+
   const isAgency = profile?.user_type === 'agence';
   const isPremiumUser = activeSubscription?.product_id.includes('premium');
   const isProUser = activeSubscription?.product_id.includes('pro') && !isPremiumUser;
   const totalAvailable = freeCreditsRemaining + availableCredits;
 
   const handlePurchase = async (productId: string) => {
-    await purchaseProduct(productId);
+    // On iOS native, use StoreKit
+    if (isIosNative) {
+      await purchaseProduct(productId);
+    } else {
+      // On web/Android, use Stripe
+      const result = await purchaseWithStripe(productId);
+      if (result.url && !window.open(result.url, '_blank')) {
+        // Popup blocked, show fallback
+        setStripeUrl(result.url);
+      }
+    }
   };
 
   const handleRestore = async () => {
@@ -96,8 +122,8 @@ const CreditsPage = () => {
       </div>
 
       <div className="p-4 space-y-6">
-        {/* StoreKit Error Banner */}
-        {storeKitError && (
+        {/* StoreKit Error Banner (iOS only when native plugin fails) */}
+        {storeKitError && isIosNative && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -110,17 +136,34 @@ const CreditsPage = () => {
           </motion.div>
         )}
 
-        {/* Mock Mode Banner (web only) */}
-        {isMockMode && !storeKitError && (
+        {/* Stripe Fallback URL (popup blocked) */}
+        {stripeUrl && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex items-center gap-3"
+            className="bg-primary/10 border border-primary/30 rounded-xl p-4 space-y-3"
           >
-            <AlertCircle className="w-5 h-5 text-amber-500" />
-            <p className="text-sm text-amber-700 dark:text-amber-400">
-              Mode web - Les achats ne sont disponibles que sur l'app iOS
+            <p className="text-sm font-medium">
+              Le lien de paiement n'a pas pu s'ouvrir automatiquement.
             </p>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                onClick={() => {
+                  window.open(stripeUrl, '_blank');
+                  setStripeUrl(null);
+                }}
+              >
+                Ouvrir le paiement
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setStripeUrl(null)}
+              >
+                Annuler
+              </Button>
+            </div>
           </motion.div>
         )}
 

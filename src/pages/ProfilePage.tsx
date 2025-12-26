@@ -873,15 +873,15 @@ const ProfilePage = () => {
 
               {/* User Info */}
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-1">
                   {/* Notifications Button */}
                   <button
                     onClick={() => navigate('/notifications')}
-                    className="relative flex-shrink-0 p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                    className="relative flex-shrink-0 p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
                   >
                     <Bell className="w-5 h-5" />
                     {notificationCount > 0 && (
-                      <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-primary text-primary-foreground text-[11px] rounded-full flex items-center justify-center">
+                      <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-primary text-primary-foreground text-[10px] rounded-full flex items-center justify-center">
                         {notificationCount > 9 ? '9+' : notificationCount}
                       </span>
                     )}
@@ -891,7 +891,7 @@ const ProfilePage = () => {
                   {/* Logout Button */}
                   <button
                     onClick={handleSignOut}
-                    className="flex-shrink-0 p-2 text-primary border border-primary rounded-lg hover:bg-primary/10 transition-colors"
+                    className="flex-shrink-0 p-1.5 text-primary border border-primary rounded-lg hover:bg-primary/10 transition-colors"
                     title="Déconnexion"
                   >
                     <LogOut className="w-4 h-4" />

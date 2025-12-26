@@ -272,16 +272,24 @@ export function useCredits(): UseCreditsReturn {
           return false;
         }
 
-        // Step 3: Refresh purchases from database
-        const { data: newPurchases } = await supabase
+        // Step 3: Refresh purchases from database IMMEDIATELY
+        console.log('[useCredits] Refreshing purchases from database...');
+        const { data: newPurchases, error: fetchError } = await supabase
           .from('storekit_purchases')
           .select('*')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false });
 
-        setPurchases((newPurchases || []) as StoreKitPurchase[]);
+        if (fetchError) {
+          console.error('[useCredits] Error fetching updated purchases:', fetchError);
+        } else {
+          console.log('[useCredits] Updated purchases:', newPurchases?.length);
+          setPurchases((newPurchases || []) as StoreKitPurchase[]);
+        }
 
         const creditsAmount = CREDITS_PER_PRODUCT[productId] || 1;
+        console.log('[useCredits] Credits added:', creditsAmount);
+        
         toast({
           title: 'Achat réussi !',
           description: `${creditsAmount} crédit(s) ajouté(s) à votre compte`,

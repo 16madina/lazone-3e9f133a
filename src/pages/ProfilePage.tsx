@@ -72,8 +72,6 @@ import { AppointmentsTab } from '@/components/appointment/AppointmentsTab';
 import { PendingListingsSection } from '@/components/profile/PendingListingsSection';
 import { BlockedDatesManager } from '@/components/appointment/BlockedDatesManager';
 import { useCredits } from '@/hooks/useCredits';
-import { useSponsoredListings } from '@/hooks/useSponsoredListings';
-import { Sparkles } from 'lucide-react';
 
 type TabType = 'annonces' | 'rdv' | 'favoris' | 'parametres';
 
@@ -194,8 +192,6 @@ interface Property {
   property_type: string;
   type: string;
   is_active: boolean;
-  is_sponsored?: boolean;
-  sponsored_until?: string | null;
   created_at: string;
   property_images: { url: string; is_primary: boolean }[];
 }
@@ -272,12 +268,6 @@ const ProfilePage = () => {
   const { appMode, isResidence } = useAppMode();
   const { unreadCount: notificationCount } = useNotifications();
   const { activeSubscription, availableCredits, freeCreditsRemaining } = useCredits();
-  const { 
-    sponsoredQuota, 
-    sponsoredRemaining, 
-    subscriptionType,
-    sponsorProperty 
-  } = useSponsoredListings();
   const { resetTutorial, startTutorial } = useTutorial();
   const [sendingEmail, setSendingEmail] = useState(false);
   const [propertiesCount, setPropertiesCount] = useState(0);
@@ -568,31 +558,6 @@ const ProfilePage = () => {
     }
   };
 
-  const isPropertySponsored = (property: Property) => {
-    return property.is_sponsored && property.sponsored_until && new Date(property.sponsored_until) > new Date();
-  };
-
-  const handleSponsor = async (property: Property) => {
-    if (isPropertySponsored(property)) {
-      toast({
-        title: 'Déjà sponsorisée',
-        description: 'Cette annonce est sponsorisée jusqu\'à ' + format(new Date(property.sponsored_until!), 'dd MMM yyyy', { locale: fr }),
-      });
-      return;
-    }
-    
-    const success = await sponsorProperty(property.id);
-    if (success) {
-      const sponsoredUntil = new Date();
-      sponsoredUntil.setDate(sponsoredUntil.getDate() + 3);
-      setProperties(prev => 
-        prev.map(p => 
-          p.id === property.id ? { ...p, is_sponsored: true, sponsored_until: sponsoredUntil.toISOString() } : p
-        )
-      );
-    }
-  };
-
   const getPrimaryImage = (images: { url: string; is_primary: boolean }[]) => {
     const primary = images?.find(img => img.is_primary);
     return primary?.url || images?.[0]?.url || '/placeholder.svg';
@@ -763,40 +728,14 @@ const ProfilePage = () => {
         className="hidden"
       />
 
-      {/* Orange Gradient Header with Notification Bell */}
-      <div className="h-32 top-safe-area bg-gradient-to-r from-primary via-primary to-primary/80 relative">
-        <button
-          onClick={() => navigate('/notifications')}
-          className="absolute top-4 right-4 top-safe-area p-2.5 bg-white/20 backdrop-blur-sm rounded-full text-white hover:bg-white/30 transition-colors"
-        >
-          <Bell className="w-5 h-5" />
-          {notificationCount > 0 && (
-            <span className="absolute -top-1 -right-1 w-5 h-5 bg-white text-primary text-[10px] font-bold rounded-full flex items-center justify-center">
-              {notificationCount > 9 ? '9+' : notificationCount}
-            </span>
-          )}
-        </button>
-      </div>
+      {/* Orange Gradient Header */}
+      <div className="h-32 top-safe-area bg-gradient-to-r from-primary via-primary to-primary/80" />
 
       {/* Profile Card */}
       <div className="px-4 -mt-16">
         <div className="bg-card rounded-2xl shadow-lg overflow-hidden">
           {/* Main Content */}
           <div className="p-5">
-            {/* Action buttons row - above profile */}
-            <div className="flex items-center justify-end gap-2 mb-4">
-              {/* Admin Button */}
-              <AdminButton />
-              {/* Logout Button */}
-              <button
-                onClick={handleSignOut}
-                className="flex-shrink-0 p-2 text-primary border border-primary rounded-lg hover:bg-primary/10 transition-colors"
-                title="Déconnexion"
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
-            </div>
-
             <div className="flex gap-4">
               {/* Avatar with upload button */}
               <div className="flex-shrink-0">
@@ -804,7 +743,7 @@ const ProfilePage = () => {
                   <button
                     onClick={handleAvatarClick}
                     disabled={uploadingAvatar}
-                    className="relative w-32 h-32 rounded-xl overflow-hidden border-4 border-card shadow-lg group"
+                    className="relative w-24 h-24 rounded-xl overflow-hidden border-4 border-card shadow-md group"
                   >
                     {profile?.avatar_url ? (
                       <img 
@@ -814,7 +753,7 @@ const ProfilePage = () => {
                       />
                     ) : (
                       <div className="w-full h-full bg-muted flex items-center justify-center">
-                        <span className="text-4xl">👤</span>
+                        <span className="text-3xl">👤</span>
                       </div>
                     )}
                     {/* Overlay on hover */}
@@ -825,21 +764,9 @@ const ProfilePage = () => {
                         <Camera className="w-6 h-6 text-white" />
                       )}
                     </div>
-                    {/* Premium/Pro Badge - Diagonal on photo */}
-                    {activeSubscription && (
-                      <div className={`absolute top-0 left-0 right-0 flex justify-center ${
-                        activeSubscription.product_id.includes('premium') 
-                          ? 'bg-gradient-to-r from-amber-500 to-orange-500' 
-                          : 'bg-gradient-to-r from-purple-500 to-pink-500'
-                      }`} style={{ transform: 'rotate(-35deg) translateX(-30%) translateY(10px)', transformOrigin: 'center' }}>
-                        <span className="text-[10px] font-bold text-white px-8 py-0.5 uppercase tracking-wide">
-                          {activeSubscription.product_id.includes('premium') ? 'Premium' : 'Pro'}
-                        </span>
-                      </div>
-                    )}
                   </button>
                   {/* Verification Badge */}
-                  <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap ${
+                  <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${
                     isEmailVerified 
                       ? 'bg-green-500 text-white' 
                       : 'bg-primary text-primary-foreground'
@@ -855,7 +782,7 @@ const ProfilePage = () => {
                       <SheetTrigger asChild>
                         <button 
                           data-tutorial="profile-info"
-                          className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md hover:bg-primary/90 transition-colors"
+                          className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md hover:bg-primary/90 transition-colors"
                         >
                           <User className="w-4 h-4" />
                         </button>
@@ -881,29 +808,67 @@ const ProfilePage = () => {
                   </div>
                   <button
                     onClick={() => navigate('/credits')}
-                    className="flex items-center gap-1.5 text-xs text-amber-600 font-medium hover:underline ml-10"
+                    className="flex items-center gap-1.5 text-xs text-amber-600 font-medium hover:underline ml-9"
                   >
                     <Coins className="w-3.5 h-3.5" />
                     Mes Crédits
                     {activeSubscription ? (
-                      <span className="ml-1 px-1.5 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-semibold rounded-full flex items-center gap-0.5">
+                      <span className="ml-1.5 px-1.5 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-semibold rounded-full flex items-center gap-0.5">
                         <Crown className="w-2.5 h-2.5" />
                         Abonné
                       </span>
                     ) : (
-                      <span className="ml-1 text-muted-foreground text-[11px]">({freeCreditsRemaining + availableCredits})</span>
+                      <span className="ml-1.5 text-muted-foreground">({freeCreditsRemaining + availableCredits})</span>
                     )}
                   </button>
                 </div>
               </div>
 
               {/* User Info */}
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 mt-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    {/* Notifications Button */}
+                    <button
+                      onClick={() => navigate('/notifications')}
+                      className="relative flex-shrink-0 p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                    >
+                      <Bell className="w-5 h-5" />
+                      {notificationCount > 0 && (
+                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground text-xs rounded-full flex items-center justify-center">
+                          {notificationCount > 9 ? '9+' : notificationCount}
+                        </span>
+                      )}
+                    </button>
+                    {/* Admin Button */}
+                    <AdminButton />
+                    {/* Logout Button */}
+                    <button
+                      onClick={handleSignOut}
+                      className="flex-shrink-0 p-2 text-primary border border-primary rounded-lg hover:bg-primary/10 transition-colors"
+                      title="Déconnexion"
+                    >
+                      <LogOut className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
                 
-                {/* User Name */}
-                <h1 className="text-xl font-bold text-foreground leading-tight">
-                  {user.user_metadata?.full_name || profile?.full_name || 'Utilisateur'}
-                </h1>
+                {/* User Name - on separate line */}
+                <div className="flex items-center gap-2 mt-2">
+                  <h1 className="text-lg font-bold text-foreground">
+                    {user.user_metadata?.full_name || profile?.full_name || 'Utilisateur'}
+                  </h1>
+                  {activeSubscription && (
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold flex items-center gap-1 ${
+                      activeSubscription.product_id.includes('premium') 
+                        ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white' 
+                        : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
+                    }`}>
+                      <Crown className="w-3 h-3" />
+                      {activeSubscription.product_id.includes('premium') ? 'Premium' : 'Pro'}
+                    </span>
+                  )}
+                </div>
 
                 {/* Tags */}
                 <div className="flex flex-wrap gap-1.5 mt-2">
@@ -911,7 +876,7 @@ const ProfilePage = () => {
                     <UserTypeBadge 
                       userType={profile.user_type} 
                       agencyName={profile.agency_name}
-                      size="sm"
+                      size="md"
                     />
                   ) : (
                     <span className="px-2 py-0.5 bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20 rounded-full text-xs font-medium flex items-center gap-1">
@@ -920,41 +885,46 @@ const ProfilePage = () => {
                     </span>
                   )}
                   {!isEmailVerified && (
-                    <button 
-                      onClick={handleResendVerification}
-                      disabled={sendingEmail}
-                      className="px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full text-xs font-medium flex items-center gap-1 hover:bg-amber-200 transition-colors disabled:opacity-50"
-                    >
-                      {sendingEmail ? (
-                        <Loader2 className="w-3 h-3 animate-spin" />
-                      ) : (
-                        <RefreshCw className="w-3 h-3" />
-                      )}
-                      Vérifier email
-                    </button>
+                    <>
+                      <span className="px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full text-xs font-medium">
+                        ⚠ Email non vérifié
+                      </span>
+                      <button 
+                        onClick={handleResendVerification}
+                        disabled={sendingEmail}
+                        className="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-medium flex items-center gap-1 hover:bg-green-200 transition-colors disabled:opacity-50"
+                      >
+                        {sendingEmail ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : (
+                          <RefreshCw className="w-3 h-3" />
+                        )}
+                        Renvoyer le lien
+                      </button>
+                    </>
                   )}
                 </div>
 
                 {/* Contact Info */}
-                <div className="mt-3 space-y-1.5">
+                <div className="mt-3 space-y-1">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Mail className="w-4 h-4 flex-shrink-0" />
+                    <Mail className="w-4 h-4" />
                     <span className="truncate">{user.email}</span>
                   </div>
                   {user.user_metadata?.phone && (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Phone className="w-4 h-4 flex-shrink-0" />
+                      <Phone className="w-4 h-4" />
                       <span>{user.user_metadata.phone}</span>
                     </div>
                   )}
                   {user.user_metadata?.city && user.user_metadata?.country && (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <MapPin className="w-4 h-4 flex-shrink-0" />
-                      <span className="truncate">{user.user_metadata.city}, {user.user_metadata.country}</span>
+                      <MapPin className="w-4 h-4" />
+                      <span>{user.user_metadata.city}, {user.user_metadata.country}</span>
                     </div>
                   )}
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Calendar className="w-4 h-4 flex-shrink-0" />
+                    <Calendar className="w-4 h-4" />
                     <span>Membre depuis {memberSince}</span>
                   </div>
                 </div>
@@ -1041,26 +1011,6 @@ const ProfilePage = () => {
                 {/* Pending listings section */}
                 <PendingListingsSection />
 
-                {/* Sponsored Quota Banner for subscribers */}
-                {subscriptionType && (
-                  <div className={`mb-4 p-3 rounded-xl ${
-                    subscriptionType === 'premium' 
-                      ? 'bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20' 
-                      : 'bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20'
-                  }`}>
-                    <div className="flex items-center gap-2 mb-1">
-                      <Sparkles className={`w-4 h-4 ${subscriptionType === 'premium' ? 'text-amber-500' : 'text-purple-500'}`} />
-                      <span className="text-sm font-medium">Sponsoring</span>
-                      <span className="text-xs text-muted-foreground">
-                        {sponsoredRemaining}/{sponsoredQuota} dispo
-                      </span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Cliquez sur ⭐ pour mettre une annonce en avant (3 jours)
-                    </p>
-                  </div>
-                )}
-
                 {/* Add new listing button */}
                 <button
                   onClick={() => navigate('/publish')}
@@ -1137,30 +1087,6 @@ const ProfilePage = () => {
                                 >
                                   <Eye className="w-3 h-3 text-muted-foreground" />
                                 </button>
-                                {/* Sponsor Button */}
-                                {subscriptionType && property.is_active && (
-                                  <button
-                                    onClick={() => handleSponsor(property)}
-                                    className={`p-1 rounded transition-colors ${
-                                      isPropertySponsored(property)
-                                        ? 'bg-amber-100'
-                                        : sponsoredRemaining > 0
-                                          ? 'bg-amber-50 hover:bg-amber-100'
-                                          : 'bg-muted opacity-50'
-                                    }`}
-                                    title={
-                                      isPropertySponsored(property) 
-                                        ? 'Sponsorisée' 
-                                        : sponsoredRemaining > 0 
-                                          ? 'Sponsoriser' 
-                                          : 'Quota atteint'
-                                    }
-                                  >
-                                    <Sparkles className={`w-3 h-3 ${
-                                      isPropertySponsored(property) ? 'text-amber-600' : 'text-amber-500'
-                                    }`} />
-                                  </button>
-                                )}
                                 <button
                                   onClick={() => togglePropertyStatus(property.id, property.is_active)}
                                   className="p-1 rounded bg-muted"

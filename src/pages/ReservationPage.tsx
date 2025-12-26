@@ -398,7 +398,7 @@ const ReservationPage = () => {
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">
+      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border pt-[env(safe-area-inset-top)]">
         <div className="container max-w-2xl mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" onClick={prevStep}>

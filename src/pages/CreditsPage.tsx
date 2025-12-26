@@ -23,6 +23,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useCredits } from '@/hooks/useCredits';
 import { useListingLimit } from '@/hooks/useListingLimit';
 import { CREDITS_PER_PRODUCT } from '@/services/storeKitService';
+import { CreditPaymentDialog } from '@/components/credits/CreditPaymentDialog';
 
 const CreditsPage = () => {
   const navigate = useNavigate();
@@ -36,7 +37,6 @@ const CreditsPage = () => {
     subscriptions,
     activeSubscription,
     purchaseProduct,
-    purchaseWithStripe,
     restorePurchases,
     loading,
     purchasing,
@@ -47,7 +47,15 @@ const CreditsPage = () => {
     storeKitError,
   } = useCredits();
 
-  const [stripeUrl, setStripeUrl] = useState<string | null>(null);
+  // Payment dialog state
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<{
+    id: string;
+    name: string;
+    price: number;
+    symbol: string;
+    displayPrice: string;
+  } | null>(null);
 
   // Get subscription limits from admin settings
   const proMonthlyLimit = listingSettings?.pro_monthly_limit ?? 15;
@@ -78,17 +86,29 @@ const CreditsPage = () => {
   const isProUser = activeSubscription?.product_id.includes('pro') && !isPremiumUser;
   const totalAvailable = freeCreditsRemaining + availableCredits;
 
-  const handlePurchase = async (productId: string) => {
-    // On iOS native, use StoreKit
+  // Parse price from display string (e.g., "500 FCFA" -> { amount: 500, symbol: "FCFA" })
+  const parsePrice = (displayPrice: string): { amount: number; symbol: string } => {
+    const parts = displayPrice.replace(/\s+/g, ' ').trim().split(' ');
+    const amount = parseInt(parts[0].replace(/[^\d]/g, ''), 10) || 0;
+    const symbol = parts[1] || 'FCFA';
+    return { amount, symbol };
+  };
+
+  const handlePurchase = async (product: { id: string; displayName: string; displayPrice: string }) => {
+    // On iOS native, use StoreKit directly
     if (isIosNative) {
-      await purchaseProduct(productId);
+      await purchaseProduct(product.id);
     } else {
-      // On web/Android, use Stripe (popup opens immediately in hook)
-      const result = await purchaseWithStripe(productId);
-      if (result.url) {
-        // Popup was blocked, show fallback with manual link
-        setStripeUrl(result.url);
-      }
+      // On web/Android, show payment method dialog
+      const { amount, symbol } = parsePrice(product.displayPrice);
+      setSelectedProduct({
+        id: product.id,
+        name: product.displayName,
+        price: amount,
+        symbol,
+        displayPrice: product.displayPrice,
+      });
+      setPaymentDialogOpen(true);
     }
   };
 
@@ -136,36 +156,6 @@ const CreditsPage = () => {
           </motion.div>
         )}
 
-        {/* Stripe Fallback URL (popup blocked) */}
-        {stripeUrl && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-primary/10 border border-primary/30 rounded-xl p-4 space-y-3"
-          >
-            <p className="text-sm font-medium">
-              Le lien de paiement n'a pas pu s'ouvrir automatiquement.
-            </p>
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                onClick={() => {
-                  window.open(stripeUrl, '_blank');
-                  setStripeUrl(null);
-                }}
-              >
-                Ouvrir le paiement
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setStripeUrl(null)}
-              >
-                Annuler
-              </Button>
-            </div>
-          </motion.div>
-        )}
 
         {/* Credits Balance Card */}
         <motion.div
@@ -280,7 +270,7 @@ const CreditsPage = () => {
                           </div>
                         </div>
                         <Button
-                          onClick={() => handlePurchase(product.id)}
+                          onClick={() => handlePurchase(product)}
                           disabled={purchasing}
                           className={isBestValue ? 'bg-primary' : ''}
                         >
@@ -371,7 +361,7 @@ const CreditsPage = () => {
                         <Button
                           className="w-full"
                           variant={isPremium ? 'default' : 'outline'}
-                          onClick={() => handlePurchase(product.id)}
+                          onClick={() => handlePurchase(product)}
                           disabled={purchasing || isActive}
                         >
                           {isActive ? 'Abonnement actif' : product.displayPrice}
@@ -395,6 +385,25 @@ const CreditsPage = () => {
           Les crédits sont utilisés pour publier des annonces. Les abonnements se renouvellent automatiquement chaque mois.
         </motion.p>
       </div>
+
+      {/* Payment Method Dialog (Web/Android only) */}
+      {selectedProduct && (
+        <CreditPaymentDialog
+          open={paymentDialogOpen}
+          onOpenChange={setPaymentDialogOpen}
+          productId={selectedProduct.id}
+          productName={selectedProduct.name}
+          price={{
+            amount: selectedProduct.price,
+            symbol: selectedProduct.symbol,
+            displayPrice: selectedProduct.displayPrice,
+          }}
+          onSuccess={() => {
+            setPaymentDialogOpen(false);
+            setSelectedProduct(null);
+          }}
+        />
+      )}
     </div>
   );
 };

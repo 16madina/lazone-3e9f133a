@@ -159,6 +159,11 @@ export function useCredits(): UseCreditsReturn {
     }
 
     setPurchasing(true);
+    
+    // Open popup IMMEDIATELY (before async call) to avoid browser blocking
+    // We open a blank page first, then redirect once we have the URL
+    const popup = window.open('about:blank', '_blank');
+    
     try {
       const successUrl = `${window.location.origin}/credits?payment=success`;
       const cancelUrl = `${window.location.origin}/credits?payment=cancelled`;
@@ -172,20 +177,23 @@ export function useCredits(): UseCreditsReturn {
       });
 
       if (error) {
+        popup?.close();
         throw new Error(error.message || 'Erreur lors de la création du paiement');
       }
 
       const url = data?.url;
       if (url) {
-        // Open Stripe checkout
-        const popup = window.open(url, '_blank', 'noopener,noreferrer');
-        if (!popup) {
-          // Fallback: return URL for manual opening
+        if (popup && !popup.closed) {
+          // Navigate the already-opened popup to Stripe checkout
+          popup.location.href = url;
+          return { success: true };
+        } else {
+          // Popup was blocked or closed, return URL for manual opening
           return { success: true, url };
         }
-        return { success: true, url };
       }
 
+      popup?.close();
       throw new Error('URL de paiement non reçue');
     } catch (error) {
       console.error('Stripe purchase error:', error);

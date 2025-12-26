@@ -83,10 +83,10 @@ const CreditsPage = () => {
     if (isIosNative) {
       await purchaseProduct(productId);
     } else {
-      // On web/Android, use Stripe
+      // On web/Android, use Stripe (popup opens immediately in hook)
       const result = await purchaseWithStripe(productId);
-      if (result.url && !window.open(result.url, '_blank')) {
-        // Popup blocked, show fallback
+      if (result.url) {
+        // Popup was blocked, show fallback with manual link
         setStripeUrl(result.url);
       }
     }

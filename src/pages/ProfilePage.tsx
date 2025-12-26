@@ -834,7 +834,7 @@ const ProfilePage = () => {
                   {/* Credits Button */}
                   <button
                     onClick={() => navigate('/credits')}
-                    className="flex items-center gap-1.5 text-xs text-amber-600 font-medium hover:underline ml-9"
+                    className="flex items-center gap-1.5 text-xs text-amber-600 font-medium hover:underline ml-7"
                   >
                     <Coins className="w-3.5 h-3.5" />
                     Mes Crédits
@@ -849,7 +849,7 @@ const ProfilePage = () => {
                   {/* Sponsoring Button */}
                   <button
                     onClick={() => navigate('/my-listings')}
-                    className="flex items-center gap-1.5 text-xs text-purple-600 font-medium hover:underline ml-9"
+                    className="flex items-center gap-1.5 text-xs text-purple-600 font-medium hover:underline ml-7"
                   >
                     <Star className="w-3.5 h-3.5" />
                     Sponsoring
@@ -861,7 +861,7 @@ const ProfilePage = () => {
                   {/* My Listings Button */}
                   <button
                     onClick={() => navigate('/my-listings')}
-                    className="flex items-center gap-1.5 text-xs text-emerald-600 font-medium hover:underline ml-9"
+                    className="flex items-center gap-1.5 text-xs text-emerald-600 font-medium hover:underline ml-7"
                   >
                     <Home className="w-3.5 h-3.5" />
                     Mes Annonces

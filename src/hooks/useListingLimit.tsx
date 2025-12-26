@@ -30,6 +30,9 @@ export interface ListingLimitSettings {
   // Subscription limits (global defaults)
   pro_monthly_limit?: number;
   premium_monthly_limit?: number;
+  // Sponsoring quotas
+  pro_sponsored_quota?: number;
+  premium_sponsored_quota?: number;
   // New per-mode settings
   long_term?: ModeLimitSettings;
   short_term?: ModeLimitSettings;

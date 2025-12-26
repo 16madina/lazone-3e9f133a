@@ -846,7 +846,7 @@ const ProfilePage = () => {
                     </span>
                   </button>
                   
-                  {/* Sponsoring Button */}
+                  {/* Sponsoring Button - leads to my-listings page */}
                   <button
                     onClick={() => navigate('/my-listings')}
                     className="flex items-center gap-1.5 text-xs text-purple-600 font-medium hover:underline ml-7"
@@ -855,18 +855,6 @@ const ProfilePage = () => {
                     Sponsoring
                     <span className="ml-1 text-muted-foreground">
                       ({sponsoredRemaining})
-                    </span>
-                  </button>
-                  
-                  {/* My Listings Button */}
-                  <button
-                    onClick={() => navigate('/my-listings')}
-                    className="flex items-center gap-1.5 text-xs text-emerald-600 font-medium hover:underline ml-7"
-                  >
-                    <Home className="w-3.5 h-3.5" />
-                    Mes Annonces
-                    <span className="ml-1 text-muted-foreground">
-                      ({propertiesCount})
                     </span>
                   </button>
                 </div>

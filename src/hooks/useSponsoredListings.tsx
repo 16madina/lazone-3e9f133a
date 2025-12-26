@@ -40,11 +40,15 @@ export function useSponsoredListings(): SponsoredListingsReturn {
     setLoading(true);
     try {
       // Fetch user's active subscription
-      const { data: purchases } = await supabase
+      const { data: purchases, error } = await supabase
         .from('storekit_purchases')
         .select('product_id, status, expiration_date')
         .eq('user_id', user.id)
         .eq('status', 'active');
+
+      console.log('[useSponsoredListings] User ID:', user.id);
+      console.log('[useSponsoredListings] Purchases data:', purchases);
+      console.log('[useSponsoredListings] Error:', error);
 
       // Find active subscription and determine quota
       let quota = 0;
@@ -54,6 +58,12 @@ export function useSponsoredListings(): SponsoredListingsReturn {
         const isActive = !sub.expiration_date || new Date(sub.expiration_date) > new Date();
         // Check for subscription products by looking for 'sub' anywhere in product_id
         const isSubscription = sub.product_id.toLowerCase().includes('sub');
+        
+        console.log('[useSponsoredListings] Processing:', {
+          product_id: sub.product_id,
+          isActive,
+          isSubscription
+        });
         
         if (isActive && isSubscription) {
           // Determine subscription type and quota based on product_id content
@@ -70,6 +80,8 @@ export function useSponsoredListings(): SponsoredListingsReturn {
           }
         }
       });
+
+      console.log('[useSponsoredListings] Final quota:', quota, 'subType:', subType);
 
       setSponsoredQuota(quota);
       setSubscriptionType(subType);

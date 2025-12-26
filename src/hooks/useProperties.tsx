@@ -105,19 +105,30 @@ export const useProperties = () => {
 
       // Build subscription map - check for active subscription
       const subscriptionMap = new Map<string, SubscriptionType>();
+      console.log('[useProperties] Subscriptions data:', subscriptionsData);
       (subscriptionsData || []).forEach(sub => {
         const isActive = !sub.expiration_date || new Date(sub.expiration_date) > new Date();
         // Check for subscription products by looking for 'sub' anywhere in product_id
         const isSubscription = sub.product_id.toLowerCase().includes('sub');
         
+        console.log('[useProperties] Processing subscription:', {
+          product_id: sub.product_id,
+          user_id: sub.user_id,
+          isActive,
+          isSubscription
+        });
+        
         if (isActive && isSubscription) {
           if (sub.product_id.toLowerCase().includes('premium')) {
             subscriptionMap.set(sub.user_id, 'premium');
+            console.log('[useProperties] Set premium for user:', sub.user_id);
           } else if (sub.product_id.toLowerCase().includes('pro') && !subscriptionMap.has(sub.user_id)) {
             subscriptionMap.set(sub.user_id, 'pro');
+            console.log('[useProperties] Set pro for user:', sub.user_id);
           }
         }
       });
+      console.log('[useProperties] Final subscription map:', Object.fromEntries(subscriptionMap));
 
       const formattedProperties: Property[] = (propertiesData || []).map((p) => {
         // Sort images: primary first, then by display_order

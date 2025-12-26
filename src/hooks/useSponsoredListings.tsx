@@ -55,7 +55,7 @@ export function useSponsoredListings(): SponsoredListingsReturn {
       }
 
       const subType = subRow?.is_active ? (subRow.subscription_type as 'pro' | 'premium') : null;
-      const quota = subType === 'premium' ? 4 : subType === 'pro' ? 2 : 0;
+      const quota = subType === 'premium' ? 2 : subType === 'pro' ? 1 : 0;
 
       console.log('[useSponsoredListings] Calculated:', { subType, quota });
 

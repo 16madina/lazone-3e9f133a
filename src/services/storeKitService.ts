@@ -53,6 +53,7 @@ export interface StoreKitPurchaseResult {
   transactionId?: string;
   originalTransactionId?: string;
   purchaseDate?: string;
+  receiptData?: string; // Base64 encoded receipt for server validation
   error?: string;
 }
 
@@ -69,13 +70,13 @@ interface StoreKitPlugin {
   getProducts(options: { productIds: string[] }): Promise<{ products: StoreKitProduct[] }>;
   purchaseProduct(options: { productId: string }): Promise<StoreKitPurchaseResult>;
   restorePurchases(): Promise<{ success: boolean; transactions: StoreKitEntitlement[] }>;
-  getReceiptData(): Promise<{ success: boolean; entitlements: StoreKitEntitlement[] }>;
+  getReceiptData(): Promise<{ success: boolean; entitlements: StoreKitEntitlement[]; receiptData?: string }>;
 }
 
-// Mock implementation for web/development
+// Mock implementation ONLY for web development - NOT for iOS
 const mockStoreKit: StoreKitPlugin = {
   async initialize() {
-    console.log('[StoreKit Mock] Initialized');
+    console.log('[StoreKit Mock] Initialized - DEV MODE ONLY');
     return { success: true };
   },
   async getProducts({ productIds }) {
@@ -129,17 +130,16 @@ const mockStoreKit: StoreKitPlugin = {
     };
   },
   async purchaseProduct({ productId }) {
-    console.log('[StoreKit Mock] Purchasing:', productId);
+    // In mock mode (web only), always fail - no free credits
+    console.log('[StoreKit Mock] Purchase blocked in dev mode:', productId);
     return {
-      success: true,
+      success: false,
       productId,
-      transactionId: `mock_${Date.now()}`,
-      originalTransactionId: `mock_orig_${Date.now()}`,
-      purchaseDate: new Date().toISOString(),
+      error: 'Les achats ne sont disponibles que sur l\'application iOS',
     };
   },
   async restorePurchases() {
-    console.log('[StoreKit Mock] Restoring purchases');
+    console.log('[StoreKit Mock] Restoring purchases - DEV MODE');
     return { success: true, transactions: [] };
   },
   async getReceiptData() {
@@ -151,19 +151,49 @@ class StoreKitService {
   private plugin: StoreKitPlugin | null = null;
   private initialized = false;
   private products: Map<string, StoreKitProduct> = new Map();
+  private nativePluginAvailable = false;
+  private initError: string | null = null;
 
   /**
-   * Check if StoreKit is available (iOS only)
+   * Check if we're on iOS native platform
    */
-  isAvailable(): boolean {
+  isIosNative(): boolean {
     return Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios';
   }
 
   /**
-   * Check if we're in mock mode (web/dev)
+   * Check if StoreKit native plugin is available
+   */
+  isNativePluginAvailable(): boolean {
+    return this.nativePluginAvailable;
+  }
+
+  /**
+   * Check if we're in mock mode (web/dev only)
    */
   isMockMode(): boolean {
-    return !this.isAvailable();
+    // Mock mode is ONLY for web development, never for iOS
+    return !this.isIosNative();
+  }
+
+  /**
+   * Check if purchases are available
+   */
+  isPurchaseAvailable(): boolean {
+    // Purchases are only available if:
+    // 1. We're on iOS native AND the native plugin loaded successfully
+    // 2. OR we're in dev/web mode (for testing UI only, purchases will fail)
+    if (this.isIosNative()) {
+      return this.nativePluginAvailable;
+    }
+    return true; // Web mode for UI testing
+  }
+
+  /**
+   * Get initialization error if any
+   */
+  getInitError(): string | null {
+    return this.initError;
   }
 
   /**
@@ -173,23 +203,41 @@ class StoreKitService {
     if (this.initialized) return;
 
     try {
-      if (this.isAvailable()) {
+      if (this.isIosNative()) {
+        // On iOS, we MUST use the native plugin
         try {
+          console.log('[StoreKit] Attempting to load native plugin...');
           this.plugin = registerPlugin<StoreKitPlugin>('StoreKit');
           await this.plugin.initialize();
-          console.log('[StoreKit] Native plugin initialized');
+          this.nativePluginAvailable = true;
+          console.log('[StoreKit] Native plugin initialized successfully');
         } catch (e) {
-          console.warn('[StoreKit] Native plugin not available, using mock');
-          this.plugin = mockStoreKit;
+          // On iOS, if native plugin fails, we DO NOT fallback to mock
+          // This prevents fake credits on real devices
+          const errorMsg = e instanceof Error ? e.message : 'Unknown error';
+          console.error('[StoreKit] CRITICAL: Native plugin failed on iOS:', errorMsg);
+          this.initError = `Plugin StoreKit non disponible: ${errorMsg}`;
+          this.nativePluginAvailable = false;
+          
+          // Still set a plugin for getProducts (display purposes only)
+          this.plugin = {
+            ...mockStoreKit,
+            purchaseProduct: async () => ({
+              success: false,
+              error: 'StoreKit natif non disponible. Veuillez réinstaller l\'application.',
+            }),
+          };
         }
       } else {
+        // On web/dev, use mock for UI testing
         this.plugin = mockStoreKit;
-        console.log('[StoreKit] Using mock for web/development');
+        this.nativePluginAvailable = false;
+        console.log('[StoreKit] Using mock for web/development (purchases disabled)');
       }
 
       this.initialized = true;
 
-      // Pre-fetch all products
+      // Pre-fetch all products for display
       await this.fetchProducts(Object.values(PRODUCT_IDS));
     } catch (error) {
       console.error('[StoreKit] Initialization error:', error);
@@ -257,10 +305,20 @@ class StoreKitService {
 
   /**
    * Purchase a product
+   * Returns purchase result with receipt data for server validation
    */
   async purchaseProduct(productId: string): Promise<StoreKitPurchaseResult> {
     if (!this.plugin) {
       throw new Error('StoreKit not initialized');
+    }
+
+    // Block purchases if native plugin not available on iOS
+    if (this.isIosNative() && !this.nativePluginAvailable) {
+      console.error('[StoreKit] Purchase blocked: native plugin not available');
+      return {
+        success: false,
+        error: 'StoreKit non disponible. Veuillez réinstaller l\'application.',
+      };
     }
 
     try {
@@ -269,6 +327,18 @@ class StoreKitService {
       
       if (result.success) {
         console.log('[StoreKit] Purchase successful:', result.transactionId);
+        
+        // Get receipt data for server validation (iOS only)
+        if (this.isIosNative() && this.nativePluginAvailable) {
+          try {
+            const receiptResult = await this.plugin.getReceiptData();
+            if (receiptResult.receiptData) {
+              result.receiptData = receiptResult.receiptData;
+            }
+          } catch (e) {
+            console.warn('[StoreKit] Could not get receipt data:', e);
+          }
+        }
       } else if (result.cancelled) {
         console.log('[StoreKit] Purchase cancelled by user');
       } else if (result.pending) {

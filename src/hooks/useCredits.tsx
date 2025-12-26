@@ -44,6 +44,8 @@ interface UseCreditsReturn {
   purchasing: boolean;
   initialized: boolean;
   isMockMode: boolean;
+  isPurchaseAvailable: boolean;
+  storeKitError: string | null;
 }
 
 export function useCredits(): UseCreditsReturn {
@@ -57,6 +59,7 @@ export function useCredits(): UseCreditsReturn {
   const [purchasing, setPurchasing] = useState(false);
   const [initialized, setInitialized] = useState(false);
   const [freeListingsUsed, setFreeListingsUsed] = useState(0);
+  const [storeKitError, setStoreKitError] = useState<string | null>(null);
 
   // Get free credits limit based on user type
   const freeCreditsLimit = profile?.user_type === 'agence' ? 1 : 3;
@@ -81,9 +84,17 @@ export function useCredits(): UseCreditsReturn {
         await storeKitService.initialize();
         setCreditPacks(storeKitService.getCreditPacks());
         setSubscriptions(storeKitService.getSubscriptions());
+        
+        // Check for initialization errors
+        const initError = storeKitService.getInitError();
+        if (initError) {
+          setStoreKitError(initError);
+        }
+        
         setInitialized(true);
       } catch (error) {
         console.error('Failed to initialize StoreKit:', error);
+        setStoreKitError('Impossible d\'initialiser le système de paiement');
       }
     };
 
@@ -130,7 +141,7 @@ export function useCredits(): UseCreditsReturn {
     fetchData();
   }, [user?.id]);
 
-  // Purchase a product
+  // Purchase a product - validates with Apple server before crediting
   const purchaseProduct = useCallback(async (productId: string): Promise<boolean> => {
     if (!user?.id) {
       toast({
@@ -141,32 +152,64 @@ export function useCredits(): UseCreditsReturn {
       return false;
     }
 
+    // Check if purchases are available
+    if (!storeKitService.isPurchaseAvailable()) {
+      toast({
+        title: 'Achat indisponible',
+        description: storeKitService.getInitError() || 'StoreKit non disponible',
+        variant: 'destructive',
+      });
+      return false;
+    }
+
+    // Block in mock mode (web) - no free credits
+    if (storeKitService.isMockMode()) {
+      toast({
+        title: 'Achats indisponibles',
+        description: 'Les achats ne sont disponibles que sur l\'application iOS',
+        variant: 'destructive',
+      });
+      return false;
+    }
+
     setPurchasing(true);
     try {
+      // Step 1: Execute the StoreKit purchase (native iOS)
       const result: StoreKitPurchaseResult = await storeKitService.purchaseProduct(productId);
 
       if (result.success && result.transactionId) {
-        // Save purchase to database
-        const creditsAmount = CREDITS_PER_PRODUCT[productId] || 1;
-        const isSubscription = productId.includes('agency') || productId.includes('sub');
+        // Step 2: Validate with Apple server via our backend
+        console.log('[useCredits] Purchase successful, validating with server...');
         
-        const { error } = await supabase
-          .from('storekit_purchases')
-          .insert({
-            user_id: user.id,
-            product_id: productId,
-            transaction_id: result.transactionId,
-            original_transaction_id: result.originalTransactionId,
-            credits_amount: creditsAmount,
-            credits_used: 0,
-            purchase_date: result.purchaseDate || new Date().toISOString(),
-            is_subscription: isSubscription,
-            status: 'active',
+        const { data, error } = await supabase.functions.invoke('process-storekit-purchase', {
+          body: {
+            productId,
+            transactionId: result.transactionId,
+            originalTransactionId: result.originalTransactionId,
+            purchaseDate: result.purchaseDate,
+          },
+        });
+
+        if (error) {
+          console.error('[useCredits] Server validation failed:', error);
+          toast({
+            title: 'Erreur de validation',
+            description: 'L\'achat a été effectué mais la validation a échoué. Utilisez "Restaurer les achats".',
+            variant: 'destructive',
           });
+          return false;
+        }
 
-        if (error) throw error;
+        if (!data.success) {
+          toast({
+            title: 'Validation échouée',
+            description: data.error || 'Impossible de valider l\'achat',
+            variant: 'destructive',
+          });
+          return false;
+        }
 
-        // Refresh purchases
+        // Step 3: Refresh purchases from database
         const { data: newPurchases } = await supabase
           .from('storekit_purchases')
           .select('*')
@@ -175,6 +218,7 @@ export function useCredits(): UseCreditsReturn {
 
         setPurchases((newPurchases || []) as StoreKitPurchase[]);
 
+        const creditsAmount = CREDITS_PER_PRODUCT[productId] || 1;
         toast({
           title: 'Achat réussi !',
           description: `${creditsAmount} crédit(s) ajouté(s) à votre compte`,
@@ -211,45 +255,49 @@ export function useCredits(): UseCreditsReturn {
     }
   }, [user?.id, toast]);
 
-  // Restore purchases
+  // Restore purchases - validates each with server
   const restorePurchases = useCallback(async () => {
     if (!user?.id) return;
+
+    // Check if on iOS native
+    if (!storeKitService.isIosNative()) {
+      toast({
+        title: 'Non disponible',
+        description: 'La restauration n\'est disponible que sur iOS',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     setPurchasing(true);
     try {
       const entitlements = await storeKitService.restorePurchases();
       
-      // Process each restored entitlement
+      let restoredCount = 0;
+      
+      // Process each restored entitlement via server
       for (const entitlement of entitlements) {
-        const creditsAmount = CREDITS_PER_PRODUCT[entitlement.productId] || 1;
-        const isSubscription = entitlement.productId.includes('agency') || entitlement.productId.includes('sub');
+        try {
+          const { data, error } = await supabase.functions.invoke('process-storekit-purchase', {
+            body: {
+              productId: entitlement.productId,
+              transactionId: entitlement.transactionId,
+              originalTransactionId: entitlement.originalTransactionId,
+              purchaseDate: entitlement.purchaseDate,
+              expirationDate: entitlement.expirationDate,
+              isRestore: true,
+            },
+          });
 
-        // Check if already exists
-        const { data: existing } = await supabase
-          .from('storekit_purchases')
-          .select('id')
-          .eq('transaction_id', entitlement.transactionId)
-          .maybeSingle();
-
-        if (!existing) {
-          await supabase
-            .from('storekit_purchases')
-            .insert({
-              user_id: user.id,
-              product_id: entitlement.productId,
-              transaction_id: entitlement.transactionId,
-              original_transaction_id: entitlement.originalTransactionId,
-              credits_amount: creditsAmount,
-              credits_used: 0,
-              purchase_date: entitlement.purchaseDate,
-              expiration_date: entitlement.expirationDate,
-              is_subscription: isSubscription,
-              status: 'active',
-            });
+          if (!error && data?.success) {
+            restoredCount++;
+          }
+        } catch (e) {
+          console.error('Error restoring transaction:', entitlement.transactionId, e);
         }
       }
 
-      // Refresh purchases
+      // Refresh purchases from database
       const { data: newPurchases } = await supabase
         .from('storekit_purchases')
         .select('*')
@@ -260,7 +308,7 @@ export function useCredits(): UseCreditsReturn {
 
       toast({
         title: 'Restauration terminée',
-        description: `${entitlements.length} achat(s) restauré(s)`,
+        description: `${restoredCount} achat(s) restauré(s)`,
       });
     } catch (error) {
       console.error('Restore error:', error);
@@ -336,5 +384,7 @@ export function useCredits(): UseCreditsReturn {
     purchasing,
     initialized,
     isMockMode: storeKitService.isMockMode(),
+    isPurchaseAvailable: storeKitService.isPurchaseAvailable(),
+    storeKitError,
   };
 }

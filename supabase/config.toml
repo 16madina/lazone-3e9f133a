@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.validate-apple-receipt]
 verify_jwt = true
+
+[functions.process-storekit-purchase]
+verify_jwt = true

@@ -164,28 +164,25 @@ const MyListingsPage = () => {
   };
 
   const handleSponsor = async (property: Property) => {
-    if (property.is_sponsored && property.sponsored_until && new Date(property.sponsored_until) > new Date()) {
-      // Already sponsored - unsponsor
-      const success = await unsponsorProperty(property.id);
-      if (success) {
-        setProperties(prev => 
-          prev.map(p => 
-            p.id === property.id ? { ...p, is_sponsored: false, sponsored_until: null } : p
-          )
-        );
-      }
-    } else {
-      // Sponsor the property
-      const success = await sponsorProperty(property.id);
-      if (success) {
-        const sponsoredUntil = new Date();
-        sponsoredUntil.setDate(sponsoredUntil.getDate() + 30);
-        setProperties(prev => 
-          prev.map(p => 
-            p.id === property.id ? { ...p, is_sponsored: true, sponsored_until: sponsoredUntil.toISOString() } : p
-          )
-        );
-      }
+    // Only allow sponsoring, not unsponsoring
+    if (isPropertySponsored(property)) {
+      toast({
+        title: 'Déjà sponsorisée',
+        description: 'Cette annonce est sponsorisée jusqu\'à ' + format(new Date(property.sponsored_until!), 'dd MMM yyyy', { locale: fr }),
+      });
+      return;
+    }
+    
+    // Sponsor the property
+    const success = await sponsorProperty(property.id);
+    if (success) {
+      const sponsoredUntil = new Date();
+      sponsoredUntil.setDate(sponsoredUntil.getDate() + 3);
+      setProperties(prev => 
+        prev.map(p => 
+          p.id === property.id ? { ...p, is_sponsored: true, sponsored_until: sponsoredUntil.toISOString() } : p
+        )
+      );
     }
   };
 
@@ -262,11 +259,6 @@ const MyListingsPage = () => {
           </div>
         ) : (
           <div className="space-y-4">
-            {/* Debug info - remove later */}
-            <div className="p-2 bg-yellow-100 rounded text-xs">
-              Debug: subscriptionType={subscriptionType || 'null'}, quota={sponsoredQuota}, remaining={sponsoredRemaining}
-            </div>
-            
             {/* Sponsored Quota Banner */}
             {subscriptionType && (
               <div className={`p-3 rounded-xl ${

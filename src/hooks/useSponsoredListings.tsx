@@ -112,8 +112,8 @@ export function useSponsoredListings(): SponsoredListingsReturn {
     }
 
     try {
-      // Sponsor for 30 days
-      const sponsoredUntil = addDays(new Date(), 30);
+      // Sponsor for 3 days only
+      const sponsoredUntil = addDays(new Date(), 3);
 
       const { error } = await supabase
         .from('properties')
@@ -131,7 +131,7 @@ export function useSponsoredListings(): SponsoredListingsReturn {
 
       toast({
         title: 'Annonce sponsorisée !',
-        description: 'Votre annonce sera mise en avant pendant 30 jours',
+        description: 'Votre annonce sera mise en avant pendant 3 jours',
       });
 
       return true;

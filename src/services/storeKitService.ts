@@ -202,20 +202,26 @@ class StoreKitService {
   async initialize(): Promise<void> {
     if (this.initialized) return;
 
+    // Log platform detection for debugging
+    const isNative = Capacitor.isNativePlatform();
+    const platform = Capacitor.getPlatform();
+    console.log(`[StoreKit] Platform detection: isNative=${isNative}, platform=${platform}`);
+
     try {
       if (this.isIosNative()) {
         // On iOS, we MUST use the native plugin
+        console.log('[StoreKit] iOS native detected, attempting to load native plugin...');
         try {
-          console.log('[StoreKit] Attempting to load native plugin...');
           this.plugin = registerPlugin<StoreKitPlugin>('StoreKit');
+          console.log('[StoreKit] Plugin registered, calling initialize...');
           await this.plugin.initialize();
           this.nativePluginAvailable = true;
-          console.log('[StoreKit] Native plugin initialized successfully');
+          console.log('[StoreKit] ✅ Native plugin initialized successfully');
         } catch (e) {
           // On iOS, if native plugin fails, we DO NOT fallback to mock
           // This prevents fake credits on real devices
-          const errorMsg = e instanceof Error ? e.message : 'Unknown error';
-          console.error('[StoreKit] CRITICAL: Native plugin failed on iOS:', errorMsg);
+          const errorMsg = e instanceof Error ? e.message : String(e);
+          console.error('[StoreKit] ❌ CRITICAL: Native plugin failed on iOS:', errorMsg);
           this.initError = `Plugin StoreKit non disponible: ${errorMsg}`;
           this.nativePluginAvailable = false;
           
@@ -230,9 +236,9 @@ class StoreKitService {
         }
       } else {
         // On web/dev, use mock for UI testing
+        console.log('[StoreKit] Web/Android detected, using mock (purchases disabled)');
         this.plugin = mockStoreKit;
         this.nativePluginAvailable = false;
-        console.log('[StoreKit] Using mock for web/development (purchases disabled)');
       }
 
       this.initialized = true;

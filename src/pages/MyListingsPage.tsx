@@ -275,6 +275,9 @@ const MyListingsPage = () => {
                 <p className="text-xs text-muted-foreground">
                   {sponsoredRemaining} sur {sponsoredQuota} disponibles ce mois
                 </p>
+                <p className="text-xs text-muted-foreground/70 mt-1">
+                  Cliquez sur l'étoile ⭐ d'une annonce pour la mettre en avant pendant 3 jours
+                </p>
                 <div className="mt-2 h-1.5 bg-muted rounded-full overflow-hidden">
                   <div 
                     className={`h-full transition-all ${

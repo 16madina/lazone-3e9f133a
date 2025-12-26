@@ -828,10 +828,7 @@ const ProfilePage = () => {
                     <Coins className="w-3.5 h-3.5" />
                     Mes Crédits
                     <span className="ml-1.5 text-muted-foreground">
-                      {activeSubscription?.product_id.includes('premium') 
-                        ? '(Illimité)' 
-                        : `(${freeCreditsRemaining + availableCredits})`
-                      }
+                      ({freeCreditsRemaining + availableCredits})
                     </span>
                   </button>
                 </div>

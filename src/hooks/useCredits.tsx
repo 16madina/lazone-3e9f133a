@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { storeKitService, CREDITS_PER_PRODUCT, StoreKitProduct, StoreKitPurchaseResult } from '@/services/storeKitService';
@@ -36,6 +37,7 @@ interface UseCreditsReturn {
   
   // Actions
   purchaseProduct: (productId: string) => Promise<boolean>;
+  purchaseWithStripe: (productId: string) => Promise<{ success: boolean; url?: string }>;
   restorePurchases: () => Promise<void>;
   useCredit: () => Promise<boolean>;
   
@@ -43,6 +45,7 @@ interface UseCreditsReturn {
   loading: boolean;
   purchasing: boolean;
   initialized: boolean;
+  isIosNative: boolean;
   isMockMode: boolean;
   isPurchaseAvailable: boolean;
   storeKitError: string | null;
@@ -141,7 +144,63 @@ export function useCredits(): UseCreditsReturn {
     fetchData();
   }, [user?.id]);
 
-  // Purchase a product - validates with Apple server before crediting
+  // Check if we're on iOS native
+  const isIosNative = Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios';
+
+  // Purchase via Stripe (for web/Android)
+  const purchaseWithStripe = useCallback(async (productId: string): Promise<{ success: boolean; url?: string }> => {
+    if (!user?.id) {
+      toast({
+        title: 'Connexion requise',
+        description: 'Vous devez être connecté pour acheter des crédits',
+        variant: 'destructive',
+      });
+      return { success: false };
+    }
+
+    setPurchasing(true);
+    try {
+      const successUrl = `${window.location.origin}/credits?payment=success`;
+      const cancelUrl = `${window.location.origin}/credits?payment=cancelled`;
+
+      const { data, error } = await supabase.functions.invoke('create-credits-checkout', {
+        body: {
+          productId,
+          successUrl,
+          cancelUrl,
+        },
+      });
+
+      if (error) {
+        throw new Error(error.message || 'Erreur lors de la création du paiement');
+      }
+
+      const url = data?.url;
+      if (url) {
+        // Open Stripe checkout
+        const popup = window.open(url, '_blank', 'noopener,noreferrer');
+        if (!popup) {
+          // Fallback: return URL for manual opening
+          return { success: true, url };
+        }
+        return { success: true, url };
+      }
+
+      throw new Error('URL de paiement non reçue');
+    } catch (error) {
+      console.error('Stripe purchase error:', error);
+      toast({
+        title: 'Erreur de paiement',
+        description: error instanceof Error ? error.message : 'Une erreur est survenue',
+        variant: 'destructive',
+      });
+      return { success: false };
+    } finally {
+      setPurchasing(false);
+    }
+  }, [user?.id, toast]);
+
+  // Purchase a product via StoreKit (iOS only) - validates with Apple server before crediting
   const purchaseProduct = useCallback(async (productId: string): Promise<boolean> => {
     if (!user?.id) {
       toast({
@@ -152,21 +211,17 @@ export function useCredits(): UseCreditsReturn {
       return false;
     }
 
+    // If not on iOS native, redirect to Stripe
+    if (!isIosNative) {
+      const result = await purchaseWithStripe(productId);
+      return result.success;
+    }
+
     // Check if purchases are available
     if (!storeKitService.isPurchaseAvailable()) {
       toast({
         title: 'Achat indisponible',
         description: storeKitService.getInitError() || 'StoreKit non disponible',
-        variant: 'destructive',
-      });
-      return false;
-    }
-
-    // Block in mock mode (web) - no free credits
-    if (storeKitService.isMockMode()) {
-      toast({
-        title: 'Achats indisponibles',
-        description: 'Les achats ne sont disponibles que sur l\'application iOS',
         variant: 'destructive',
       });
       return false;
@@ -253,7 +308,7 @@ export function useCredits(): UseCreditsReturn {
     } finally {
       setPurchasing(false);
     }
-  }, [user?.id, toast]);
+  }, [user?.id, toast, isIosNative, purchaseWithStripe]);
 
   // Restore purchases - validates each with server
   const restorePurchases = useCallback(async () => {
@@ -378,11 +433,13 @@ export function useCredits(): UseCreditsReturn {
     subscriptions,
     activeSubscription,
     purchaseProduct,
+    purchaseWithStripe,
     restorePurchases,
     useCredit,
     loading,
     purchasing,
     initialized,
+    isIosNative,
     isMockMode: storeKitService.isMockMode(),
     isPurchaseAvailable: storeKitService.isPurchaseAvailable(),
     storeKitError,

@@ -74,9 +74,108 @@ serve(async (req) => {
       const transactionRef = session.metadata?.transaction_ref;
       const listingType = session.metadata?.listing_type;
       const propertyId = session.metadata?.property_id;
+      
+      // Check if this is a credit/subscription purchase
+      const productId = session.metadata?.product_id;
+      const creditsAmount = session.metadata?.credits_amount;
+      const isSubscription = session.metadata?.is_subscription === 'true';
 
-      if (!userId || !transactionRef) {
-        console.error("Missing metadata in session:", session.id);
+      if (!userId) {
+        console.error("Missing user_id in session:", session.id);
+        return new Response(JSON.stringify({ error: "Missing user_id" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Handle CREDITS purchase (from create-credits-checkout)
+      if (productId && creditsAmount) {
+        console.log(`[stripe-webhook] Processing credit purchase: ${productId} for user ${userId}`);
+        
+        // Check if already processed
+        const { data: existingPurchase } = await supabase
+          .from("storekit_purchases")
+          .select("id")
+          .eq("transaction_id", transactionRef || session.id)
+          .maybeSingle();
+
+        if (existingPurchase) {
+          console.log(`[stripe-webhook] Transaction ${transactionRef} already processed`);
+          return new Response(JSON.stringify({ received: true, message: "Already processed" }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        // Calculate expiration date for subscriptions
+        let expirationDate: string | null = null;
+        if (isSubscription) {
+          const date = new Date();
+          date.setMonth(date.getMonth() + 1);
+          expirationDate = date.toISOString();
+        }
+
+        // Insert into storekit_purchases (unified table for all credit purchases)
+        const { data: purchase, error: insertError } = await supabase
+          .from("storekit_purchases")
+          .insert({
+            user_id: userId,
+            product_id: productId,
+            transaction_id: transactionRef || session.id,
+            original_transaction_id: session.id,
+            credits_amount: parseInt(creditsAmount, 10),
+            credits_used: 0,
+            purchase_date: new Date().toISOString(),
+            expiration_date: expirationDate,
+            is_subscription: isSubscription,
+            status: 'active',
+          })
+          .select()
+          .single();
+
+        if (insertError) {
+          console.error("[stripe-webhook] Error inserting credit purchase:", insertError);
+        } else {
+          console.log(`[stripe-webhook] Credit purchase recorded: ${purchase.id}`);
+        }
+
+        // If subscription, update user_subscriptions table
+        if (isSubscription) {
+          const subscriptionType = productId.includes('premium') ? 'premium' : 'pro';
+          
+          await supabase
+            .from("user_subscriptions")
+            .upsert({
+              user_id: userId,
+              subscription_type: subscriptionType,
+              is_active: true,
+              active_until: expirationDate,
+            }, {
+              onConflict: 'user_id',
+            });
+          
+          console.log(`[stripe-webhook] User subscription updated: ${subscriptionType}`);
+        }
+
+        // Send notification
+        await supabase
+          .from("notifications")
+          .insert({
+            user_id: userId,
+            type: "payment_approved",
+            actor_id: userId,
+            entity_id: purchase?.id || transactionRef,
+          });
+
+        console.log(`[stripe-webhook] Credit payment completed for user ${userId}`);
+        
+        return new Response(JSON.stringify({ received: true }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Handle LISTING payment (from create-checkout-session)
+      if (!transactionRef) {
+        console.error("Missing transaction_ref in session:", session.id);
         return new Response(JSON.stringify({ error: "Missing metadata" }), {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },

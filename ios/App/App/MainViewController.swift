@@ -1,12 +1,15 @@
+import UIKit
 import Capacitor
-import CapApp_SPM
 
-@objc(MainViewController)
+/// Custom view controller that registers the StoreKit plugin with Capacitor
 class MainViewController: CAPBridgeViewController {
-  override open func capacitorDidLoad() {
-    super.capacitorDidLoad()
-
-    // Ensure our local StoreKit plugin is registered with the Capacitor bridge.
-    bridge?.registerPluginInstance(StoreKitPlugin())
-  }
+    
+    override open func capacitorDidLoad() {
+        super.capacitorDidLoad()
+        
+        // Register the StoreKit plugin
+        print("[MainViewController] Registering StoreKitPlugin...")
+        bridge?.registerPluginInstance(StoreKitPlugin())
+        print("[MainViewController] StoreKitPlugin registered successfully")
+    }
 }

@@ -238,7 +238,7 @@ const CreditsPage = () => {
                         </div>
                         <Button
                           onClick={() => handlePurchase(product.id)}
-                          disabled={purchasing || !isPurchaseAvailable}
+                          disabled={purchasing}
                           className={isBestValue ? 'bg-primary' : ''}
                         >
                           {product.displayPrice}
@@ -329,7 +329,7 @@ const CreditsPage = () => {
                           className="w-full"
                           variant={isPremium ? 'default' : 'outline'}
                           onClick={() => handlePurchase(product.id)}
-                          disabled={purchasing || isActive || !isPurchaseAvailable}
+                          disabled={purchasing || isActive}
                         >
                           {isActive ? 'Abonnement actif' : product.displayPrice}
                         </Button>

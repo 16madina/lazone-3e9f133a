@@ -3,8 +3,16 @@ import { ArrowLeft } from 'lucide-react';
 import { NotificationDropdown } from '@/components/NotificationDropdown';
 import { useAuth } from '@/hooks/useAuth';
 
-// Pages that have their own header implementation
-const pagesWithCustomHeader = ['/', '/auth', '/verify-email', '/profile'];
+// Pages that have their own header implementation or don't need notification bell
+const pagesWithCustomHeader = [
+  '/', 
+  '/auth', 
+  '/verify-email', 
+  '/profile',
+  '/credits',
+  '/my-listings',
+  '/settings/edit-profile'
+];
 
 // Pages that should not show the header at all
 const pagesWithoutHeader = ['/install'];

@@ -48,6 +48,7 @@ const CreditsPage = () => {
   }, [user, navigate]);
 
   const isAgency = profile?.user_type === 'agence';
+  const isPremiumUser = activeSubscription?.product_id.includes('premium');
   const totalAvailable = freeCreditsRemaining + availableCredits;
 
   const handlePurchase = async (productId: string) => {
@@ -112,33 +113,41 @@ const CreditsPage = () => {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Crédits disponibles</p>
-                    <p className="text-3xl font-bold text-primary">{totalAvailable}</p>
+                    <p className="text-3xl font-bold text-primary">
+                      {isPremiumUser ? 'Illimité' : totalAvailable}
+                    </p>
                   </div>
                 </div>
                 {activeSubscription && (
-                  <Badge className="bg-gradient-to-r from-amber-500 to-orange-500">
+                  <Badge className={`${
+                    isPremiumUser 
+                      ? 'bg-gradient-to-r from-amber-500 to-orange-500' 
+                      : 'bg-gradient-to-r from-purple-500 to-pink-500'
+                  }`}>
                     <Crown className="w-3 h-3 mr-1" />
-                    Abonné
+                    {isPremiumUser ? 'Premium' : 'Pro'}
                   </Badge>
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border/50">
-                <div className="flex items-center gap-2">
-                  <Gift className="w-4 h-4 text-green-500" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Gratuits</p>
-                    <p className="font-semibold">{freeCreditsRemaining}/{freeCreditsLimit}</p>
+              {!isPremiumUser && (
+                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border/50">
+                  <div className="flex items-center gap-2">
+                    <Gift className="w-4 h-4 text-green-500" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Gratuits</p>
+                      <p className="font-semibold">{freeCreditsRemaining}/{freeCreditsLimit}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-amber-500" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Achetés</p>
+                      <p className="font-semibold">{availableCredits}</p>
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-amber-500" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Achetés</p>
-                    <p className="font-semibold">{availableCredits}</p>
-                  </div>
-                </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         </motion.div>

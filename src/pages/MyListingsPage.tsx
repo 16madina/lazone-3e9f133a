@@ -84,9 +84,21 @@ const MyListingsPage = () => {
     }
     
     if (user) {
+      console.log('[MyListingsPage] User authenticated, fetching properties for:', listingType);
       fetchProperties();
     }
   }, [user, authLoading, listingType]);
+  
+  // Debug: Log sponsored data when it changes
+  useEffect(() => {
+    console.log('[MyListingsPage] Sponsored data:', {
+      subscriptionType,
+      sponsoredQuota,
+      sponsoredUsed,
+      sponsoredRemaining,
+      sponsoredLoading
+    });
+  }, [subscriptionType, sponsoredQuota, sponsoredUsed, sponsoredRemaining, sponsoredLoading]);
 
   const fetchProperties = async () => {
     if (!user) return;
@@ -354,24 +366,34 @@ const MyListingsPage = () => {
               )}
             </div>
           ) : (
-            // Non-subscriber CTA
+            // Non-subscriber CTA - Message explicatif
             <div className="bg-gradient-to-br from-purple-600 via-purple-500 to-pink-500 p-4 rounded-2xl text-white">
               <div className="flex items-start gap-3">
                 <div className="p-2 bg-white/20 rounded-xl">
                   <Gift className="w-6 h-6" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-bold mb-1">Boostez vos annonces !</h3>
-                  <p className="text-xs text-white/80 mb-3">
-                    Passez au Pro ou Premium pour sponsoriser vos annonces et obtenir jusqu'à 50% de visibilité en plus.
+                  <h3 className="font-bold mb-1">Aucun abonnement actif</h3>
+                  <p className="text-xs text-white/80 mb-2">
+                    Vous n'avez pas d'abonnement Pro ou Premium actif. Le sponsoring permet de :
                   </p>
-                  <button
-                    onClick={() => navigate('/credits')}
-                    className="flex items-center gap-2 px-4 py-2 bg-white text-purple-600 rounded-xl text-sm font-semibold hover:bg-white/90 transition-colors"
-                  >
-                    <Crown className="w-4 h-4" />
-                    Découvrir les offres
-                  </button>
+                  <ul className="text-xs text-white/80 mb-3 space-y-1 list-disc list-inside">
+                    <li>Afficher vos annonces en première page</li>
+                    <li>Obtenir jusqu'à +50% de visibilité</li>
+                    <li>Être mis en avant pendant 3 jours</li>
+                  </ul>
+                  <div className="flex flex-col gap-2">
+                    <button
+                      onClick={() => navigate('/credits')}
+                      className="flex items-center justify-center gap-2 px-4 py-2 bg-white text-purple-600 rounded-xl text-sm font-semibold hover:bg-white/90 transition-colors"
+                    >
+                      <Crown className="w-4 h-4" />
+                      S'abonner maintenant
+                    </button>
+                    <p className="text-[10px] text-white/60 text-center">
+                      Pro: 1 sponsoring/mois • Premium: 2 sponsorings/mois
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>

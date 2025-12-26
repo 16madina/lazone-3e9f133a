@@ -1,5 +1,6 @@
 import UIKit
 import Capacitor
+import CapApp_SPM
 
 /// Custom view controller that registers the StoreKit plugin with Capacitor
 class MainViewController: CAPBridgeViewController {

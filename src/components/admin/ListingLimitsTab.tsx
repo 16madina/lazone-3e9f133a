@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Loader2, Settings, DollarSign, Users, TrendingUp, BarChart3, Home, Building, Crown, Zap } from 'lucide-react';
+import { Loader2, Settings, DollarSign, Users, TrendingUp, BarChart3, Home, Building, Crown, Zap, Star } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -532,6 +532,61 @@ const ListingLimitsTab = () => {
                   className="bg-background"
                 />
                 <p className="text-xs text-amber-600">annonces/mois</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Sponsoring Quotas Section */}
+          <div className="space-y-4 pt-4 border-t border-border">
+            <div className="flex items-center gap-2">
+              <Star className="w-5 h-5 text-yellow-500" />
+              <Label className="font-medium">Quotas de sponsoring</Label>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Nombre d'annonces sponsorisées par mois (durée 3 jours chacune)
+            </p>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2 p-3 rounded-lg bg-purple-500/10 border border-purple-500/30">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-purple-500" />
+                  <Label className="text-sm font-medium text-purple-700">Pro</Label>
+                </div>
+                <Input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={localSettings.pro_sponsored_quota ?? 1}
+                  onChange={(e) =>
+                    setLocalSettings({
+                      ...localSettings,
+                      pro_sponsored_quota: parseInt(e.target.value) || 0,
+                    })
+                  }
+                  className="bg-background"
+                />
+                <p className="text-xs text-purple-600">sponsoring/mois</p>
+              </div>
+              
+              <div className="space-y-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
+                <div className="flex items-center gap-2">
+                  <Crown className="w-4 h-4 text-amber-500" />
+                  <Label className="text-sm font-medium text-amber-700">Premium</Label>
+                </div>
+                <Input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={localSettings.premium_sponsored_quota ?? 2}
+                  onChange={(e) =>
+                    setLocalSettings({
+                      ...localSettings,
+                      premium_sponsored_quota: parseInt(e.target.value) || 0,
+                    })
+                  }
+                  className="bg-background"
+                />
+                <p className="text-xs text-amber-600">sponsoring/mois</p>
               </div>
             </div>
           </div>

@@ -46,6 +46,8 @@ const CreditsPage = () => {
   // Get subscription limits from admin settings
   const proMonthlyLimit = listingSettings?.pro_monthly_limit ?? 15;
   const premiumMonthlyLimit = listingSettings?.premium_monthly_limit ?? 30;
+  const proSponsoredQuota = listingSettings?.pro_sponsored_quota ?? 1;
+  const premiumSponsoredQuota = listingSettings?.premium_sponsored_quota ?? 2;
 
   useEffect(() => {
     if (!user) {
@@ -259,8 +261,8 @@ const CreditsPage = () => {
                 const isPremium = product.id.includes('premium');
                 
                 const features = isPremium 
-                  ? [`${premiumMonthlyLimit} annonces/mois`, '2 annonces sponsorisées/mois', 'Mise en avant', 'Support prioritaire', 'Badge Premium']
-                  : [`${proMonthlyLimit} annonces/mois`, '1 annonce sponsorisée/mois', 'Badge Pro'];
+                  ? [`${premiumMonthlyLimit} annonces/mois`, `${premiumSponsoredQuota} annonces sponsorisées/mois`, 'Mise en avant', 'Support prioritaire', 'Badge Premium']
+                  : [`${proMonthlyLimit} annonces/mois`, `${proSponsoredQuota} annonce sponsorisée/mois`, 'Badge Pro'];
 
                 return (
                   <motion.div

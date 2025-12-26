@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { addDays } from 'date-fns';
+import { ListingLimitSettings } from '@/hooks/useListingLimit';
 
 interface SponsoredListingsReturn {
   // Quota
@@ -41,6 +42,17 @@ export function useSponsoredListings(): SponsoredListingsReturn {
 
     setLoading(true);
     try {
+      // Fetch admin settings for sponsored quotas
+      const { data: settingsData } = await supabase
+        .from('app_settings')
+        .select('value')
+        .eq('id', 'listing_limit')
+        .single();
+      
+      const settings = settingsData?.value as unknown as ListingLimitSettings | null;
+      const proQuota = settings?.pro_sponsored_quota ?? 1;
+      const premiumQuota = settings?.premium_sponsored_quota ?? 2;
+
       // Read public subscription status (safe) instead of private purchase rows
       const { data: subRow, error: subError } = await supabase
         .from('user_subscriptions')
@@ -55,9 +67,9 @@ export function useSponsoredListings(): SponsoredListingsReturn {
       }
 
       const subType = subRow?.is_active ? (subRow.subscription_type as 'pro' | 'premium') : null;
-      const quota = subType === 'premium' ? 2 : subType === 'pro' ? 1 : 0;
+      const quota = subType === 'premium' ? premiumQuota : subType === 'pro' ? proQuota : 0;
 
-      console.log('[useSponsoredListings] Calculated:', { subType, quota });
+      console.log('[useSponsoredListings] Calculated:', { subType, quota, proQuota, premiumQuota });
 
       setSponsoredQuota(quota);
       setSubscriptionType(subType);

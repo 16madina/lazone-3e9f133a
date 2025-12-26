@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { SPONSORED_LISTINGS_PER_PRODUCT } from '@/services/storeKitService';
 import { addDays } from 'date-fns';
 
 interface SponsoredListingsReturn {
@@ -53,13 +52,19 @@ export function useSponsoredListings(): SponsoredListingsReturn {
       
       (purchases || []).forEach(sub => {
         const isActive = !sub.expiration_date || new Date(sub.expiration_date) > new Date();
-        if (isActive && (sub.product_id.includes('sub.') || sub.product_id.includes('agency.'))) {
-          const productQuota = SPONSORED_LISTINGS_PER_PRODUCT[sub.product_id] || 0;
-          if (productQuota > quota) {
-            quota = productQuota;
-            if (sub.product_id.includes('premium')) {
+        // Check for subscription products by looking for 'sub' anywhere in product_id
+        const isSubscription = sub.product_id.toLowerCase().includes('sub');
+        
+        if (isActive && isSubscription) {
+          // Determine subscription type and quota based on product_id content
+          if (sub.product_id.toLowerCase().includes('premium')) {
+            if (quota < 4) {
+              quota = 4; // Premium gets 4 sponsored listings
               subType = 'premium';
-            } else if (sub.product_id.includes('pro')) {
+            }
+          } else if (sub.product_id.toLowerCase().includes('pro')) {
+            if (quota < 2 && subType !== 'premium') {
+              quota = 2; // Pro gets 2 sponsored listings
               subType = 'pro';
             }
           }

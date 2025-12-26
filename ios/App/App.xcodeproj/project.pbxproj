@@ -15,6 +15,9 @@
 		504EC30F1FED79650016851F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 504EC30E1FED79650016851F /* Assets.xcassets */; };
 		504EC3121FED79650016851F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC3101FED79650016851F /* LaunchScreen.storyboard */; };
 		50B271D11FEDC1A000F3C39B /* public in Resources */ = {isa = PBXBuildFile; fileRef = 50B271D01FEDC1A000F3C39B /* public */; };
+		A1A1A1A1A1A1A1A1A1A1A1A1 /* StoreKitPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2A2A2A2A2A2A2A2A2A2A2A2 /* StoreKitPlugin.swift */; };
+		A3A3A3A3A3A3A3A3A3A3A3A3 /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4A4A4A4A4A4A4A4A4A4A4A4 /* MainViewController.swift */; };
+		A5A5A5A5A5A5A5A5A5A5A5A5 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = A6A6A6A6A6A6A6A6A6A6A6A6 /* GoogleService-Info.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */

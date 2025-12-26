@@ -1104,32 +1104,41 @@ const ProfilePage = () => {
                                 {property.area}m²
                               </span>
                             </div>
-                            <div className="flex items-center justify-between mt-1">
-                              <div className="flex items-center gap-1">
+                            <div className="flex items-center justify-between mt-2">
+                              <div className="flex items-center gap-1.5">
                                 <button
                                   onClick={() => navigate(`/property/${property.id}`)}
-                                  className="p-1 rounded bg-muted"
-                                  title="Voir"
+                                  className="flex items-center gap-1 px-2 py-1 rounded-md bg-muted text-xs font-medium text-muted-foreground hover:bg-muted/80 transition-colors"
                                 >
-                                  <Eye className="w-3 h-3 text-muted-foreground" />
+                                  <Eye className="w-3 h-3" />
+                                  Voir
                                 </button>
                                 <button
                                   onClick={() => togglePropertyStatus(property.id, property.is_active)}
-                                  className="p-1 rounded bg-muted"
-                                  title={property.is_active ? 'Désactiver' : 'Activer'}
+                                  className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-colors ${
+                                    property.is_active 
+                                      ? 'bg-orange-100 text-orange-700 hover:bg-orange-200' 
+                                      : 'bg-green-100 text-green-700 hover:bg-green-200'
+                                  }`}
                                 >
                                   {property.is_active ? (
-                                    <EyeOff className="w-3 h-3 text-muted-foreground" />
+                                    <>
+                                      <EyeOff className="w-3 h-3" />
+                                      Masquer
+                                    </>
                                   ) : (
-                                    <Eye className="w-3 h-3 text-green-600" />
+                                    <>
+                                      <Eye className="w-3 h-3" />
+                                      Activer
+                                    </>
                                   )}
                                 </button>
                                 <button
                                   onClick={() => deleteProperty(property.id)}
-                                  className="p-1 rounded bg-red-50"
-                                  title="Supprimer"
+                                  className="flex items-center gap-1 px-2 py-1 rounded-md bg-red-100 text-red-600 text-xs font-medium hover:bg-red-200 transition-colors"
                                 >
-                                  <Trash2 className="w-3 h-3 text-red-500" />
+                                  <Trash2 className="w-3 h-3" />
+                                  Suppr.
                                 </button>
                               </div>
 

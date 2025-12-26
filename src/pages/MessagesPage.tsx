@@ -12,6 +12,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useMessages, useConversation } from '@/hooks/useMessages';
 import { useAppMode } from '@/hooks/useAppMode';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
+import { useKeyboardHeight } from '@/hooks/useKeyboardHeight';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -464,6 +465,7 @@ const ConversationView = ({ participantId, propertyId, onBack }: ConversationVie
   const navigate = useNavigate();
   const { isUserOnline, getLastSeen, fetchLastSeen } = useOnlineStatus();
   const { messages, loading, sendMessage, deleteMessage, addReaction, uploadAttachment, isTyping, setTyping } = useConversation(participantId, propertyId);
+  const { keyboardHeight } = useKeyboardHeight();
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [participant, setParticipant] = useState<{ full_name: string; avatar_url: string | null } | null>(null);
@@ -481,6 +483,15 @@ const ConversationView = ({ participantId, propertyId, onBack }: ConversationVie
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Scroll to bottom when keyboard opens
+  useEffect(() => {
+    if (keyboardHeight > 0) {
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
+  }, [keyboardHeight]);
 
   const toggleMute = () => {
     const stored = localStorage.getItem('mutedConversations');
@@ -647,9 +658,17 @@ const ConversationView = ({ participantId, propertyId, onBack }: ConversationVie
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-80px)]">
+    <div 
+      className="flex flex-col"
+      style={{ 
+        height: keyboardHeight > 0 
+          ? `calc(100vh - ${keyboardHeight}px)` 
+          : 'calc(100vh - 80px)',
+        transition: 'height 0.15s ease-out'
+      }}
+    >
       {/* Header */}
-      <div className="bg-card border-b border-border pt-[env(safe-area-inset-top)]">
+      <div className="bg-card border-b border-border pt-[env(safe-area-inset-top)] flex-shrink-0">
         <div className="p-4 flex items-center gap-3">
           <button onClick={onBack} className="p-2 hover:bg-muted rounded-full">
             <ArrowLeft className="w-5 h-5" />
@@ -910,7 +929,13 @@ const ConversationView = ({ participantId, propertyId, onBack }: ConversationVie
       )}
 
       {/* Input */}
-      <div className="p-3 bg-card border-t border-border" style={{ paddingBottom: 'calc(16px + env(safe-area-inset-bottom))' }} data-tutorial="messages-input">
+      <div 
+        className="p-3 bg-card border-t border-border flex-shrink-0" 
+        style={{ 
+          paddingBottom: keyboardHeight > 0 ? '12px' : 'calc(16px + env(safe-area-inset-bottom))'
+        }} 
+        data-tutorial="messages-input"
+      >
         <div className="flex items-center gap-2">
           <input
             type="file"
@@ -922,7 +947,7 @@ const ConversationView = ({ participantId, propertyId, onBack }: ConversationVie
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="p-3 hover:bg-muted rounded-full transition-colors"
+            className="p-3 hover:bg-muted rounded-full transition-colors flex-shrink-0"
           >
             {uploading ? (
               <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
@@ -935,9 +960,11 @@ const ConversationView = ({ participantId, propertyId, onBack }: ConversationVie
             value={newMessage}
             onChange={handleInputChange}
             onKeyPress={handleKeyPress}
-            onBlur={() => {
-              // Force keyboard dismiss on iOS
-              (document.activeElement as HTMLElement)?.blur();
+            onFocus={() => {
+              // Scroll to bottom when focusing input on iOS
+              setTimeout(() => {
+                messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+              }, 300);
             }}
             placeholder={replyTo ? "Répondre..." : "Votre message..."}
             className="flex-1 bg-muted px-3 py-2.5 rounded-full outline-none focus:ring-2 focus:ring-primary"
@@ -946,7 +973,7 @@ const ConversationView = ({ participantId, propertyId, onBack }: ConversationVie
             onClick={handleSend}
             disabled={(!newMessage.trim() && !pendingAttachment) || sending}
             size="icon"
-            className="rounded-full gradient-primary h-12 w-12"
+            className="rounded-full gradient-primary h-12 w-12 flex-shrink-0"
           >
             {sending ? (
               <Loader2 className="w-5 h-5 animate-spin" />

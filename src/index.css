@@ -420,4 +420,18 @@
   .property-card-swiper .swiper-pagination-bullet {
     transition: all 0.2s ease;
   }
+
+  /* iOS Keyboard handling */
+  .keyboard-aware-input {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+    transition: padding-bottom 0.25s ease;
+  }
+
+  /* When keyboard is visible on iOS */
+  @supports (-webkit-touch-callout: none) {
+    .keyboard-aware-container {
+      height: 100%;
+      height: 100dvh;
+    }
+  }
 }

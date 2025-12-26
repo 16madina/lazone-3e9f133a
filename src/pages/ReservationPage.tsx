@@ -22,6 +22,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { useKeyboardHeight } from '@/hooks/useKeyboardHeight';
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -61,6 +62,7 @@ const ReservationPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { keyboardHeight, isKeyboardVisible } = useKeyboardHeight();
 
   // State
   const [property, setProperty] = useState<Property | null>(null);
@@ -760,51 +762,53 @@ const ReservationPage = () => {
         </AnimatePresence>
       </div>
 
-      {/* Price Summary & Action Button */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-md border-t border-border p-4 pb-safe">
-        <div className="container max-w-2xl mx-auto">
-          {nights > 0 && step !== 'confirmation' && (
-            <div className="flex justify-between items-center mb-3">
-              <div>
-                <p className="text-sm text-muted-foreground">{nights} nuit{nights > 1 ? 's' : ''}</p>
-                {applicableDiscount && (
-                  <p className="text-xs text-emerald-600">Forfait {applicableDiscount.tier} appliqué</p>
-                )}
+      {/* Price Summary & Action Button - Hidden when keyboard is visible */}
+      {!isKeyboardVisible && (
+        <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-md border-t border-border p-4 pb-safe">
+          <div className="container max-w-2xl mx-auto">
+            {nights > 0 && step !== 'confirmation' && (
+              <div className="flex justify-between items-center mb-3">
+                <div>
+                  <p className="text-sm text-muted-foreground">{nights} nuit{nights > 1 ? 's' : ''}</p>
+                  {applicableDiscount && (
+                    <p className="text-xs text-emerald-600">Forfait {applicableDiscount.tier} appliqué</p>
+                  )}
+                </div>
+                <p className="text-lg font-bold text-emerald-600">{formatPrice(Math.round(totalPrice))}</p>
               </div>
-              <p className="text-lg font-bold text-emerald-600">{formatPrice(Math.round(totalPrice))}</p>
-            </div>
-          )}
+            )}
 
-          {step === 'confirmation' ? (
-            <Button
-              onClick={handleSubmit}
-              disabled={submitting}
-              className="w-full h-12 bg-emerald-500 hover:bg-emerald-600 text-white"
-            >
-              {submitting ? (
-                <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Envoi en cours...
-                </>
-              ) : (
-                <>
-                  <Send className="w-5 h-5 mr-2" />
-                  Confirmer la demande
-                </>
-              )}
-            </Button>
-          ) : (
-            <Button
-              onClick={nextStep}
-              disabled={!canProceed()}
-              className="w-full h-12 bg-emerald-500 hover:bg-emerald-600 text-white"
-            >
-              Continuer
-              <ChevronRight className="w-5 h-5 ml-2" />
-            </Button>
-          )}
+            {step === 'confirmation' ? (
+              <Button
+                onClick={handleSubmit}
+                disabled={submitting}
+                className="w-full h-12 bg-emerald-500 hover:bg-emerald-600 text-white"
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Envoi en cours...
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-5 h-5 mr-2" />
+                    Confirmer la demande
+                  </>
+                )}
+              </Button>
+            ) : (
+              <Button
+                onClick={nextStep}
+                disabled={!canProceed()}
+                className="w-full h-12 bg-emerald-500 hover:bg-emerald-600 text-white"
+              >
+                Continuer
+                <ChevronRight className="w-5 h-5 ml-2" />
+              </Button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

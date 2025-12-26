@@ -41,6 +41,8 @@ const CreditsPage = () => {
     purchasing,
     initialized,
     isMockMode,
+    isPurchaseAvailable,
+    storeKitError,
   } = useCredits();
 
   // Get subscription limits from admin settings
@@ -94,8 +96,22 @@ const CreditsPage = () => {
       </div>
 
       <div className="p-4 space-y-6">
-        {/* Mock Mode Banner */}
-        {isMockMode && (
+        {/* StoreKit Error Banner */}
+        {storeKitError && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-destructive/10 border border-destructive/30 rounded-xl p-3 flex items-center gap-3"
+          >
+            <AlertCircle className="w-5 h-5 text-destructive" />
+            <p className="text-sm text-destructive">
+              {storeKitError}
+            </p>
+          </motion.div>
+        )}
+
+        {/* Mock Mode Banner (web only) */}
+        {isMockMode && !storeKitError && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -103,7 +119,7 @@ const CreditsPage = () => {
           >
             <AlertCircle className="w-5 h-5 text-amber-500" />
             <p className="text-sm text-amber-700 dark:text-amber-400">
-              Mode démo - Les achats seront simulés
+              Mode web - Les achats ne sont disponibles que sur l'app iOS
             </p>
           </motion.div>
         )}
@@ -222,7 +238,7 @@ const CreditsPage = () => {
                         </div>
                         <Button
                           onClick={() => handlePurchase(product.id)}
-                          disabled={purchasing}
+                          disabled={purchasing || !isPurchaseAvailable}
                           className={isBestValue ? 'bg-primary' : ''}
                         >
                           {product.displayPrice}
@@ -313,7 +329,7 @@ const CreditsPage = () => {
                           className="w-full"
                           variant={isPremium ? 'default' : 'outline'}
                           onClick={() => handlePurchase(product.id)}
-                          disabled={purchasing || isActive}
+                          disabled={purchasing || isActive || !isPurchaseAvailable}
                         >
                           {isActive ? 'Abonnement actif' : product.displayPrice}
                         </Button>

@@ -72,6 +72,8 @@ import { AppointmentsTab } from '@/components/appointment/AppointmentsTab';
 import { PendingListingsSection } from '@/components/profile/PendingListingsSection';
 import { BlockedDatesManager } from '@/components/appointment/BlockedDatesManager';
 import { useCredits } from '@/hooks/useCredits';
+import { useSponsoredListings } from '@/hooks/useSponsoredListings';
+import { Sparkles } from 'lucide-react';
 
 type TabType = 'annonces' | 'rdv' | 'favoris' | 'parametres';
 
@@ -192,6 +194,8 @@ interface Property {
   property_type: string;
   type: string;
   is_active: boolean;
+  is_sponsored?: boolean;
+  sponsored_until?: string | null;
   created_at: string;
   property_images: { url: string; is_primary: boolean }[];
 }
@@ -268,6 +272,12 @@ const ProfilePage = () => {
   const { appMode, isResidence } = useAppMode();
   const { unreadCount: notificationCount } = useNotifications();
   const { activeSubscription, availableCredits, freeCreditsRemaining } = useCredits();
+  const { 
+    sponsoredQuota, 
+    sponsoredRemaining, 
+    subscriptionType,
+    sponsorProperty 
+  } = useSponsoredListings();
   const { resetTutorial, startTutorial } = useTutorial();
   const [sendingEmail, setSendingEmail] = useState(false);
   const [propertiesCount, setPropertiesCount] = useState(0);
@@ -555,6 +565,31 @@ const ProfilePage = () => {
       });
     } catch (error) {
       console.error('Error deleting property:', error);
+    }
+  };
+
+  const isPropertySponsored = (property: Property) => {
+    return property.is_sponsored && property.sponsored_until && new Date(property.sponsored_until) > new Date();
+  };
+
+  const handleSponsor = async (property: Property) => {
+    if (isPropertySponsored(property)) {
+      toast({
+        title: 'Déjà sponsorisée',
+        description: 'Cette annonce est sponsorisée jusqu\'à ' + format(new Date(property.sponsored_until!), 'dd MMM yyyy', { locale: fr }),
+      });
+      return;
+    }
+    
+    const success = await sponsorProperty(property.id);
+    if (success) {
+      const sponsoredUntil = new Date();
+      sponsoredUntil.setDate(sponsoredUntil.getDate() + 3);
+      setProperties(prev => 
+        prev.map(p => 
+          p.id === property.id ? { ...p, is_sponsored: true, sponsored_until: sponsoredUntil.toISOString() } : p
+        )
+      );
     }
   };
 
@@ -1011,6 +1046,26 @@ const ProfilePage = () => {
                 {/* Pending listings section */}
                 <PendingListingsSection />
 
+                {/* Sponsored Quota Banner for subscribers */}
+                {subscriptionType && (
+                  <div className={`mb-4 p-3 rounded-xl ${
+                    subscriptionType === 'premium' 
+                      ? 'bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20' 
+                      : 'bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20'
+                  }`}>
+                    <div className="flex items-center gap-2 mb-1">
+                      <Sparkles className={`w-4 h-4 ${subscriptionType === 'premium' ? 'text-amber-500' : 'text-purple-500'}`} />
+                      <span className="text-sm font-medium">Sponsoring</span>
+                      <span className="text-xs text-muted-foreground">
+                        {sponsoredRemaining}/{sponsoredQuota} dispo
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Cliquez sur ⭐ pour mettre une annonce en avant (3 jours)
+                    </p>
+                  </div>
+                )}
+
                 {/* Add new listing button */}
                 <button
                   onClick={() => navigate('/publish')}
@@ -1087,6 +1142,30 @@ const ProfilePage = () => {
                                 >
                                   <Eye className="w-3 h-3 text-muted-foreground" />
                                 </button>
+                                {/* Sponsor Button */}
+                                {subscriptionType && property.is_active && (
+                                  <button
+                                    onClick={() => handleSponsor(property)}
+                                    className={`p-1 rounded transition-colors ${
+                                      isPropertySponsored(property)
+                                        ? 'bg-amber-100'
+                                        : sponsoredRemaining > 0
+                                          ? 'bg-amber-50 hover:bg-amber-100'
+                                          : 'bg-muted opacity-50'
+                                    }`}
+                                    title={
+                                      isPropertySponsored(property) 
+                                        ? 'Sponsorisée' 
+                                        : sponsoredRemaining > 0 
+                                          ? 'Sponsoriser' 
+                                          : 'Quota atteint'
+                                    }
+                                  >
+                                    <Sparkles className={`w-3 h-3 ${
+                                      isPropertySponsored(property) ? 'text-amber-600' : 'text-amber-500'
+                                    }`} />
+                                  </button>
+                                )}
                                 <button
                                   onClick={() => togglePropertyStatus(property.id, property.is_active)}
                                   className="p-1 rounded bg-muted"

@@ -73,6 +73,7 @@ import { PendingListingsSection } from '@/components/profile/PendingListingsSect
 import { BlockedDatesManager } from '@/components/appointment/BlockedDatesManager';
 import { useCredits } from '@/hooks/useCredits';
 import { useListingLimit } from '@/hooks/useListingLimit';
+import { useSponsoredListings } from '@/hooks/useSponsoredListings';
 
 type TabType = 'annonces' | 'rdv' | 'favoris' | 'parametres';
 
@@ -270,6 +271,7 @@ const ProfilePage = () => {
   const { unreadCount: notificationCount } = useNotifications();
   const { activeSubscription, availableCredits, freeCreditsRemaining } = useCredits();
   const { settings: listingSettings } = useListingLimit();
+  const { sponsoredQuota, sponsoredRemaining, loading: sponsoredLoading } = useSponsoredListings();
   const { resetTutorial, startTutorial } = useTutorial();
   
   // Get subscription limits from admin settings
@@ -796,8 +798,9 @@ const ProfilePage = () => {
                   </div>
                 </div>
                 
-                {/* Profile Info & Edit Button */}
-                <div className="mt-4 flex flex-col gap-1">
+                {/* Profile Actions - Stacked vertically */}
+                <div className="mt-4 flex flex-col gap-1.5">
+                  {/* Edit Profile */}
                   <div className="flex items-center gap-2">
                     <Sheet open={showProfileSheet} onOpenChange={setShowProfileSheet}>
                       <SheetTrigger asChild>
@@ -827,17 +830,43 @@ const ProfilePage = () => {
                       Modifier le profil
                     </button>
                   </div>
+                  
+                  {/* Credits Button */}
                   <button
                     onClick={() => navigate('/credits')}
                     className="flex items-center gap-1.5 text-xs text-amber-600 font-medium hover:underline ml-9"
                   >
                     <Coins className="w-3.5 h-3.5" />
                     Mes Crédits
-                    <span className="ml-1.5 text-muted-foreground">
+                    <span className="ml-1 text-muted-foreground">
                       ({activeSubscription 
                         ? (activeSubscription.product_id.includes('premium') ? `${premiumMonthlyLimit}/mois` : `${proMonthlyLimit}/mois`)
                         : freeCreditsRemaining + availableCredits
                       })
+                    </span>
+                  </button>
+                  
+                  {/* Sponsoring Button */}
+                  <button
+                    onClick={() => navigate('/my-listings')}
+                    className="flex items-center gap-1.5 text-xs text-purple-600 font-medium hover:underline ml-9"
+                  >
+                    <Star className="w-3.5 h-3.5" />
+                    Sponsoring
+                    <span className="ml-1 text-muted-foreground">
+                      ({sponsoredRemaining})
+                    </span>
+                  </button>
+                  
+                  {/* My Listings Button */}
+                  <button
+                    onClick={() => navigate('/my-listings')}
+                    className="flex items-center gap-1.5 text-xs text-emerald-600 font-medium hover:underline ml-9"
+                  >
+                    <Home className="w-3.5 h-3.5" />
+                    Mes Annonces
+                    <span className="ml-1 text-muted-foreground">
+                      ({propertiesCount})
                     </span>
                   </button>
                 </div>

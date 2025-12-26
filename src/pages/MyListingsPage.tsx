@@ -8,20 +8,15 @@ import {
   Bed, 
   Bath, 
   Maximize,
-  Edit,
-  Trash2,
-  Eye,
-  EyeOff,
   Loader2,
-  Calendar,
   Sparkles,
   Crown,
   Star,
   TrendingUp,
   Zap,
-  Gift
+  Gift,
+  AlertTriangle
 } from 'lucide-react';
-import { BlockedDatesManager } from '@/components/appointment/BlockedDatesManager';
 import { useAuth } from '@/hooks/useAuth';
 import { useAppMode } from '@/hooks/useAppMode';
 import { useSponsoredListings } from '@/hooks/useSponsoredListings';
@@ -29,7 +24,17 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { format, differenceInHours } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface Property {
   id: string;
@@ -67,6 +72,8 @@ const MyListingsPage = () => {
   } = useSponsoredListings();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   const listingType = isResidence ? 'short_term' : 'long_term';
 
@@ -109,67 +116,7 @@ const MyListingsPage = () => {
     }
   };
 
-  const togglePropertyStatus = async (propertyId: string, currentStatus: boolean) => {
-    try {
-      const { error } = await supabase
-        .from('properties')
-        .update({ is_active: !currentStatus })
-        .eq('id', propertyId)
-        .eq('user_id', user?.id);
-
-      if (error) throw error;
-
-      setProperties(prev => 
-        prev.map(p => 
-          p.id === propertyId ? { ...p, is_active: !currentStatus } : p
-        )
-      );
-
-      toast({
-        title: currentStatus ? 'Annonce désactivée' : 'Annonce activée',
-        description: currentStatus 
-          ? 'Votre annonce n\'est plus visible.' 
-          : 'Votre annonce est maintenant visible.',
-      });
-    } catch (error) {
-      console.error('Error toggling property status:', error);
-      toast({
-        title: 'Erreur',
-        description: 'Impossible de modifier le statut.',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const deleteProperty = async (propertyId: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cette annonce ?')) return;
-
-    try {
-      const { error } = await supabase
-        .from('properties')
-        .delete()
-        .eq('id', propertyId)
-        .eq('user_id', user?.id);
-
-      if (error) throw error;
-
-      setProperties(prev => prev.filter(p => p.id !== propertyId));
-
-      toast({
-        title: 'Annonce supprimée',
-        description: 'Votre annonce a été supprimée avec succès.',
-      });
-    } catch (error) {
-      console.error('Error deleting property:', error);
-      toast({
-        title: 'Erreur',
-        description: 'Impossible de supprimer l\'annonce.',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const handleSponsor = async (property: Property) => {
+  const handleSponsorClick = (property: Property) => {
     if (isPropertySponsored(property)) {
       toast({
         title: 'Déjà sponsorisée',
@@ -178,16 +125,40 @@ const MyListingsPage = () => {
       return;
     }
     
-    const success = await sponsorProperty(property.id);
+    if (!subscriptionType) {
+      navigate('/credits');
+      return;
+    }
+    
+    if (sponsoredRemaining === 0) {
+      toast({
+        title: 'Quota atteint',
+        description: 'Vous avez utilisé tous vos sponsorings ce mois-ci.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    setSelectedProperty(property);
+    setShowConfirmDialog(true);
+  };
+
+  const confirmSponsor = async () => {
+    if (!selectedProperty) return;
+    
+    const success = await sponsorProperty(selectedProperty.id);
     if (success) {
       const sponsoredUntil = new Date();
       sponsoredUntil.setDate(sponsoredUntil.getDate() + 3);
       setProperties(prev => 
         prev.map(p => 
-          p.id === property.id ? { ...p, is_sponsored: true, sponsored_until: sponsoredUntil.toISOString() } : p
+          p.id === selectedProperty.id ? { ...p, is_sponsored: true, sponsored_until: sponsoredUntil.toISOString() } : p
         )
       );
     }
+    
+    setShowConfirmDialog(false);
+    setSelectedProperty(null);
   };
 
   const isPropertySponsored = (property: Property) => {
@@ -220,16 +191,16 @@ const MyListingsPage = () => {
     return isResidence ? `${formatted}/nuit` : formatted;
   };
 
-  const pageTitle = isResidence ? 'Mes Séjours' : 'Mes Annonces';
+  const pageTitle = 'Sponsoring';
   const emptyTitle = isResidence ? 'Aucun séjour' : 'Aucune annonce';
   const emptyDescription = isResidence 
     ? 'Vous n\'avez pas encore publié de séjour court terme.'
-    : 'Vous n\'avez pas encore publié d\'annonce.';
-  const publishLabel = isResidence ? 'Publier un séjour' : 'Publier une annonce';
-  const countLabel = isResidence ? 'séjour' : 'annonce';
+    : 'Vous n\'avez pas encore publié d\'annonce à sponsoriser.';
 
   // Count sponsored properties
   const sponsoredCount = properties.filter(p => isPropertySponsored(p)).length;
+  // Only show active properties for sponsoring
+  const activeProperties = properties.filter(p => p.is_active);
 
   if (authLoading || loading) {
     return (
@@ -241,8 +212,57 @@ const MyListingsPage = () => {
 
   return (
     <div className="min-h-screen bg-muted/30 pb-32">
+      {/* Confirmation Dialog */}
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent className="max-w-sm mx-4">
+          <AlertDialogHeader>
+            <div className="flex items-center justify-center mb-2">
+              <div className="p-3 bg-amber-100 rounded-full">
+                <Sparkles className="w-6 h-6 text-amber-600" />
+              </div>
+            </div>
+            <AlertDialogTitle className="text-center">
+              Confirmer le sponsoring
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-center space-y-3">
+              <p>
+                Vous êtes sur le point de sponsoriser :
+              </p>
+              {selectedProperty && (
+                <div className="p-3 bg-muted rounded-xl">
+                  <p className="font-semibold text-foreground">{selectedProperty.title}</p>
+                  <p className="text-xs text-muted-foreground">{selectedProperty.city}</p>
+                </div>
+              )}
+              <div className="flex items-start gap-2 p-3 bg-amber-50 rounded-xl text-left">
+                <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-amber-800">
+                  <strong>Attention :</strong> Une fois confirmé, vous ne pourrez pas changer d'annonce. 
+                  Le sponsoring sera actif pendant <strong>3 jours</strong>.
+                </p>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Il vous restera {sponsoredRemaining - 1} sponsoring{sponsoredRemaining - 1 > 1 ? 's' : ''} ce mois-ci.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
+            <AlertDialogAction 
+              onClick={confirmSponsor}
+              className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
+              Confirmer le sponsoring
+            </AlertDialogAction>
+            <AlertDialogCancel className="w-full">
+              Annuler
+            </AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Header */}
-      <div className="bg-gradient-to-r from-primary via-primary to-primary/80 text-primary-foreground pt-[env(safe-area-inset-top)]">
+      <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white pt-[env(safe-area-inset-top)]">
         <div className="flex items-center gap-4 px-4 py-4">
           <button 
             onClick={() => navigate('/profile')}
@@ -251,9 +271,12 @@ const MyListingsPage = () => {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="flex-1">
-            <h1 className="text-xl font-bold">{pageTitle}</h1>
-            <p className="text-xs text-primary-foreground/80">
-              {properties.length} {countLabel}{properties.length > 1 ? 's' : ''} • {sponsoredCount} sponsorisée{sponsoredCount > 1 ? 's' : ''}
+            <h1 className="text-xl font-bold flex items-center gap-2">
+              <Sparkles className="w-5 h-5" />
+              {pageTitle}
+            </h1>
+            <p className="text-xs text-white/80">
+              {sponsoredCount} annonce{sponsoredCount > 1 ? 's' : ''} sponsorisée{sponsoredCount > 1 ? 's' : ''}
             </p>
           </div>
         </div>
@@ -282,8 +305,8 @@ const MyListingsPage = () => {
                     <Crown className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-sm">Sponsoring {subscriptionType === 'premium' ? 'Premium' : 'Pro'}</h3>
-                    <p className="text-xs text-muted-foreground">Mettez vos annonces en avant</p>
+                    <h3 className="font-bold text-sm">Abonnement {subscriptionType === 'premium' ? 'Premium' : 'Pro'}</h3>
+                    <p className="text-xs text-muted-foreground">Sponsorings disponibles</p>
                   </div>
                 </div>
                 <div className="text-right">
@@ -355,7 +378,7 @@ const MyListingsPage = () => {
           )}
         </motion.div>
 
-        {properties.length === 0 ? (
+        {activeProperties.length === 0 ? (
           <div className="text-center py-12">
             <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
               <Home className="w-10 h-10 text-muted-foreground" />
@@ -369,26 +392,20 @@ const MyListingsPage = () => {
               className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-xl font-medium"
             >
               <Plus className="w-5 h-5" />
-              {publishLabel}
+              Publier une annonce
             </button>
           </div>
         ) : (
-          <div className="space-y-4">
-            {/* Add new listing button */}
-            <div className="flex items-center justify-end">
-              <button
-                onClick={() => navigate('/publish')}
-                className="inline-flex items-center gap-1 text-sm text-primary font-medium"
-              >
-                <Plus className="w-4 h-4" />
-                {isResidence ? 'Nouveau séjour' : 'Nouvelle annonce'}
-              </button>
-            </div>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              {activeProperties.length} annonce{activeProperties.length > 1 ? 's' : ''} disponible{activeProperties.length > 1 ? 's' : ''}
+            </p>
 
             {/* Property List */}
-            {properties.map((property, index) => {
+            {activeProperties.map((property, index) => {
               const isSponsored = isPropertySponsored(property);
               const timeRemaining = getSponsoredTimeRemaining(property);
+              const canSponsor = subscriptionType && sponsoredRemaining > 0 && !isSponsored;
               
               return (
                 <motion.div
@@ -412,7 +429,7 @@ const MyListingsPage = () => {
 
                   <div className="flex">
                     {/* Image */}
-                    <div className="w-32 h-32 flex-shrink-0 relative">
+                    <div className="w-28 h-28 flex-shrink-0 relative">
                       <img
                         src={getPrimaryImage(property.property_images)}
                         alt={property.title}
@@ -426,120 +443,60 @@ const MyListingsPage = () => {
                     </div>
 
                     {/* Info */}
-                    <div className="flex-1 p-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-sm truncate">
-                            {property.title}
-                          </h3>
-                          <p className="text-primary font-bold text-sm mt-0.5">
-                            {formatPrice(property)}
-                          </p>
+                    <div className="flex-1 p-3 flex flex-col">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-sm line-clamp-1">
+                          {property.title}
+                        </h3>
+                        <p className="text-primary font-bold text-sm mt-0.5">
+                          {formatPrice(property)}
+                        </p>
+                        <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
+                          <MapPin className="w-3 h-3" />
+                          <span className="truncate">{property.city}</span>
                         </div>
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                          property.is_active 
-                            ? 'bg-green-100 text-green-700' 
-                            : 'bg-gray-100 text-gray-600'
-                        }`}>
-                          {property.is_active ? 'Active' : 'Inactive'}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
-                        <MapPin className="w-3 h-3" />
-                        <span className="truncate">{property.city}</span>
-                      </div>
-
-                      <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                        {property.bedrooms !== null && (
-                          <span className="flex items-center gap-1">
-                            <Bed className="w-3 h-3" />
-                            {property.bedrooms}
-                          </span>
-                        )}
-                        {property.bathrooms !== null && (
-                          <span className="flex items-center gap-1">
-                            <Bath className="w-3 h-3" />
-                            {property.bathrooms}
-                          </span>
-                        )}
-                        <span className="flex items-center gap-1">
-                          <Maximize className="w-3 h-3" />
-                          {property.area}m²
-                        </span>
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex items-center gap-2 mt-2">
-                        <button
-                          onClick={() => navigate(`/property/${property.id}`)}
-                          className="p-1.5 rounded-lg bg-muted hover:bg-muted/80 transition-colors"
-                          title="Voir"
-                        >
-                          <Eye className="w-4 h-4 text-muted-foreground" />
-                        </button>
-                        {isResidence && (
-                          <BlockedDatesManager
-                            propertyId={property.id}
-                            propertyTitle={property.title}
-                            trigger={
-                              <button
-                                className="p-1.5 rounded-lg bg-muted hover:bg-muted/80 transition-colors"
-                                title="Gérer les disponibilités"
-                              >
-                                <Calendar className="w-4 h-4 text-muted-foreground" />
-                              </button>
-                            }
-                          />
-                        )}
-                        {/* Sponsor Button */}
-                        {property.is_active && (
-                          <button
-                            onClick={() => handleSponsor(property)}
-                            disabled={!subscriptionType || (!isSponsored && sponsoredRemaining === 0)}
-                            className={`p-1.5 rounded-lg transition-all ${
-                              isSponsored
-                                ? 'bg-gradient-to-r from-amber-100 to-orange-100 hover:from-amber-200 hover:to-orange-200'
-                                : subscriptionType && sponsoredRemaining > 0
-                                  ? 'bg-amber-50 hover:bg-amber-100 hover:scale-105'
-                                  : 'bg-muted opacity-40 cursor-not-allowed'
-                            }`}
-                            title={
-                              isSponsored
-                                ? `Sponsorisée - ${timeRemaining}`
-                                : !subscriptionType
-                                  ? 'Abonnement requis'
-                                  : sponsoredRemaining > 0
-                                    ? 'Sponsoriser (3 jours)'
-                                    : 'Quota atteint'
-                            }
-                          >
-                            <Sparkles className={`w-4 h-4 ${
-                              isSponsored 
-                                ? 'text-amber-600' 
-                                : subscriptionType && sponsoredRemaining > 0
-                                  ? 'text-amber-500'
-                                  : 'text-muted-foreground'
-                            }`} />
-                          </button>
-                        )}
-                        <button
-                          onClick={() => togglePropertyStatus(property.id, property.is_active)}
-                          className="p-1.5 rounded-lg bg-muted hover:bg-muted/80 transition-colors"
-                          title={property.is_active ? 'Désactiver' : 'Activer'}
-                        >
-                          {property.is_active ? (
-                            <EyeOff className="w-4 h-4 text-muted-foreground" />
-                          ) : (
-                            <Eye className="w-4 h-4 text-green-600" />
+                        <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                          {property.bedrooms !== null && (
+                            <span className="flex items-center gap-1">
+                              <Bed className="w-3 h-3" />
+                              {property.bedrooms}
+                            </span>
                           )}
-                        </button>
+                          {property.bathrooms !== null && (
+                            <span className="flex items-center gap-1">
+                              <Bath className="w-3 h-3" />
+                              {property.bathrooms}
+                            </span>
+                          )}
+                          <span className="flex items-center gap-1">
+                            <Maximize className="w-3 h-3" />
+                            {property.area}m²
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Sponsor Button */}
+                      <div className="mt-2">
                         <button
-                          onClick={() => deleteProperty(property.id)}
-                          className="p-1.5 rounded-lg bg-red-50 hover:bg-red-100 transition-colors"
-                          title="Supprimer"
+                          onClick={() => handleSponsorClick(property)}
+                          disabled={isSponsored}
+                          className={`w-full py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                            isSponsored
+                              ? 'bg-gradient-to-r from-amber-100 to-orange-100 text-amber-700 cursor-default'
+                              : canSponsor
+                                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600 active:scale-95'
+                                : 'bg-muted text-muted-foreground'
+                          }`}
                         >
-                          <Trash2 className="w-4 h-4 text-red-500" />
+                          <Sparkles className="w-3.5 h-3.5" />
+                          {isSponsored 
+                            ? `Sponsorisée • ${timeRemaining}` 
+                            : canSponsor 
+                              ? 'Sponsoriser cette annonce'
+                              : !subscriptionType 
+                                ? 'Abonnement requis'
+                                : 'Quota atteint'
+                          }
                         </button>
                       </div>
                     </div>

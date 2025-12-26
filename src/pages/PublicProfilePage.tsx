@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { 
   ArrowLeft, BadgeCheck, MapPin, Calendar, 
   Building2, Star, MessageCircle, UserPlus, UserMinus, Users, Loader2,
-  Home, Hotel
+  Home, Hotel, Crown
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -64,6 +64,7 @@ const PublicProfilePage = () => {
   const [followLoading, setFollowLoading] = useState(false);
   const [userBadge, setUserBadge] = useState<BadgeLevel>('none');
   const [activeTab, setActiveTab] = useState<ProfileTab>('immobilier');
+  const [userSubscription, setUserSubscription] = useState<{ subscription_type: string } | null>(null);
 
   useEffect(() => {
     if (userId) {
@@ -72,6 +73,7 @@ const PublicProfilePage = () => {
       fetchReviews();
       fetchFollowersCount();
       fetchUserBadge();
+      fetchUserSubscription();
     }
   }, [userId]);
 
@@ -227,6 +229,20 @@ const PublicProfilePage = () => {
     }
   };
 
+  const fetchUserSubscription = async () => {
+    try {
+      const { data } = await supabase
+        .from('user_subscriptions')
+        .select('subscription_type')
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .maybeSingle();
+      setUserSubscription(data);
+    } catch (error) {
+      console.error('Error fetching user subscription:', error);
+    }
+  };
+
   const checkIfFollowing = async () => {
     if (!user) return;
     try {
@@ -368,14 +384,30 @@ const PublicProfilePage = () => {
           <div className="flex items-start gap-4">
             {/* Avatar */}
             <div className="relative">
-              <img
-                src={profile.avatar_url || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop'}
-                alt={profile.full_name || 'Utilisateur'}
-                className="w-24 h-24 rounded-full object-cover border-4 border-background shadow-lg"
-                onError={(e) => {
-                  e.currentTarget.src = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop';
-                }}
-              />
+              <div className="relative w-24 h-24 rounded-full overflow-hidden border-4 border-background shadow-lg">
+                <img
+                  src={profile.avatar_url || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop'}
+                  alt={profile.full_name || 'Utilisateur'}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.src = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop';
+                  }}
+                />
+                
+                {/* Premium/Pro Diagonal Ribbon Badge */}
+                {userSubscription && (
+                  <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    <div className={`absolute top-[10px] -left-[26px] w-[90px] text-center py-[2px] text-[7px] font-bold text-white uppercase tracking-wider shadow-md transform -rotate-45 ${
+                      userSubscription.subscription_type.includes('premium') 
+                        ? 'bg-gradient-to-r from-amber-500 to-orange-500' 
+                        : 'bg-gradient-to-r from-purple-500 to-pink-500'
+                    }`}>
+                      {userSubscription.subscription_type.includes('premium') ? 'Premium' : 'Pro'}
+                    </div>
+                  </div>
+                )}
+              </div>
+              
               {profile.email_verified && (
                 <div className="absolute -bottom-1 -right-1 bg-primary rounded-full p-1">
                   <BadgeCheck className="w-5 h-5 text-primary-foreground" />

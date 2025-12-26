@@ -756,6 +756,20 @@ const ProfilePage = () => {
                         <span className="text-3xl">👤</span>
                       </div>
                     )}
+                    
+                    {/* Premium/Pro Diagonal Ribbon Badge */}
+                    {activeSubscription && (
+                      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                        <div className={`absolute top-[8px] -left-[28px] w-[100px] text-center py-[2px] text-[8px] font-bold text-white uppercase tracking-wider shadow-md transform -rotate-45 ${
+                          activeSubscription.product_id.includes('premium') 
+                            ? 'bg-gradient-to-r from-amber-500 to-orange-500' 
+                            : 'bg-gradient-to-r from-purple-500 to-pink-500'
+                        }`}>
+                          {activeSubscription.product_id.includes('premium') ? 'Premium' : 'Pro'}
+                        </div>
+                      </div>
+                    )}
+                    
                     {/* Overlay on hover */}
                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                       {uploadingAvatar ? (
@@ -765,18 +779,6 @@ const ProfilePage = () => {
                       )}
                     </div>
                   </button>
-                  
-                  {/* Premium/Pro Badge - Diagonal on avatar */}
-                  {activeSubscription && (
-                    <div className={`absolute -top-1 -right-1 px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-0.5 shadow-lg transform rotate-12 ${
-                      activeSubscription.product_id.includes('premium') 
-                        ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white' 
-                        : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
-                    }`}>
-                      <Crown className="w-2.5 h-2.5" />
-                      {activeSubscription.product_id.includes('premium') ? 'Premium' : 'Pro'}
-                    </div>
-                  )}
                   
                   {/* Verification Badge */}
                   <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${

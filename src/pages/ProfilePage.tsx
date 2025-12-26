@@ -763,48 +763,48 @@ const ProfilePage = () => {
         className="hidden"
       />
 
-      {/* Orange Gradient Header */}
-      <div className="h-32 top-safe-area bg-gradient-to-r from-primary via-primary to-primary/80" />
+      {/* Orange Gradient Header with Notification Bell */}
+      <div className="h-32 top-safe-area bg-gradient-to-r from-primary via-primary to-primary/80 relative">
+        <button
+          onClick={() => navigate('/notifications')}
+          className="absolute top-4 right-4 top-safe-area p-2.5 bg-white/20 backdrop-blur-sm rounded-full text-white hover:bg-white/30 transition-colors"
+        >
+          <Bell className="w-5 h-5" />
+          {notificationCount > 0 && (
+            <span className="absolute -top-1 -right-1 w-5 h-5 bg-white text-primary text-[10px] font-bold rounded-full flex items-center justify-center">
+              {notificationCount > 9 ? '9+' : notificationCount}
+            </span>
+          )}
+        </button>
+      </div>
 
       {/* Profile Card */}
       <div className="px-4 -mt-16">
         <div className="bg-card rounded-2xl shadow-lg overflow-hidden">
           {/* Main Content */}
-          <div className="p-4">
+          <div className="p-5">
             {/* Action buttons row - above profile */}
-            <div className="flex items-center justify-end gap-1 mb-3">
-              {/* Notifications Button */}
-              <button
-                onClick={() => navigate('/notifications')}
-                className="relative flex-shrink-0 p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
-              >
-                <Bell className="w-5 h-5" />
-                {notificationCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-primary text-primary-foreground text-[10px] rounded-full flex items-center justify-center">
-                    {notificationCount > 9 ? '9+' : notificationCount}
-                  </span>
-                )}
-              </button>
+            <div className="flex items-center justify-end gap-2 mb-4">
               {/* Admin Button */}
               <AdminButton />
               {/* Logout Button */}
               <button
                 onClick={handleSignOut}
-                className="flex-shrink-0 p-1.5 text-primary border border-primary rounded-lg hover:bg-primary/10 transition-colors"
+                className="flex-shrink-0 p-2 text-primary border border-primary rounded-lg hover:bg-primary/10 transition-colors"
                 title="Déconnexion"
               >
                 <LogOut className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex gap-4">
               {/* Avatar with upload button */}
               <div className="flex-shrink-0">
                 <div className="relative">
                   <button
                     onClick={handleAvatarClick}
                     disabled={uploadingAvatar}
-                    className="relative w-24 h-24 rounded-xl overflow-hidden border-4 border-card shadow-lg group"
+                    className="relative w-32 h-32 rounded-xl overflow-hidden border-4 border-card shadow-lg group"
                   >
                     {profile?.avatar_url ? (
                       <img 
@@ -814,7 +814,7 @@ const ProfilePage = () => {
                       />
                     ) : (
                       <div className="w-full h-full bg-muted flex items-center justify-center">
-                        <span className="text-3xl">👤</span>
+                        <span className="text-4xl">👤</span>
                       </div>
                     )}
                     {/* Overlay on hover */}
@@ -831,8 +831,8 @@ const ProfilePage = () => {
                         activeSubscription.product_id.includes('premium') 
                           ? 'bg-gradient-to-r from-amber-500 to-orange-500' 
                           : 'bg-gradient-to-r from-purple-500 to-pink-500'
-                      }`} style={{ transform: 'rotate(-35deg) translateX(-25%) translateY(6px)', transformOrigin: 'center' }}>
-                        <span className="text-[9px] font-bold text-white px-6 py-0.5 uppercase tracking-wide">
+                      }`} style={{ transform: 'rotate(-35deg) translateX(-30%) translateY(10px)', transformOrigin: 'center' }}>
+                        <span className="text-[10px] font-bold text-white px-8 py-0.5 uppercase tracking-wide">
                           {activeSubscription.product_id.includes('premium') ? 'Premium' : 'Pro'}
                         </span>
                       </div>
@@ -901,12 +901,12 @@ const ProfilePage = () => {
               <div className="flex-1 min-w-0">
                 
                 {/* User Name */}
-                <h1 className="text-lg font-bold text-foreground mt-2 leading-tight">
+                <h1 className="text-xl font-bold text-foreground leading-tight">
                   {user.user_metadata?.full_name || profile?.full_name || 'Utilisateur'}
                 </h1>
 
                 {/* Tags */}
-                <div className="flex flex-wrap gap-1.5 mt-1.5">
+                <div className="flex flex-wrap gap-1.5 mt-2">
                   {profile?.user_type && profile.user_type !== 'particulier' ? (
                     <UserTypeBadge 
                       userType={profile.user_type} 
@@ -914,7 +914,7 @@ const ProfilePage = () => {
                       size="sm"
                     />
                   ) : (
-                    <span className="px-2 py-0.5 bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20 rounded-full text-[11px] font-medium flex items-center gap-1">
+                    <span className="px-2 py-0.5 bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20 rounded-full text-xs font-medium flex items-center gap-1">
                       <User className="w-3 h-3" />
                       Particulier
                     </span>
@@ -923,7 +923,7 @@ const ProfilePage = () => {
                     <button 
                       onClick={handleResendVerification}
                       disabled={sendingEmail}
-                      className="px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full text-[11px] font-medium flex items-center gap-1 hover:bg-amber-200 transition-colors disabled:opacity-50"
+                      className="px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full text-xs font-medium flex items-center gap-1 hover:bg-amber-200 transition-colors disabled:opacity-50"
                     >
                       {sendingEmail ? (
                         <Loader2 className="w-3 h-3 animate-spin" />
@@ -936,25 +936,25 @@ const ProfilePage = () => {
                 </div>
 
                 {/* Contact Info */}
-                <div className="mt-2.5 space-y-1">
+                <div className="mt-3 space-y-1.5">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Mail className="w-3.5 h-3.5 flex-shrink-0" />
+                    <Mail className="w-4 h-4 flex-shrink-0" />
                     <span className="truncate">{user.email}</span>
                   </div>
                   {user.user_metadata?.phone && (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Phone className="w-3.5 h-3.5 flex-shrink-0" />
+                      <Phone className="w-4 h-4 flex-shrink-0" />
                       <span>{user.user_metadata.phone}</span>
                     </div>
                   )}
                   {user.user_metadata?.city && user.user_metadata?.country && (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+                      <MapPin className="w-4 h-4 flex-shrink-0" />
                       <span className="truncate">{user.user_metadata.city}, {user.user_metadata.country}</span>
                     </div>
                   )}
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
+                    <Calendar className="w-4 h-4 flex-shrink-0" />
                     <span>Membre depuis {memberSince}</span>
                   </div>
                 </div>

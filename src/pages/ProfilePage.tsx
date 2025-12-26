@@ -770,15 +770,15 @@ const ProfilePage = () => {
       <div className="px-4 -mt-16">
         <div className="bg-card rounded-2xl shadow-lg overflow-hidden">
           {/* Main Content */}
-          <div className="p-5">
-            <div className="flex gap-4">
+          <div className="p-4">
+            <div className="flex gap-3">
               {/* Avatar with upload button */}
               <div className="flex-shrink-0">
                 <div className="relative">
                   <button
                     onClick={handleAvatarClick}
                     disabled={uploadingAvatar}
-                    className="relative w-24 h-24 rounded-xl overflow-hidden border-4 border-card shadow-md group"
+                    className="relative w-20 h-20 rounded-xl overflow-hidden border-3 border-card shadow-md group"
                   >
                     {profile?.avatar_url ? (
                       <img 
@@ -788,20 +788,30 @@ const ProfilePage = () => {
                       />
                     ) : (
                       <div className="w-full h-full bg-muted flex items-center justify-center">
-                        <span className="text-3xl">👤</span>
+                        <span className="text-2xl">👤</span>
                       </div>
                     )}
                     {/* Overlay on hover */}
                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                       {uploadingAvatar ? (
-                        <Loader2 className="w-6 h-6 text-white animate-spin" />
+                        <Loader2 className="w-5 h-5 text-white animate-spin" />
                       ) : (
-                        <Camera className="w-6 h-6 text-white" />
+                        <Camera className="w-5 h-5 text-white" />
                       )}
                     </div>
                   </button>
+                  {/* Premium/Pro Badge on avatar */}
+                  {activeSubscription && (
+                    <div className={`absolute -top-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center shadow-md ${
+                      activeSubscription.product_id.includes('premium') 
+                        ? 'bg-gradient-to-r from-amber-500 to-orange-500' 
+                        : 'bg-gradient-to-r from-purple-500 to-pink-500'
+                    }`}>
+                      <Crown className="w-3.5 h-3.5 text-white" />
+                    </div>
+                  )}
                   {/* Verification Badge */}
-                  <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${
+                  <div className={`absolute -bottom-1.5 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap ${
                     isEmailVerified 
                       ? 'bg-green-500 text-white' 
                       : 'bg-primary text-primary-foreground'
@@ -811,15 +821,15 @@ const ProfilePage = () => {
                 </div>
                 
                 {/* Profile Info & Edit Button */}
-                <div className="mt-4 flex flex-col gap-1">
-                  <div className="flex items-center gap-2">
+                <div className="mt-3 flex flex-col gap-0.5">
+                  <div className="flex items-center gap-1.5">
                     <Sheet open={showProfileSheet} onOpenChange={setShowProfileSheet}>
                       <SheetTrigger asChild>
                         <button 
                           data-tutorial="profile-info"
-                          className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md hover:bg-primary/90 transition-colors"
+                          className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md hover:bg-primary/90 transition-colors"
                         >
-                          <User className="w-4 h-4" />
+                          <User className="w-3 h-3" />
                         </button>
                       </SheetTrigger>
                       <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto rounded-t-2xl">
@@ -836,130 +846,111 @@ const ProfilePage = () => {
                     </Sheet>
                     <button
                       onClick={() => navigate('/settings/edit-profile')}
-                      className="text-xs text-primary font-medium hover:underline"
+                      className="text-[11px] text-primary font-medium hover:underline"
                     >
                       Modifier le profil
                     </button>
                   </div>
                   <button
                     onClick={() => navigate('/credits')}
-                    className="flex items-center gap-1.5 text-xs text-amber-600 font-medium hover:underline ml-9"
+                    className="flex items-center gap-1 text-[11px] text-amber-600 font-medium hover:underline ml-7"
                   >
-                    <Coins className="w-3.5 h-3.5" />
+                    <Coins className="w-3 h-3" />
                     Mes Crédits
                     {activeSubscription ? (
-                      <span className="ml-1.5 px-1.5 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-semibold rounded-full flex items-center gap-0.5">
-                        <Crown className="w-2.5 h-2.5" />
+                      <span className="ml-1 px-1 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[9px] font-semibold rounded-full flex items-center gap-0.5">
+                        <Crown className="w-2 h-2" />
                         Abonné
                       </span>
                     ) : (
-                      <span className="ml-1.5 text-muted-foreground">({freeCreditsRemaining + availableCredits})</span>
+                      <span className="ml-1 text-muted-foreground text-[10px]">({freeCreditsRemaining + availableCredits})</span>
                     )}
                   </button>
                 </div>
               </div>
 
               {/* User Info */}
-              <div className="flex-1 min-w-0 mt-2">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    {/* Notifications Button */}
-                    <button
-                      onClick={() => navigate('/notifications')}
-                      className="relative flex-shrink-0 p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
-                    >
-                      <Bell className="w-5 h-5" />
-                      {notificationCount > 0 && (
-                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground text-xs rounded-full flex items-center justify-center">
-                          {notificationCount > 9 ? '9+' : notificationCount}
-                        </span>
-                      )}
-                    </button>
-                    {/* Admin Button */}
-                    <AdminButton />
-                    {/* Logout Button */}
-                    <button
-                      onClick={handleSignOut}
-                      className="flex-shrink-0 p-2 text-primary border border-primary rounded-lg hover:bg-primary/10 transition-colors"
-                      title="Déconnexion"
-                    >
-                      <LogOut className="w-4 h-4" />
-                    </button>
-                  </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {/* Notifications Button */}
+                  <button
+                    onClick={() => navigate('/notifications')}
+                    className="relative flex-shrink-0 p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                  >
+                    <Bell className="w-4 h-4" />
+                    {notificationCount > 0 && (
+                      <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-primary text-primary-foreground text-[10px] rounded-full flex items-center justify-center">
+                        {notificationCount > 9 ? '9+' : notificationCount}
+                      </span>
+                    )}
+                  </button>
+                  {/* Admin Button */}
+                  <AdminButton />
+                  {/* Logout Button */}
+                  <button
+                    onClick={handleSignOut}
+                    className="flex-shrink-0 p-1.5 text-primary border border-primary rounded-lg hover:bg-primary/10 transition-colors"
+                    title="Déconnexion"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                  </button>
                 </div>
                 
-                {/* User Name - on separate line */}
-                <div className="flex items-center gap-2 mt-2">
-                  <h1 className="text-lg font-bold text-foreground">
-                    {user.user_metadata?.full_name || profile?.full_name || 'Utilisateur'}
-                  </h1>
-                  {activeSubscription && (
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold flex items-center gap-1 ${
-                      activeSubscription.product_id.includes('premium') 
-                        ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white' 
-                        : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
-                    }`}>
-                      <Crown className="w-3 h-3" />
-                      {activeSubscription.product_id.includes('premium') ? 'Premium' : 'Pro'}
-                    </span>
-                  )}
-                </div>
+                {/* User Name */}
+                <h1 className="text-base font-bold text-foreground mt-1.5 leading-tight">
+                  {user.user_metadata?.full_name || profile?.full_name || 'Utilisateur'}
+                </h1>
 
                 {/* Tags */}
-                <div className="flex flex-wrap gap-1.5 mt-2">
+                <div className="flex flex-wrap gap-1 mt-1">
                   {profile?.user_type && profile.user_type !== 'particulier' ? (
                     <UserTypeBadge 
                       userType={profile.user_type} 
                       agencyName={profile.agency_name}
-                      size="md"
+                      size="sm"
                     />
                   ) : (
-                    <span className="px-2 py-0.5 bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20 rounded-full text-xs font-medium flex items-center gap-1">
-                      <User className="w-3 h-3" />
+                    <span className="px-1.5 py-0.5 bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20 rounded-full text-[10px] font-medium flex items-center gap-0.5">
+                      <User className="w-2.5 h-2.5" />
                       Particulier
                     </span>
                   )}
                   {!isEmailVerified && (
-                    <>
-                      <span className="px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full text-xs font-medium">
-                        ⚠ Email non vérifié
-                      </span>
-                      <button 
-                        onClick={handleResendVerification}
-                        disabled={sendingEmail}
-                        className="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-medium flex items-center gap-1 hover:bg-green-200 transition-colors disabled:opacity-50"
-                      >
-                        {sendingEmail ? (
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                        ) : (
-                          <RefreshCw className="w-3 h-3" />
-                        )}
-                        Renvoyer le lien
-                      </button>
-                    </>
+                    <button 
+                      onClick={handleResendVerification}
+                      disabled={sendingEmail}
+                      className="px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded-full text-[10px] font-medium flex items-center gap-0.5 hover:bg-amber-200 transition-colors disabled:opacity-50"
+                    >
+                      {sendingEmail ? (
+                        <Loader2 className="w-2.5 h-2.5 animate-spin" />
+                      ) : (
+                        <RefreshCw className="w-2.5 h-2.5" />
+                      )}
+                      Vérifier email
+                    </button>
                   )}
                 </div>
 
-                {/* Contact Info */}
-                <div className="mt-3 space-y-1">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Mail className="w-4 h-4" />
+                {/* Contact Info - more compact */}
+                <div className="mt-2 space-y-0.5">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Mail className="w-3 h-3 flex-shrink-0" />
                     <span className="truncate">{user.email}</span>
                   </div>
                   {user.user_metadata?.phone && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Phone className="w-4 h-4" />
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <Phone className="w-3 h-3 flex-shrink-0" />
                       <span>{user.user_metadata.phone}</span>
                     </div>
                   )}
                   {user.user_metadata?.city && user.user_metadata?.country && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <MapPin className="w-4 h-4" />
-                      <span>{user.user_metadata.city}, {user.user_metadata.country}</span>
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <MapPin className="w-3 h-3 flex-shrink-0" />
+                      <span className="truncate">{user.user_metadata.city}, {user.user_metadata.country}</span>
                     </div>
                   )}
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Calendar className="w-4 h-4" />
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Calendar className="w-3 h-3 flex-shrink-0" />
                     <span>Membre depuis {memberSince}</span>
                   </div>
                 </div>

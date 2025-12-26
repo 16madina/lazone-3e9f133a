@@ -22,14 +22,14 @@ export const CREDITS_PER_PRODUCT: Record<string, number> = {
   [PRODUCT_IDS.LISTING_SINGLE]: 1,
   [PRODUCT_IDS.LISTING_PACK_5]: 5,
   [PRODUCT_IDS.LISTING_PACK_10]: 10,
-  [PRODUCT_IDS.SUB_PRO_MONTHLY]: 30,
-  [PRODUCT_IDS.SUB_PREMIUM_MONTHLY]: 999, // Unlimited
+  [PRODUCT_IDS.SUB_PRO_MONTHLY]: 15,      // Pro: 15 crédits/mois
+  [PRODUCT_IDS.SUB_PREMIUM_MONTHLY]: 30,  // Premium: 30 crédits/mois
 };
 
 // Sponsored listings per subscription
 export const SPONSORED_LISTINGS_PER_PRODUCT: Record<string, number> = {
-  [PRODUCT_IDS.SUB_PRO_MONTHLY]: 2,
-  [PRODUCT_IDS.SUB_PREMIUM_MONTHLY]: 4,
+  [PRODUCT_IDS.SUB_PRO_MONTHLY]: 1,       // Pro: 1 sponsoring/mois
+  [PRODUCT_IDS.SUB_PREMIUM_MONTHLY]: 2,   // Premium: 2 sponsorings/mois
 };
 
 export interface StoreKitProduct {

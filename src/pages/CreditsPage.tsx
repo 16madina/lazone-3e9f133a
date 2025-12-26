@@ -21,11 +21,13 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/hooks/useAuth';
 import { useCredits } from '@/hooks/useCredits';
+import { useListingLimit } from '@/hooks/useListingLimit';
 import { CREDITS_PER_PRODUCT } from '@/services/storeKitService';
 
 const CreditsPage = () => {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
+  const { settings: listingSettings } = useListingLimit();
   const {
     availableCredits,
     freeCreditsRemaining,
@@ -41,6 +43,10 @@ const CreditsPage = () => {
     isMockMode,
   } = useCredits();
 
+  // Get subscription limits from admin settings
+  const proMonthlyLimit = listingSettings?.pro_monthly_limit ?? 15;
+  const premiumMonthlyLimit = listingSettings?.premium_monthly_limit ?? 30;
+
   useEffect(() => {
     if (!user) {
       navigate('/auth');
@@ -49,6 +55,7 @@ const CreditsPage = () => {
 
   const isAgency = profile?.user_type === 'agence';
   const isPremiumUser = activeSubscription?.product_id.includes('premium');
+  const isProUser = activeSubscription?.product_id.includes('pro') && !isPremiumUser;
   const totalAvailable = freeCreditsRemaining + availableCredits;
 
   const handlePurchase = async (productId: string) => {
@@ -112,9 +119,16 @@ const CreditsPage = () => {
                     <Coins className="w-6 h-6 text-primary" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Crédits disponibles</p>
+                    <p className="text-sm text-muted-foreground">
+                      {activeSubscription ? 'Limite mensuelle' : 'Crédits disponibles'}
+                    </p>
                     <p className="text-3xl font-bold text-primary">
-                      {isPremiumUser ? 'Illimité' : totalAvailable}
+                      {isPremiumUser 
+                        ? `${premiumMonthlyLimit}/mois` 
+                        : isProUser 
+                          ? `${proMonthlyLimit}/mois`
+                          : totalAvailable
+                      }
                     </p>
                   </div>
                 </div>
@@ -130,7 +144,7 @@ const CreditsPage = () => {
                 )}
               </div>
 
-              {!isPremiumUser && (
+              {!activeSubscription && (
                 <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border/50">
                   <div className="flex items-center gap-2">
                     <Gift className="w-4 h-4 text-green-500" />
@@ -245,8 +259,8 @@ const CreditsPage = () => {
                 const isPremium = product.id.includes('premium');
                 
                 const features = isPremium 
-                  ? ['Annonces illimitées', '4 annonces sponsorisées/mois', 'Mise en avant', 'Support prioritaire', 'Badge Premium']
-                  : ['30 annonces/mois', '2 annonces sponsorisées/mois', 'Badge Pro'];
+                  ? [`${premiumMonthlyLimit} annonces/mois`, '2 annonces sponsorisées/mois', 'Mise en avant', 'Support prioritaire', 'Badge Premium']
+                  : [`${proMonthlyLimit} annonces/mois`, '1 annonce sponsorisée/mois', 'Badge Pro'];
 
                 return (
                   <motion.div

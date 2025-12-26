@@ -12,6 +12,9 @@ export interface ModeLimitSettings {
   free_listings_proprietaire: number;
   free_listings_demarcheur: number;
   price_per_extra: number;
+  // Subscription limits (per month)
+  pro_monthly_limit?: number;
+  premium_monthly_limit?: number;
 }
 
 export interface ListingLimitSettings {
@@ -24,6 +27,9 @@ export interface ListingLimitSettings {
   free_listings_demarcheur: number;
   price_per_extra: number;
   currency: string;
+  // Subscription limits (global defaults)
+  pro_monthly_limit?: number;
+  premium_monthly_limit?: number;
   // New per-mode settings
   long_term?: ModeLimitSettings;
   short_term?: ModeLimitSettings;

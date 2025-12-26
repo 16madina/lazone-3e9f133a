@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Loader2, Settings, DollarSign, Users, TrendingUp, BarChart3, Home, Building } from 'lucide-react';
+import { Loader2, Settings, DollarSign, Users, TrendingUp, BarChart3, Home, Building, Crown, Zap } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -56,6 +56,8 @@ const ListingLimitsTab = () => {
         free_listings_proprietaire: 3,
         free_listings_demarcheur: 3,
         price_per_extra: 1000,
+        pro_monthly_limit: 15,
+        premium_monthly_limit: 30,
       };
       
       const updatedSettings: ListingLimitSettings = {
@@ -478,6 +480,61 @@ const ListingLimitsTab = () => {
               </div>
             </TabsContent>
           </Tabs>
+
+          {/* Subscription Limits Section */}
+          <div className="space-y-4 pt-4 border-t border-border">
+            <div className="flex items-center gap-2">
+              <Crown className="w-5 h-5 text-amber-500" />
+              <Label className="font-medium">Limites mensuelles par abonnement</Label>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Nombre maximum d'annonces par mois pour les abonnés Pro et Premium
+            </p>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2 p-3 rounded-lg bg-purple-500/10 border border-purple-500/30">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-purple-500" />
+                  <Label className="text-sm font-medium text-purple-700">Pro</Label>
+                </div>
+                <Input
+                  type="number"
+                  min="1"
+                  max="1000"
+                  value={localSettings.pro_monthly_limit ?? 15}
+                  onChange={(e) =>
+                    setLocalSettings({
+                      ...localSettings,
+                      pro_monthly_limit: parseInt(e.target.value) || 15,
+                    })
+                  }
+                  className="bg-background"
+                />
+                <p className="text-xs text-purple-600">annonces/mois</p>
+              </div>
+              
+              <div className="space-y-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
+                <div className="flex items-center gap-2">
+                  <Crown className="w-4 h-4 text-amber-500" />
+                  <Label className="text-sm font-medium text-amber-700">Premium</Label>
+                </div>
+                <Input
+                  type="number"
+                  min="1"
+                  max="1000"
+                  value={localSettings.premium_monthly_limit ?? 30}
+                  onChange={(e) =>
+                    setLocalSettings({
+                      ...localSettings,
+                      premium_monthly_limit: parseInt(e.target.value) || 30,
+                    })
+                  }
+                  className="bg-background"
+                />
+                <p className="text-xs text-amber-600">annonces/mois</p>
+              </div>
+            </div>
+          </div>
 
           <p className="text-xs text-muted-foreground">
             Les limites sont appliquées séparément pour chaque mode. Un utilisateur peut avoir des limites différentes en mode Immobilier et Résidence.

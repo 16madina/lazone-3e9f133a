@@ -362,7 +362,7 @@ const PublicProfilePage = () => {
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
-      <div className="bg-card border-b border-border sticky top-0 z-10">
+      <div className="bg-card border-b border-border sticky top-0 z-10 pt-[env(safe-area-inset-top)]">
         <div className="flex items-center gap-4 p-4">
           <button 
             onClick={() => navigate(-1)}

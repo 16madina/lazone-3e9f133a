@@ -1392,7 +1392,7 @@ const AdminPage = () => {
   return (
     <div className="min-h-screen bg-muted/30 pb-32">
       {/* Header */}
-      <div className="bg-gradient-to-r from-primary via-primary to-primary/80 pt-12 pb-6 px-4">
+      <div className="bg-gradient-to-r from-primary via-primary to-primary/80 pt-[env(safe-area-inset-top)] pb-6 px-4">
         <div className="flex items-center gap-3 mb-4">
           <button
             onClick={() => navigate('/profile')}

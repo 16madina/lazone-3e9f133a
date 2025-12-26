@@ -364,7 +364,7 @@ const DashboardPage = () => {
   return (
     <div className="min-h-screen pb-32 bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-lg border-b border-border">
+      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-lg border-b border-border pt-[env(safe-area-inset-top)]">
         <div className="flex items-center gap-4 px-4 py-3">
           <button 
             onClick={() => navigate(-1)}

@@ -218,17 +218,32 @@ public class StoreKitPlugin: CAPPlugin, CAPBridgedPlugin {
     }
     
     private func productTypeString(_ type: Product.ProductType) -> String {
-        switch type {
-        case .consumable:
-            return "consumable"
-        case .nonConsumable:
-            return "nonConsumable"
-        case .autoRenewable:
-            return "autoRenewable"
-        case .nonRenewable:
-            return "nonRenewable"
-        @unknown default:
-            return "unknown"
+        if #available(iOS 17.0, *) {
+            switch type {
+            case .consumable:
+                return "consumable"
+            case .nonConsumable:
+                return "nonConsumable"
+            case .autoRenewable:
+                return "autoRenewable"
+            case .nonRenewable:
+                return "nonRenewable"
+            default:
+                return "unknown"
+            }
+        } else {
+            switch type {
+            case .consumable:
+                return "consumable"
+            case .nonConsumable:
+                return "nonConsumable"
+            case .autoRenewable:
+                return "autoRenewable"
+            case .nonRenewable:
+                return "nonRenewable"
+            @unknown default:
+                return "unknown"
+            }
         }
     }
     

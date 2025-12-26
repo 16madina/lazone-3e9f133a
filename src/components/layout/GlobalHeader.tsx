@@ -4,7 +4,7 @@ import { NotificationDropdown } from '@/components/NotificationDropdown';
 import { useAuth } from '@/hooks/useAuth';
 
 // Pages that have their own header implementation
-const pagesWithCustomHeader = ['/', '/auth', '/verify-email'];
+const pagesWithCustomHeader = ['/', '/auth', '/verify-email', '/profile'];
 
 // Pages that should not show the header at all
 const pagesWithoutHeader = ['/install'];

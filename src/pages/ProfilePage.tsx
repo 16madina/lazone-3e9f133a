@@ -72,6 +72,7 @@ import { AppointmentsTab } from '@/components/appointment/AppointmentsTab';
 import { PendingListingsSection } from '@/components/profile/PendingListingsSection';
 import { BlockedDatesManager } from '@/components/appointment/BlockedDatesManager';
 import { useCredits } from '@/hooks/useCredits';
+import { useListingLimit } from '@/hooks/useListingLimit';
 
 type TabType = 'annonces' | 'rdv' | 'favoris' | 'parametres';
 
@@ -268,7 +269,12 @@ const ProfilePage = () => {
   const { appMode, isResidence } = useAppMode();
   const { unreadCount: notificationCount } = useNotifications();
   const { activeSubscription, availableCredits, freeCreditsRemaining } = useCredits();
+  const { settings: listingSettings } = useListingLimit();
   const { resetTutorial, startTutorial } = useTutorial();
+  
+  // Get subscription limits from admin settings
+  const proMonthlyLimit = listingSettings?.pro_monthly_limit ?? 15;
+  const premiumMonthlyLimit = listingSettings?.premium_monthly_limit ?? 30;
   const [sendingEmail, setSendingEmail] = useState(false);
   const [propertiesCount, setPropertiesCount] = useState(0);
   const [properties, setProperties] = useState<Property[]>([]);
@@ -828,7 +834,10 @@ const ProfilePage = () => {
                     <Coins className="w-3.5 h-3.5" />
                     Mes Crédits
                     <span className="ml-1.5 text-muted-foreground">
-                      ({freeCreditsRemaining + availableCredits})
+                      ({activeSubscription 
+                        ? (activeSubscription.product_id.includes('premium') ? `${premiumMonthlyLimit}/mois` : `${proMonthlyLimit}/mois`)
+                        : freeCreditsRemaining + availableCredits
+                      })
                     </span>
                   </button>
                 </div>

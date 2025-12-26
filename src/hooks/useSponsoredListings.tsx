@@ -32,7 +32,9 @@ export function useSponsoredListings(): SponsoredListingsReturn {
   const [loading, setLoading] = useState(true);
 
   const fetchSponsoredData = useCallback(async () => {
+    console.log('[useSponsoredListings] Current user:', user?.id);
     if (!user?.id) {
+      console.log('[useSponsoredListings] No user, exiting');
       setLoading(false);
       return;
     }
@@ -46,12 +48,16 @@ export function useSponsoredListings(): SponsoredListingsReturn {
         .eq('user_id', user.id)
         .maybeSingle();
 
+      console.log('[useSponsoredListings] Subscription query result:', { subRow, subError });
+
       if (subError) {
         console.error('[useSponsoredListings] Failed to load subscription status:', subError);
       }
 
       const subType = subRow?.is_active ? (subRow.subscription_type as 'pro' | 'premium') : null;
       const quota = subType === 'premium' ? 4 : subType === 'pro' ? 2 : 0;
+
+      console.log('[useSponsoredListings] Calculated:', { subType, quota });
 
       setSponsoredQuota(quota);
       setSubscriptionType(subType);

@@ -1105,13 +1105,20 @@ const ProfilePage = () => {
                               </span>
                             </div>
                             <div className="flex items-center justify-between mt-2">
-                              <div className="flex items-center gap-1.5">
+                              <div className="flex items-center gap-1.5 flex-wrap">
                                 <button
                                   onClick={() => navigate(`/property/${property.id}`)}
                                   className="flex items-center gap-1 px-2 py-1 rounded-md bg-muted text-xs font-medium text-muted-foreground hover:bg-muted/80 transition-colors"
                                 >
                                   <Eye className="w-3 h-3" />
                                   Voir
+                                </button>
+                                <button
+                                  onClick={() => navigate(`/edit-property/${property.id}`)}
+                                  className="flex items-center gap-1 px-2 py-1 rounded-md bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors"
+                                >
+                                  <Edit className="w-3 h-3" />
+                                  Modifier
                                 </button>
                                 <button
                                   onClick={() => togglePropertyStatus(property.id, property.is_active)}

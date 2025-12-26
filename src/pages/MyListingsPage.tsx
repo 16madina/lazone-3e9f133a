@@ -262,6 +262,11 @@ const MyListingsPage = () => {
           </div>
         ) : (
           <div className="space-y-4">
+            {/* Debug info - remove later */}
+            <div className="p-2 bg-yellow-100 rounded text-xs">
+              Debug: subscriptionType={subscriptionType || 'null'}, quota={sponsoredQuota}, remaining={sponsoredRemaining}
+            </div>
+            
             {/* Sponsored Quota Banner */}
             {subscriptionType && (
               <div className={`p-3 rounded-xl ${

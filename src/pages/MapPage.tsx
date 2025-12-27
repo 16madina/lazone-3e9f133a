@@ -575,6 +575,7 @@ const MapPage = () => {
               className="pl-10 bg-card border shadow-md"
             />
           </div>
+          {/* Temporarily hidden to debug green circle
           <button 
             className={`p-3 rounded-xl shadow-md border ${
               userLocation 
@@ -592,6 +593,7 @@ const MapPage = () => {
               <Navigation className="w-5 h-5" />
             )}
           </button>
+          */}
         </div>
 
         {/* Filter Pills */}
@@ -845,7 +847,7 @@ const MapPage = () => {
         )}
       </AnimatePresence>
 
-      {/* <SectionTutorialButton section="map" /> */}
+      <SectionTutorialButton section="map" />
     </div>
   );
 };

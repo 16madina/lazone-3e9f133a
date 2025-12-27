@@ -129,6 +129,8 @@ export const CreditPaymentDialog = ({
             productId,
             successUrl,
             cancelUrl,
+            amount: price.amount,
+            currency: price.symbol === 'FCFA' ? 'XOF' : price.symbol,
           },
         });
 

@@ -7,40 +7,44 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Product definitions matching iOS StoreKit products
-const PRODUCTS: Record<string, { name: string; amount: number; credits: number; type: 'one_time' | 'subscription'; interval?: 'month' }> = {
+// Product definitions - credits per product
+const PRODUCTS_CREDITS: Record<string, { name: string; credits: number; type: 'one_time' | 'subscription'; interval?: 'month' }> = {
   'com.lazone.listing.single': {
     name: '1 Crédit Annonce',
-    amount: 500,
     credits: 1,
     type: 'one_time',
   },
   'com.lazone.listing.pack5': {
     name: 'Pack 5 Crédits',
-    amount: 2250,
     credits: 5,
     type: 'one_time',
   },
   'com.lazone.listing.pack10': {
     name: 'Pack 10 Crédits',
-    amount: 4000,
     credits: 10,
     type: 'one_time',
   },
   'com.lazone.sub.pro.monthly': {
     name: 'Abonnement Pro',
-    amount: 12000,
     credits: 30,
     type: 'subscription',
     interval: 'month',
   },
   'com.lazone.sub.premium.monthly': {
     name: 'Abonnement Premium',
-    amount: 25000,
     credits: 999,
     type: 'subscription',
     interval: 'month',
   },
+};
+
+// Fallback prices in XOF centimes (used only if client doesn't send amount)
+const FALLBACK_PRICES: Record<string, number> = {
+  'com.lazone.listing.single': 500,
+  'com.lazone.listing.pack5': 2250,
+  'com.lazone.listing.pack10': 4000,
+  'com.lazone.sub.pro.monthly': 12000,
+  'com.lazone.sub.premium.monthly': 25000,
 };
 
 serve(async (req) => {
@@ -82,19 +86,26 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const { productId, successUrl, cancelUrl } = body;
+    const { productId, successUrl, cancelUrl, amount, currency } = body;
 
     console.log(`[create-credits-checkout] User ${user.id} requesting product: ${productId}`);
+    console.log(`[create-credits-checkout] Amount: ${amount} ${currency || 'XOF'}`);
     console.log(`[create-credits-checkout] successUrl: ${successUrl}, cancelUrl: ${cancelUrl}`);
 
-    if (!productId || !PRODUCTS[productId]) {
+    if (!productId || !PRODUCTS_CREDITS[productId]) {
       return new Response(JSON.stringify({ error: "Produit invalide" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const product = PRODUCTS[productId];
+    const product = PRODUCTS_CREDITS[productId];
+    
+    // Use client-provided amount or fallback to default
+    const chargeAmount = amount && amount > 0 ? Math.round(amount) : FALLBACK_PRICES[productId];
+    // Currency: default to XOF, but support other currencies if provided
+    const chargeCurrency = (currency || 'XOF').toLowerCase();
+    
     const transactionRef = `cr_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
 
     // Determine fallback URLs - always use provided URLs, never trust origin header from mobile apps
@@ -108,12 +119,12 @@ serve(async (req) => {
       line_items: [
         {
           price_data: {
-            currency: 'xof',
+            currency: chargeCurrency,
             product_data: {
               name: product.name,
               description: `${product.credits} crédit(s) pour publier des annonces`,
             },
-            unit_amount: product.amount,
+            unit_amount: chargeAmount,
             recurring: product.type === 'subscription' ? { interval: product.interval! } : undefined,
           },
           quantity: 1,

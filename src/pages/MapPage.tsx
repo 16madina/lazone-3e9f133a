@@ -566,7 +566,6 @@ const MapPage = () => {
             </DropdownMenuContent>
           </DropdownMenu>
           
-          {/* Temporarily hidden to debug green circle
           <div className="flex-1 relative" data-tutorial="map-search">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
@@ -576,8 +575,6 @@ const MapPage = () => {
               className="pl-10 bg-card border shadow-md"
             />
           </div>
-          */}
-          {/* Temporarily hidden to debug green circle
           <button 
             className={`p-3 rounded-xl shadow-md border ${
               userLocation 
@@ -595,7 +592,6 @@ const MapPage = () => {
               <Navigation className="w-5 h-5" />
             )}
           </button>
-          */}
         </div>
 
         {/* Filter Pills */}

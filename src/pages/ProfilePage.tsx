@@ -834,6 +834,7 @@ const ProfilePage = () => {
                   {/* Credits Button */}
                   <button
                     onClick={() => navigate('/credits')}
+                    data-tutorial="profile-credits"
                     className="flex items-center gap-1.5 text-xs text-amber-600 font-medium hover:underline ml-7"
                   >
                     <Coins className="w-3.5 h-3.5" />
@@ -1035,7 +1036,9 @@ const ProfilePage = () => {
             {activeTab === 'annonces' && (
               <div>
                 {/* Pending listings section */}
-                <PendingListingsSection />
+                <div data-tutorial="profile-pending">
+                  <PendingListingsSection />
+                </div>
 
                 {/* Add new listing button */}
                 <button

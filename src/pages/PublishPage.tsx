@@ -563,7 +563,7 @@ const PublishPage = () => {
     );
   };
 
-  // Trigger geocoding when city changes
+  // Trigger geocoding when city changes (including custom cities)
   useEffect(() => {
     if (!city || city.length < 2 || !selectedCountry) return;
     
@@ -572,17 +572,18 @@ const PublishPage = () => {
       clearTimeout(geocodeTimeoutRef.current);
     }
     
-    // Debounce geocoding
+    // Debounce geocoding - use shorter delay for custom city input
+    const delay = isCustomCity ? 1000 : 500;
     geocodeTimeoutRef.current = setTimeout(() => {
-      geocodeAddress(address, city, selectedCountry);
-    }, 500);
+      geocodeAddress(address, city, selectedCountry, !isCustomCity);
+    }, delay);
     
     return () => {
       if (geocodeTimeoutRef.current) {
         clearTimeout(geocodeTimeoutRef.current);
       }
     };
-  }, [city, selectedCountry]);
+  }, [city, selectedCountry, isCustomCity]);
 
   // Trigger geocoding when address changes (with longer debounce)
   useEffect(() => {
@@ -900,6 +901,10 @@ const PublishPage = () => {
           discount_7_nights: isResidence && discount7Nights ? parseFloat(discount7Nights) : null,
           discount_14_nights: isResidence && discount14Nights ? parseFloat(discount14Nights) : null,
           discount_30_nights: isResidence && discount30Nights ? parseFloat(discount30Nights) : null,
+          // Commercial specific - Pas de porte
+          pas_de_porte: propertyType === 'commercial' && transactionType === 'rent' && hasPasDePorte && pasDePorteAmount 
+            ? parseFloat(pasDePorteAmount) 
+            : null,
           // Set is_active based on payment status
           is_active: shouldBeActive,
         })

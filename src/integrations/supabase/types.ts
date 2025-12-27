@@ -560,6 +560,7 @@ export type Database = {
           listing_type: string
           lng: number | null
           minimum_stay: number | null
+          pas_de_porte: number | null
           postal_code: string | null
           price: number
           price_per_night: number | null
@@ -594,6 +595,7 @@ export type Database = {
           listing_type?: string
           lng?: number | null
           minimum_stay?: number | null
+          pas_de_porte?: number | null
           postal_code?: string | null
           price: number
           price_per_night?: number | null
@@ -628,6 +630,7 @@ export type Database = {
           listing_type?: string
           lng?: number | null
           minimum_stay?: number | null
+          pas_de_porte?: number | null
           postal_code?: string | null
           price?: number
           price_per_night?: number | null

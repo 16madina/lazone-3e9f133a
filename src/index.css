@@ -331,6 +331,11 @@
     text-wrap: balance;
   }
 
+  .writing-mode-vertical {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+  }
+
   .border-glass-border {
     border-color: hsl(var(--glass-border));
   }

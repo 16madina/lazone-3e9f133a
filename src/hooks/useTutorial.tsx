@@ -235,6 +235,13 @@ const sectionTutorials: Record<TutorialSection, TutorialStep[]> = {
       position: 'bottom'
     },
     {
+      id: 'publish-credits',
+      title: 'Crédits disponibles 💳',
+      description: 'Vous avez des annonces gratuites ou des crédits. Pro = 15/mois !',
+      target: '[data-tutorial="publish-credits"]',
+      position: 'bottom'
+    },
+    {
       id: 'publish-photos',
       title: 'Ajoutez vos photos 📷',
       description: 'Jusqu\'à 6 photos de qualité pour attirer les acheteurs.',
@@ -256,9 +263,15 @@ const sectionTutorials: Record<TutorialSection, TutorialStep[]> = {
       position: 'top'
     },
     {
+      id: 'publish-payment',
+      title: 'Paiement 💰',
+      description: 'Si pas de crédit, payez par Mobile Money ou achetez un abonnement.',
+      position: 'bottom'
+    },
+    {
       id: 'publish-complete',
       title: 'Prêt à publier ! 🎉',
-      description: 'Votre annonce sera visible par tous les utilisateurs.',
+      description: 'Votre annonce sera visible après validation du paiement.',
       position: 'bottom'
     }
   ],
@@ -301,7 +314,7 @@ const sectionTutorials: Record<TutorialSection, TutorialStep[]> = {
     {
       id: 'profile-intro',
       title: 'Profil 👤',
-      description: 'Gérez compte et annonces.',
+      description: 'Gérez compte, crédits et annonces.',
       position: 'center'
     },
     {
@@ -312,23 +325,37 @@ const sectionTutorials: Record<TutorialSection, TutorialStep[]> = {
       position: 'bottom'
     },
     {
+      id: 'profile-credits',
+      title: 'Mes crédits 💳',
+      description: 'Gérez vos crédits pour publier. Pro = 15/mois, Premium = illimité.',
+      target: '[data-tutorial="profile-credits"]',
+      position: 'bottom'
+    },
+    {
+      id: 'profile-pending',
+      title: 'Annonces en attente ⏳',
+      description: 'Vos annonces non payées apparaissent ici. Payez pour les activer.',
+      target: '[data-tutorial="profile-pending"]',
+      position: 'bottom'
+    },
+    {
       id: 'profile-listings',
-      title: 'Annonces',
-      description: 'Vos propriétés publiées.',
+      title: 'Mes annonces',
+      description: 'Vos propriétés publiées et actives.',
       target: '[data-tutorial="profile-listings"]',
       position: 'bottom'
     },
     {
       id: 'profile-appointments',
       title: 'Mes RDV',
-      description: 'Gérez vos rendez-vous.',
+      description: 'Gérez vos rendez-vous de visite.',
       target: '[data-tutorial="profile-appointments"]',
       position: 'bottom'
     },
     {
       id: 'profile-settings',
       title: 'Paramètres',
-      description: 'Notifications, sécurité, etc.',
+      description: 'Notifications, sécurité, abonnement.',
       target: '[data-tutorial="profile-settings"]',
       position: 'bottom'
     },
@@ -420,6 +447,13 @@ const sectionResidenceTutorials: Record<TutorialSection, TutorialStep[]> = {
       position: 'bottom'
     },
     {
+      id: 'publish-credits',
+      title: 'Crédits disponibles 💳',
+      description: 'Vous avez des annonces gratuites ou des crédits. Pro = 15/mois !',
+      target: '[data-tutorial="publish-credits"]',
+      position: 'bottom'
+    },
+    {
       id: 'publish-photos',
       title: 'Ajoutez vos photos 📷',
       description: 'Jusqu\'à 6 photos pour séduire les voyageurs.',
@@ -448,9 +482,15 @@ const sectionResidenceTutorials: Record<TutorialSection, TutorialStep[]> = {
       position: 'top'
     },
     {
+      id: 'publish-payment',
+      title: 'Paiement 💰',
+      description: 'Si pas de crédit, payez par Mobile Money ou achetez un abonnement.',
+      position: 'bottom'
+    },
+    {
       id: 'publish-complete',
       title: 'Prêt à accueillir ! 🎉',
-      description: 'Votre séjour sera visible par les voyageurs.',
+      description: 'Votre séjour sera visible après validation du paiement.',
       position: 'bottom'
     }
   ],
@@ -493,7 +533,7 @@ const sectionResidenceTutorials: Record<TutorialSection, TutorialStep[]> = {
     {
       id: 'profile-intro',
       title: 'Profil 👤',
-      description: 'Gérez compte et séjours.',
+      description: 'Gérez compte, crédits et séjours.',
       position: 'center'
     },
     {
@@ -504,9 +544,23 @@ const sectionResidenceTutorials: Record<TutorialSection, TutorialStep[]> = {
       position: 'bottom'
     },
     {
+      id: 'profile-credits',
+      title: 'Mes crédits 💳',
+      description: 'Gérez vos crédits pour publier. Pro = 15/mois, Premium = illimité.',
+      target: '[data-tutorial="profile-credits"]',
+      position: 'bottom'
+    },
+    {
+      id: 'profile-pending',
+      title: 'Séjours en attente ⏳',
+      description: 'Vos annonces non payées apparaissent ici. Payez pour les activer.',
+      target: '[data-tutorial="profile-pending"]',
+      position: 'bottom'
+    },
+    {
       id: 'profile-listings',
       title: 'Mes séjours',
-      description: 'Vos hébergements publiés.',
+      description: 'Vos hébergements publiés et actifs.',
       target: '[data-tutorial="profile-listings"]',
       position: 'bottom'
     },
@@ -520,7 +574,7 @@ const sectionResidenceTutorials: Record<TutorialSection, TutorialStep[]> = {
     {
       id: 'profile-settings',
       title: 'Paramètres',
-      description: 'Notifications, calendrier, disponibilités.',
+      description: 'Notifications, calendrier, abonnement.',
       target: '[data-tutorial="profile-settings"]',
       position: 'bottom'
     },

@@ -1133,7 +1133,7 @@ const PublishPage = () => {
         </p>
         
         {/* Credits and listings info */}
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="mt-3 flex flex-wrap gap-2" data-tutorial="publish-credits">
           {/* Show subscription info for subscribers */}
           {hasActiveSubscription && (
             <Badge className="bg-green-500 text-white border-green-400">

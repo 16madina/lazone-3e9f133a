@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Loader2, Info, Home, Building2, ArrowRight } from 'lucide-react';
+import { Loader2, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { SearchBar } from '@/components/home/SearchBar';
@@ -261,77 +261,6 @@ const Index = () => {
 
           {/* Hero Content with Logo */}
           <div className="text-center mb-8 relative">
-            {/* Animated Mode Badge - Right Side with Morphing */}
-            <motion.button
-              onClick={() => handleModeSwitch(isResidence ? 'lazone' : 'residence')}
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-20"
-              whileHover={{ x: -2 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <motion.div
-                layout
-                className="flex items-center gap-1.5 px-2 py-1.5 rounded-l-lg backdrop-blur-md border border-white/20 cursor-pointer overflow-hidden"
-                animate={{
-                  background: isResidence 
-                    ? 'linear-gradient(to left, rgba(20, 184, 166, 0.8), rgba(13, 148, 136, 0.6))'
-                    : 'linear-gradient(to left, rgba(249, 115, 22, 0.8), rgba(234, 88, 12, 0.6))',
-                  boxShadow: [
-                    `0 0 8px ${isResidence ? 'rgba(20, 184, 166, 0.3)' : 'rgba(249, 115, 22, 0.3)'}`,
-                    `0 0 16px ${isResidence ? 'rgba(20, 184, 166, 0.5)' : 'rgba(249, 115, 22, 0.5)'}`,
-                    `0 0 8px ${isResidence ? 'rgba(20, 184, 166, 0.3)' : 'rgba(249, 115, 22, 0.3)'}`,
-                  ],
-                }}
-                transition={{
-                  layout: { type: "spring", stiffness: 300, damping: 25 },
-                  background: { duration: 0.5, ease: "easeInOut" },
-                  boxShadow: { duration: 2, repeat: Infinity, ease: "easeInOut" },
-                }}
-              >
-                {/* Icon with morph animation */}
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={isResidence ? 'building-icon' : 'home-icon'}
-                    initial={{ scale: 0, rotate: -180, opacity: 0 }}
-                    animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                    exit={{ scale: 0, rotate: 180, opacity: 0 }}
-                    transition={{ 
-                      type: "spring", 
-                      stiffness: 400, 
-                      damping: 20,
-                      duration: 0.3 
-                    }}
-                  >
-                    {isResidence ? (
-                      <Building2 className="w-3 h-3 text-white" />
-                    ) : (
-                      <Home className="w-3 h-3 text-white" />
-                    )}
-                  </motion.div>
-                </AnimatePresence>
-                
-                {/* Text with morph animation */}
-                <AnimatePresence mode="wait">
-                  <motion.span 
-                    key={isResidence ? 'immo-text' : 'residence-text'}
-                    initial={{ opacity: 0, y: 10, filter: 'blur(4px)' }}
-                    animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                    exit={{ opacity: 0, y: -10, filter: 'blur(4px)' }}
-                    transition={{ duration: 0.25, ease: "easeOut" }}
-                    className="text-[9px] font-medium text-white leading-tight"
-                  >
-                    {isResidence ? 'Immobilier' : 'Résidence'}
-                  </motion.span>
-                </AnimatePresence>
-                
-                <motion.div
-                  animate={{ x: [0, 2, 0] }}
-                  transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                >
-                  <ArrowRight className="w-2.5 h-2.5 text-white/70" />
-                </motion.div>
-              </motion.div>
-            </motion.button>
-
             <AppLogo className="h-24 mx-auto mb-4" />
             <AnimatePresence mode="wait">
               <motion.h1 

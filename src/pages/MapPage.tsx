@@ -845,7 +845,7 @@ const MapPage = () => {
         )}
       </AnimatePresence>
 
-      <SectionTutorialButton section="map" />
+      {/* <SectionTutorialButton section="map" /> */}
     </div>
   );
 };

@@ -54,6 +54,22 @@ export const usePlatformPayment = (): UsePlatformPaymentReturn => {
   // Determine preferred payment method based on platform
   const preferredMethod: PaymentMethod = platform === 'ios' ? 'apple_iap' : 'stripe';
 
+  // Production URL for redirects - use deployed URL instead of window.location.origin
+  // This is crucial for Capacitor apps where window.location.origin returns localhost
+  const getProductionOrigin = (): string => {
+    // Check if we're in a Capacitor native environment
+    if (Capacitor.isNativePlatform()) {
+      // Use the deployed app URL for redirects
+      return 'https://lazone.lovable.app';
+    }
+    // For web, use actual origin but fallback to production if localhost
+    const origin = window.location.origin;
+    if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      return 'https://lazone.lovable.app';
+    }
+    return origin;
+  };
+
   // Opens an external URL, working around iframe restrictions
   const openExternalUrl = (url: string): { opened: boolean; url: string } => {
     // Try window.open first (works best in iframes)
@@ -94,13 +110,15 @@ export const usePlatformPayment = (): UsePlatformPaymentReturn => {
       }
 
       const mode = params.listingType === 'short_term' ? 'residence' : 'lazone';
-      const successUrl = new URL(`${window.location.origin}/publish`);
+      const productionOrigin = getProductionOrigin();
+      
+      const successUrl = new URL(`${productionOrigin}/publish`);
       successUrl.searchParams.set('payment', 'success');
       successUrl.searchParams.set('mode', mode);
       successUrl.searchParams.set('listingType', params.listingType);
       if (params.propertyId) successUrl.searchParams.set('propertyId', params.propertyId);
 
-      const cancelUrl = new URL(`${window.location.origin}/publish`);
+      const cancelUrl = new URL(`${productionOrigin}/publish`);
       cancelUrl.searchParams.set('payment', 'cancelled');
       cancelUrl.searchParams.set('mode', mode);
       cancelUrl.searchParams.set('listingType', params.listingType);

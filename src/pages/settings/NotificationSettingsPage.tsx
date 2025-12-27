@@ -1,12 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Bell, MessageCircle, Heart, Tag, Home, Mail, Volume2 } from 'lucide-react';
+import { ArrowLeft, Bell, MessageCircle, Heart, Tag, Home, Mail, Volume2, Smartphone, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
+import { Button } from '@/components/ui/button';
 import { useSound } from '@/hooks/useSound';
+import { usePushNotifications, getPlatform, isNativePlatform } from '@/hooks/useNativePlugins';
+import { useToast } from '@/hooks/use-toast';
 
 const NotificationSettingsPage = () => {
   const navigate = useNavigate();
   const { playNotificationSound, isMuted, setMuted } = useSound();
+  const { isRegistered, register, isNative } = usePushNotifications();
+  const { toast } = useToast();
+  const [isRegistering, setIsRegistering] = useState(false);
   const [notifications, setNotifications] = useState({
     push: true,
     messages: true,
@@ -35,6 +41,45 @@ const NotificationSettingsPage = () => {
     }
   };
 
+  const handleActivatePush = async () => {
+    if (!isNativePlatform()) {
+      toast({
+        title: "Non disponible",
+        description: "Les notifications push ne sont disponibles que sur l'application mobile.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsRegistering(true);
+    try {
+      await register();
+      toast({
+        title: "Notifications activées",
+        description: "Vous recevrez désormais les notifications push.",
+      });
+    } catch (error: any) {
+      console.error('Error registering for push:', error);
+      if (error.message === 'permission_denied') {
+        toast({
+          title: "Permission refusée",
+          description: "Veuillez autoriser les notifications dans les paramètres de votre appareil.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erreur",
+          description: "Impossible d'activer les notifications. Réessayez plus tard.",
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setIsRegistering(false);
+    }
+  };
+
+  const platform = getPlatform();
+
   return (
     <div className="min-h-screen bg-muted/30 pb-32">
       {/* Header */}
@@ -51,6 +96,57 @@ const NotificationSettingsPage = () => {
       </div>
 
       <div className="px-4 py-6 space-y-6">
+        {/* Push Notification Activation - Native Only */}
+        {isNative && (
+          <div className="bg-card rounded-2xl overflow-hidden border-2 border-primary/20">
+            <div className="p-4 border-b border-border bg-primary/5">
+              <h2 className="font-semibold flex items-center gap-2">
+                <Smartphone className="w-5 h-5 text-primary" />
+                Activation des notifications
+              </h2>
+            </div>
+            <div className="p-4">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    {isRegistered ? (
+                      <CheckCircle className="w-5 h-5 text-green-500" />
+                    ) : (
+                      <AlertCircle className="w-5 h-5 text-amber-500" />
+                    )}
+                    <p className="font-medium text-sm">
+                      {isRegistered ? 'Notifications activées' : 'Notifications non activées'}
+                    </p>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {isRegistered 
+                      ? `Appareil ${platform === 'android' ? 'Android' : 'iOS'} enregistré`
+                      : 'Activez pour recevoir les notifications sur cet appareil'
+                    }
+                  </p>
+                </div>
+                {!isRegistered && (
+                  <Button 
+                    onClick={handleActivatePush}
+                    disabled={isRegistering}
+                    size="sm"
+                    className="shrink-0"
+                  >
+                    {isRegistering ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Activation...
+                      </>
+                    ) : (
+                      'Activer'
+                    )}
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Sound Settings */}
         <div className="bg-card rounded-2xl overflow-hidden">
           <div className="p-4 border-b border-border">

@@ -269,8 +269,14 @@ const ProfilePage = () => {
   const { theme, toggleTheme } = useTheme();
   const { appMode, isResidence } = useAppMode();
   const { unreadCount: notificationCount } = useNotifications();
-  const { activeSubscription, availableCredits, freeCreditsRemaining } = useCredits();
-  const { settings: listingSettings } = useListingLimit();
+  const { activeSubscription } = useCredits();
+  const { 
+    settings: listingSettings, 
+    availableCredits, 
+    remainingFreeListings,
+    hasActiveSubscription,
+    subscriptionType 
+  } = useListingLimit();
   const { sponsoredQuota, sponsoredRemaining, loading: sponsoredLoading } = useSponsoredListings();
   const { resetTutorial, startTutorial } = useTutorial();
   
@@ -840,9 +846,9 @@ const ProfilePage = () => {
                     <Coins className="w-3.5 h-3.5" />
                     Mes Crédits
                     <span className="ml-1 text-muted-foreground">
-                      ({activeSubscription 
-                        ? (activeSubscription.product_id.includes('premium') ? `${premiumMonthlyLimit}/mois` : `${proMonthlyLimit}/mois`)
-                        : freeCreditsRemaining + availableCredits
+                      ({hasActiveSubscription 
+                        ? (subscriptionType === 'premium' ? `${premiumMonthlyLimit}/mois` : `${proMonthlyLimit}/mois`)
+                        : remainingFreeListings + availableCredits
                       })
                     </span>
                   </button>

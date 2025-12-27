@@ -14,33 +14,35 @@ export const AppModeSwitch = ({ onSwitch }: AppModeSwitchProps) => {
   const [showHint, setShowHint] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
 
-  // Show hint animation after 2 seconds, hide after 8 seconds or on interaction
+  // Show hint animation every 30 seconds in a loop
   useEffect(() => {
-    // Check if user has already seen the hint
-    const hintSeen = localStorage.getItem('mode-switch-hint-seen');
-    if (hintSeen) return;
-
-    const showTimer = setTimeout(() => {
+    const runAnimation = () => {
       setShowHint(true);
-    }, 2000);
+      // Hide after 5 seconds
+      setTimeout(() => {
+        if (!hasInteracted) {
+          setShowHint(false);
+        }
+      }, 5000);
+    };
 
-    const hideTimer = setTimeout(() => {
-      setShowHint(false);
-      localStorage.setItem('mode-switch-hint-seen', 'true');
-    }, 10000);
+    // Start first animation after 2 seconds
+    const initialTimer = setTimeout(runAnimation, 2000);
+
+    // Then repeat every 30 seconds
+    const intervalTimer = setInterval(runAnimation, 30000);
 
     return () => {
-      clearTimeout(showTimer);
-      clearTimeout(hideTimer);
+      clearTimeout(initialTimer);
+      clearInterval(intervalTimer);
     };
-  }, []);
+  }, [hasInteracted]);
 
   const handleSwitch = () => {
     const newMode = isResidence ? 'lazone' : 'residence';
     onSwitch(newMode);
     setShowHint(false);
     setHasInteracted(true);
-    localStorage.setItem('mode-switch-hint-seen', 'true');
   };
 
   return (
@@ -93,16 +95,16 @@ export const AppModeSwitch = ({ onSwitch }: AppModeSwitchProps) => {
         )}
       </AnimatePresence>
 
-      {/* Main switch button */}
+      {/* Main switch button - more prominent */}
       <motion.button
         onClick={handleSwitch}
         className={cn(
-          "relative flex items-center gap-2 px-3 py-1.5 rounded-full",
-          "backdrop-blur-xl border transition-all duration-300",
-          "text-xs font-medium",
+          "relative flex items-center gap-2 px-4 py-2 rounded-full",
+          "backdrop-blur-xl border-2 transition-all duration-300",
+          "text-sm font-semibold shadow-lg",
           isResidence 
-            ? "bg-emerald-500/20 border-emerald-400/30 text-white hover:bg-emerald-500/30"
-            : "bg-white/20 border-white/30 text-white hover:bg-white/30"
+            ? "bg-emerald-500/30 border-emerald-400/50 text-white hover:bg-emerald-500/40"
+            : "bg-white/30 border-white/50 text-white hover:bg-white/40"
         )}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}

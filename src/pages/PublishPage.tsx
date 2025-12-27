@@ -130,6 +130,9 @@ const PublishPage = () => {
     needsPayment, 
     canUseCredit,
     availableCredits,
+    subscriptionCreditsRemaining,
+    hasActiveSubscription,
+    subscriptionType,
     userListingsCount,
     remainingFreeListings, 
     priceForUser,
@@ -928,11 +931,15 @@ const PublishPage = () => {
           });
       }
 
-      // If user needs to pay, show payment dialog with property ID
+      // If user needs to pay and has no credits, redirect to credits page
       if (needsPayment && !canUseCredit && !hasPaid) {
         setLoading(false);
         setPendingPropertyId(property.id);
-        setShowPaymentDialog(true);
+        toast({ 
+          title: 'Crédits insuffisants', 
+          description: 'Votre annonce est en attente. Veuillez acheter des crédits pour la publier.',
+        });
+        navigate('/credits');
         return;
       }
 
@@ -1127,12 +1134,21 @@ const PublishPage = () => {
         
         {/* Credits and listings info */}
         <div className="mt-3 flex flex-wrap gap-2">
-          {remainingFreeListings > 0 && (
+          {/* Show subscription info for subscribers */}
+          {hasActiveSubscription && (
+            <Badge className="bg-green-500 text-white border-green-400">
+              <Check className="w-3 h-3 mr-1" />
+              {subscriptionType === 'premium' ? 'Premium' : 'Pro'}: {availableCredits} crédit{availableCredits > 1 ? 's' : ''} restant{availableCredits > 1 ? 's' : ''}
+            </Badge>
+          )}
+          {/* Show remaining free listings for non-subscribers who haven't exceeded limit */}
+          {!hasActiveSubscription && remainingFreeListings > 0 && (
             <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
               {remainingFreeListings} annonce{remainingFreeListings > 1 ? 's' : ''} gratuite{remainingFreeListings > 1 ? 's' : ''} restante{remainingFreeListings > 1 ? 's' : ''}
             </Badge>
           )}
-          {canUseCredit && (
+          {/* Show available credits for non-subscribers with credits */}
+          {!hasActiveSubscription && canUseCredit && (
             <Badge className="bg-green-500 text-white border-green-400 animate-pulse">
               <Check className="w-3 h-3 mr-1" />
               {availableCredits} crédit{availableCredits > 1 ? 's' : ''} disponible{availableCredits > 1 ? 's' : ''}

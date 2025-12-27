@@ -30,7 +30,14 @@ import { convertUsdToLocal, parseUsdPrice, getCurrencyByCountry } from '@/data/c
 const CreditsPage = () => {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
-  const { settings: listingSettings } = useListingLimit();
+  const { 
+    settings: listingSettings, 
+    availableCredits: totalCreditsFromLimit,
+    subscriptionCreditsRemaining,
+    hasActiveSubscription,
+    subscriptionType,
+    remainingFreeListings
+  } = useListingLimit();
   const {
     availableCredits,
     freeCreditsRemaining,
@@ -84,9 +91,11 @@ const CreditsPage = () => {
   }, []);
 
   const isAgency = profile?.user_type === 'agence';
-  const isPremiumUser = activeSubscription?.product_id.includes('premium');
-  const isProUser = activeSubscription?.product_id.includes('pro') && !isPremiumUser;
-  const totalAvailable = freeCreditsRemaining + availableCredits;
+  const isPremiumUser = hasActiveSubscription && subscriptionType === 'premium';
+  const isProUser = hasActiveSubscription && subscriptionType === 'pro';
+  
+  // Use synchronized total from useListingLimit
+  const totalAvailable = totalCreditsFromLimit;
 
   // Get user's country for local currency display
   const userCountry = profile?.country || null;
@@ -184,19 +193,17 @@ const CreditsPage = () => {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">
-                      {activeSubscription ? 'Limite mensuelle' : 'Crédits disponibles'}
+                      {hasActiveSubscription ? 'Crédits restants ce mois' : 'Crédits disponibles'}
                     </p>
                     <p className="text-3xl font-bold text-primary">
-                      {isPremiumUser 
-                        ? `${premiumMonthlyLimit}/mois` 
-                        : isProUser 
-                          ? `${proMonthlyLimit}/mois`
-                          : totalAvailable
+                      {hasActiveSubscription 
+                        ? `${subscriptionCreditsRemaining}/${isPremiumUser ? premiumMonthlyLimit : proMonthlyLimit}`
+                        : totalAvailable
                       }
                     </p>
                   </div>
                 </div>
-                {activeSubscription && (
+                {hasActiveSubscription && (
                   <Badge className={`${
                     isPremiumUser 
                       ? 'bg-gradient-to-r from-amber-500 to-orange-500' 
@@ -208,13 +215,30 @@ const CreditsPage = () => {
                 )}
               </div>
 
-              {!activeSubscription && (
+              {hasActiveSubscription ? (
+                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border/50">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-amber-500" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Abonnement</p>
+                      <p className="font-semibold">{subscriptionCreditsRemaining} restant{subscriptionCreditsRemaining > 1 ? 's' : ''}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Package className="w-4 h-4 text-blue-500" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Crédits achetés</p>
+                      <p className="font-semibold">{availableCredits}</p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
                 <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border/50">
                   <div className="flex items-center gap-2">
                     <Gift className="w-4 h-4 text-green-500" />
                     <div>
                       <p className="text-xs text-muted-foreground">Gratuits</p>
-                      <p className="font-semibold">{freeCreditsRemaining}/{freeCreditsLimit}</p>
+                      <p className="font-semibold">{remainingFreeListings}/{freeCreditsLimit}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">

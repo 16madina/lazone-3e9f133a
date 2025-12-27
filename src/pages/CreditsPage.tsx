@@ -80,6 +80,15 @@ const CreditsPage = () => {
     }
   }, [user, navigate]);
 
+  // Store last selected product for retry functionality
+  const [lastProductForRetry, setLastProductForRetry] = useState<{
+    id: string;
+    name: string;
+    price: number;
+    symbol: string;
+    displayPrice: string;
+  } | null>(null);
+
   // Check for payment success/cancel in URL params and refresh credits
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -88,12 +97,17 @@ const CreditsPage = () => {
     if (payment) {
       // Always close the payment dialog when returning from payment
       setPaymentDialogOpen(false);
+      // Keep the last product for retry but clear selected
+      if (selectedProduct) {
+        setLastProductForRetry(selectedProduct);
+      }
       setSelectedProduct(null);
     }
     
     if (payment === 'success') {
       // Clear params and show success message
       window.history.replaceState({}, '', '/credits');
+      setLastProductForRetry(null);
       toast({
         title: '🎉 Paiement réussi !',
         description: 'Vos crédits ont été ajoutés à votre compte.',
@@ -104,10 +118,29 @@ const CreditsPage = () => {
       }, 1000);
     } else if (payment === 'cancelled') {
       window.history.replaceState({}, '', '/credits');
-      toast({
+      const { dismiss } = toast({
         title: 'Paiement annulé',
         description: 'Vous pouvez réessayer à tout moment.',
         variant: 'destructive',
+        duration: 10000,
+        action: (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="border-destructive-foreground/20 hover:bg-destructive-foreground/10"
+            onClick={() => {
+              dismiss();
+              // Reopen payment dialog with last product if available
+              if (lastProductForRetry) {
+                setSelectedProduct(lastProductForRetry);
+                setPaymentDialogOpen(true);
+              }
+            }}
+          >
+            <RefreshCw className="w-3 h-3 mr-1" />
+            Réessayer
+          </Button>
+        ),
       });
     }
   }, []);

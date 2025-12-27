@@ -85,6 +85,7 @@ serve(async (req) => {
     const { productId, successUrl, cancelUrl } = body;
 
     console.log(`[create-credits-checkout] User ${user.id} requesting product: ${productId}`);
+    console.log(`[create-credits-checkout] successUrl: ${successUrl}, cancelUrl: ${cancelUrl}`);
 
     if (!productId || !PRODUCTS[productId]) {
       return new Response(JSON.stringify({ error: "Produit invalide" }), {
@@ -95,6 +96,11 @@ serve(async (req) => {
 
     const product = PRODUCTS[productId];
     const transactionRef = `cr_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+
+    // Determine fallback URLs - always use provided URLs, never trust origin header from mobile apps
+    // Mobile apps send lazone:// URLs which Stripe supports for redirects
+    const defaultSuccessUrl = 'https://lazoneapp.com/credits?payment=success';
+    const defaultCancelUrl = 'https://lazoneapp.com/credits?payment=cancelled';
 
     // Create Stripe checkout session
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
@@ -114,8 +120,8 @@ serve(async (req) => {
         },
       ],
       mode: product.type === 'subscription' ? 'subscription' : 'payment',
-      success_url: successUrl || `${req.headers.get('origin')}/credits?payment=success`,
-      cancel_url: cancelUrl || `${req.headers.get('origin')}/credits?payment=cancelled`,
+      success_url: successUrl || defaultSuccessUrl,
+      cancel_url: cancelUrl || defaultCancelUrl,
       customer_email: user.email,
       metadata: {
         user_id: user.id,

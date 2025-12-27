@@ -26,6 +26,7 @@ import { useListingLimit } from '@/hooks/useListingLimit';
 import { CREDITS_PER_PRODUCT, SPONSORED_LISTINGS_PER_PRODUCT, PRODUCT_PRICES_FCFA } from '@/services/storeKitService';
 import { CreditPaymentDialog } from '@/components/credits/CreditPaymentDialog';
 import { convertUsdToLocal, parseUsdPrice, getCurrencyByCountry } from '@/data/currencies';
+import { useToast } from '@/hooks/use-toast';
 
 const CreditsPage = () => {
   const navigate = useNavigate();
@@ -55,6 +56,7 @@ const CreditsPage = () => {
     isPurchaseAvailable,
     storeKitError,
   } = useCredits();
+  const { toast } = useToast();
 
   // Payment dialog state
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
@@ -78,15 +80,28 @@ const CreditsPage = () => {
     }
   }, [user, navigate]);
 
-  // Check for payment success/cancel in URL params
+  // Check for payment success/cancel in URL params and refresh credits
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const payment = params.get('payment');
     if (payment === 'success') {
       // Clear params and show success message
       window.history.replaceState({}, '', '/credits');
+      toast({
+        title: '🎉 Paiement réussi !',
+        description: 'Vos crédits ont été ajoutés à votre compte.',
+      });
+      // Force page reload to refresh credits data
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     } else if (payment === 'cancelled') {
       window.history.replaceState({}, '', '/credits');
+      toast({
+        title: 'Paiement annulé',
+        description: 'Vous pouvez réessayer à tout moment.',
+        variant: 'destructive',
+      });
     }
   }, []);
 
@@ -109,24 +124,28 @@ const CreditsPage = () => {
   };
 
   // Parse price from display string or get from FCFA map
+  // ALWAYS prioritize PRODUCT_PRICES_FCFA for accurate local pricing
   const parsePrice = (productId: string, displayPrice: string): { amount: number; symbol: string } => {
-    // First check if we have the price in our FCFA map
+    // First check if we have the price in our FCFA map - this is the authoritative source
     const fcfaPrice = PRODUCT_PRICES_FCFA[productId];
-    if (fcfaPrice) {
+    if (fcfaPrice !== undefined && fcfaPrice > 0) {
+      console.log(`[CreditsPage] Using FCFA price for ${productId}: ${fcfaPrice}`);
       return { amount: fcfaPrice, symbol: 'FCFA' };
     }
     
-    // Fallback: try to parse from displayPrice
-    const cleanPrice = displayPrice.replace(/[^\d\s]/g, ' ').trim();
-    const parts = cleanPrice.split(/\s+/);
-    const amount = parseInt(parts[0], 10) || 0;
+    // Fallback: try to parse from displayPrice if it's already in FCFA format
+    if (displayPrice.includes('FCFA') || displayPrice.includes('XOF')) {
+      const cleanPrice = displayPrice.replace(/[^\d]/g, '');
+      const amount = parseInt(cleanPrice, 10) || 0;
+      if (amount >= 100) { // Valid FCFA price (at least 100 FCFA)
+        console.log(`[CreditsPage] Parsed FCFA from displayPrice: ${amount}`);
+        return { amount, symbol: 'FCFA' };
+      }
+    }
     
-    // Detect symbol
-    if (displayPrice.includes('FCFA')) return { amount, symbol: 'FCFA' };
-    if (displayPrice.includes('XOF')) return { amount, symbol: 'FCFA' };
-    if (displayPrice.includes('$')) return { amount, symbol: 'USD' };
-    
-    return { amount, symbol: 'FCFA' };
+    // Last resort fallback - shouldn't happen if PRODUCT_PRICES_FCFA is complete
+    console.warn(`[CreditsPage] No FCFA price found for ${productId}, using fallback`);
+    return { amount: 500, symbol: 'FCFA' }; // Default minimum price
   };
 
   const handlePurchase = async (product: { id: string; displayName: string; displayPrice: string }) => {

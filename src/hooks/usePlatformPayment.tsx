@@ -55,14 +55,14 @@ export const usePlatformPayment = (): UsePlatformPaymentReturn => {
   const preferredMethod: PaymentMethod = platform === 'ios' ? 'apple_iap' : 'stripe';
 
   // Get the appropriate redirect URL based on platform
-  // Native apps use custom URL scheme for automatic return
+  // Only Android uses custom URL scheme (iOS uses Apple IAP, not Stripe)
   // Web uses the production domain
   const getRedirectOrigin = (): string => {
-    if (Capacitor.isNativePlatform()) {
-      // Use custom URL scheme for native apps - this will reopen the app automatically
+    // Only use custom URL scheme on Android (iOS uses Apple IAP instead of Stripe)
+    if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android') {
       return 'lazone://';
     }
-    // For web, use actual origin but fallback to production if localhost
+    // For web and iOS, use actual origin but fallback to production if localhost
     const origin = window.location.origin;
     if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
       return 'https://lazoneapp.com';

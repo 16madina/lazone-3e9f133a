@@ -29,11 +29,12 @@ import waveLogo from '@/assets/wave-logo.png';
 import { Capacitor } from '@capacitor/core';
 
 // Helper to get redirect URL for Stripe based on platform
+// Only Android uses custom URL scheme (iOS uses Apple IAP, not Stripe)
 const getRedirectOrigin = (): { origin: string; isNative: boolean } => {
-  const isNative = Capacitor.isNativePlatform();
+  // Only use custom URL scheme on Android (iOS uses Apple IAP instead of Stripe)
+  const isAndroid = Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
   
-  if (isNative) {
-    // Use custom URL scheme for native apps
+  if (isAndroid) {
     return { origin: 'lazone://', isNative: true };
   }
   

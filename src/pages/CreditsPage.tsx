@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -13,7 +13,8 @@ import {
   Check,
   Star,
   Zap,
-  AlertCircle
+  AlertCircle,
+  Info
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,6 +25,7 @@ import { useCredits } from '@/hooks/useCredits';
 import { useListingLimit } from '@/hooks/useListingLimit';
 import { CREDITS_PER_PRODUCT, SPONSORED_LISTINGS_PER_PRODUCT } from '@/services/storeKitService';
 import { CreditPaymentDialog } from '@/components/credits/CreditPaymentDialog';
+import { convertUsdToLocal, parseUsdPrice, getCurrencyByCountry } from '@/data/currencies';
 
 const CreditsPage = () => {
   const navigate = useNavigate();
@@ -85,6 +87,17 @@ const CreditsPage = () => {
   const isPremiumUser = activeSubscription?.product_id.includes('premium');
   const isProUser = activeSubscription?.product_id.includes('pro') && !isPremiumUser;
   const totalAvailable = freeCreditsRemaining + availableCredits;
+
+  // Get user's country for local currency display
+  const userCountry = profile?.country || null;
+  const localCurrency = useMemo(() => getCurrencyByCountry(userCountry), [userCountry]);
+  
+  // Helper to get local price estimate
+  const getLocalEstimate = (displayPrice: string): string | null => {
+    const usdPrice = parseUsdPrice(displayPrice);
+    if (!usdPrice) return null;
+    return convertUsdToLocal(usdPrice, userCountry);
+  };
 
   // Parse price from display string (e.g., "500 FCFA" -> { amount: 500, symbol: "FCFA" })
   const parsePrice = (displayPrice: string): { amount: number; symbol: string } => {
@@ -269,13 +282,21 @@ const CreditsPage = () => {
                             <p className="text-sm text-muted-foreground">{product.description}</p>
                           </div>
                         </div>
-                        <Button
-                          onClick={() => handlePurchase(product)}
-                          disabled={purchasing}
-                          className={isBestValue ? 'bg-primary' : ''}
-                        >
-                          {product.displayPrice}
-                        </Button>
+                        <div className="flex flex-col items-end gap-1">
+                          <Button
+                            onClick={() => handlePurchase(product)}
+                            disabled={purchasing}
+                            className={isBestValue ? 'bg-primary' : ''}
+                            size="sm"
+                          >
+                            {product.displayPrice}
+                          </Button>
+                          {localCurrency && getLocalEstimate(product.displayPrice) && (
+                            <span className="text-xs text-muted-foreground">
+                              {getLocalEstimate(product.displayPrice)}
+                            </span>
+                          )}
+                        </div>
                       </CardContent>
                     </Card>
                   </motion.div>
@@ -362,14 +383,21 @@ const CreditsPage = () => {
                             </li>
                           ))}
                         </ul>
-                        <Button
-                          className="w-full"
-                          variant={isPremium ? 'default' : 'outline'}
-                          onClick={() => handlePurchase(product)}
-                          disabled={purchasing || isActive}
-                        >
-                          {isActive ? 'Abonnement actif' : product.displayPrice}
-                        </Button>
+                        <div className="flex flex-col gap-1">
+                          <Button
+                            className="w-full"
+                            variant={isPremium ? 'default' : 'outline'}
+                            onClick={() => handlePurchase(product)}
+                            disabled={purchasing || isActive}
+                          >
+                            {isActive ? 'Abonnement actif' : product.displayPrice}
+                          </Button>
+                          {!isActive && localCurrency && getLocalEstimate(product.displayPrice) && (
+                            <span className="text-xs text-muted-foreground text-center">
+                              {getLocalEstimate(product.displayPrice)}
+                            </span>
+                          )}
+                        </div>
                       </CardContent>
                     </Card>
                   </motion.div>
@@ -380,14 +408,24 @@ const CreditsPage = () => {
         </motion.div>
 
         {/* Help Text */}
-        <motion.p
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
-          className="text-center text-sm text-muted-foreground px-4"
+          className="space-y-2 px-4"
         >
-          Les crédits sont utilisés pour publier des annonces. Les abonnements se renouvellent automatiquement chaque mois.
-        </motion.p>
+          <p className="text-center text-sm text-muted-foreground">
+            Les crédits sont utilisés pour publier des annonces. Les abonnements se renouvellent automatiquement chaque mois.
+          </p>
+          {localCurrency && (
+            <div className="flex items-start gap-2 p-3 bg-muted/50 rounded-lg">
+              <Info className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
+              <p className="text-xs text-muted-foreground">
+                Les montants en {localCurrency.symbol} sont des estimations. Le prix final sera converti par votre banque au taux du jour lors du paiement.
+              </p>
+            </div>
+          )}
+        </motion.div>
       </div>
 
       {/* Payment Method Dialog (Web/Android only) */}

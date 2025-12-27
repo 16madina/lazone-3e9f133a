@@ -84,6 +84,13 @@ const CreditsPage = () => {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const payment = params.get('payment');
+    
+    if (payment) {
+      // Always close the payment dialog when returning from payment
+      setPaymentDialogOpen(false);
+      setSelectedProduct(null);
+    }
+    
     if (payment === 'success') {
       // Clear params and show success message
       window.history.replaceState({}, '', '/credits');

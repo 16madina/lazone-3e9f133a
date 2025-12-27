@@ -29,20 +29,23 @@ import waveLogo from '@/assets/wave-logo.png';
 import { Capacitor } from '@capacitor/core';
 
 // Helper to get redirect URL for Stripe based on platform
-// Only Android uses custom URL scheme (iOS uses Apple IAP, not Stripe)
+// Android native uses custom URL scheme, web uses lazoneapp.com
 const getRedirectOrigin = (): { origin: string; isNative: boolean } => {
-  // Only use custom URL scheme on Android (iOS uses Apple IAP instead of Stripe)
-  const isAndroid = Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
+  const platform = Capacitor.getPlatform();
+  const isNativePlatform = Capacitor.isNativePlatform();
   
-  if (isAndroid) {
+  console.log('[getRedirectOrigin] Platform:', platform, 'isNativePlatform:', isNativePlatform);
+  
+  // Android native app: use deep link scheme
+  if (isNativePlatform && platform === 'android') {
+    console.log('[getRedirectOrigin] Using Android deep link: lazone://');
     return { origin: 'lazone://', isNative: true };
   }
   
-  const origin = window.location.origin;
-  if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
-    return { origin: 'https://lazoneapp.com', isNative: false };
-  }
-  return { origin, isNative: false };
+  // For web (including preview), ALWAYS use production domain
+  // This ensures redirects work correctly and don't go to lovableproject.com
+  console.log('[getRedirectOrigin] Using production URL: https://lazoneapp.com');
+  return { origin: 'https://lazoneapp.com', isNative: false };
 };
 
 type PaymentMethod = 'stripe' | 'mobile_money';

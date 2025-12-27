@@ -49,6 +49,7 @@ import CreditsPage from "./pages/CreditsPage";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { PushNotificationBanner } from "@/components/PushNotificationBanner";
 import { NotificationDeepLinkHandler } from "@/components/NotificationDeepLinkHandler";
+import { DeepLinkHandler } from "@/components/DeepLinkHandler";
 
 const queryClient = new QueryClient();
 
@@ -72,6 +73,7 @@ const App = () => {
                 <SplashScreen onComplete={handleSplashComplete} />
               ) : (
                 <BrowserRouter>
+                  <DeepLinkHandler />
                   <NotificationDeepLinkHandler />
                   <PushNotificationBanner />
                   <div className="min-h-screen bg-background">

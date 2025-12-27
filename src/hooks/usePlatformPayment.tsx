@@ -54,13 +54,13 @@ export const usePlatformPayment = (): UsePlatformPaymentReturn => {
   // Determine preferred payment method based on platform
   const preferredMethod: PaymentMethod = platform === 'ios' ? 'apple_iap' : 'stripe';
 
-  // Production URL for redirects - use deployed URL instead of window.location.origin
-  // This is crucial for Capacitor apps where window.location.origin returns localhost
-  const getProductionOrigin = (): string => {
-    // Check if we're in a Capacitor native environment
+  // Get the appropriate redirect URL based on platform
+  // Native apps use custom URL scheme for automatic return
+  // Web uses the production domain
+  const getRedirectOrigin = (): string => {
     if (Capacitor.isNativePlatform()) {
-      // Use the deployed app URL for redirects
-      return 'https://lazoneapp.com';
+      // Use custom URL scheme for native apps - this will reopen the app automatically
+      return 'lazone://';
     }
     // For web, use actual origin but fallback to production if localhost
     const origin = window.location.origin;
@@ -69,6 +69,9 @@ export const usePlatformPayment = (): UsePlatformPaymentReturn => {
     }
     return origin;
   };
+
+  // Check if we should use deep link scheme
+  const isNative = Capacitor.isNativePlatform();
 
   // Opens an external URL, working around iframe restrictions
   const openExternalUrl = (url: string): { opened: boolean; url: string } => {
@@ -110,15 +113,18 @@ export const usePlatformPayment = (): UsePlatformPaymentReturn => {
       }
 
       const mode = params.listingType === 'short_term' ? 'residence' : 'lazone';
-      const productionOrigin = getProductionOrigin();
+      const redirectOrigin = getRedirectOrigin();
       
-      const successUrl = new URL(`${productionOrigin}/publish`);
+      // Build success URL - use path format for deep links
+      const successPath = isNative ? 'publish' : '/publish';
+      const successUrl = new URL(`${redirectOrigin}${successPath}`);
       successUrl.searchParams.set('payment', 'success');
       successUrl.searchParams.set('mode', mode);
       successUrl.searchParams.set('listingType', params.listingType);
       if (params.propertyId) successUrl.searchParams.set('propertyId', params.propertyId);
 
-      const cancelUrl = new URL(`${productionOrigin}/publish`);
+      const cancelPath = isNative ? 'publish' : '/publish';
+      const cancelUrl = new URL(`${redirectOrigin}${cancelPath}`);
       cancelUrl.searchParams.set('payment', 'cancelled');
       cancelUrl.searchParams.set('mode', mode);
       cancelUrl.searchParams.set('listingType', params.listingType);

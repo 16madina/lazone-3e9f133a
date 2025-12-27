@@ -28,16 +28,20 @@ import { useAuth } from '@/hooks/useAuth';
 import waveLogo from '@/assets/wave-logo.png';
 import { Capacitor } from '@capacitor/core';
 
-// Helper to get production URL for Stripe redirects
-const getProductionOrigin = (): string => {
-  if (Capacitor.isNativePlatform()) {
-    return 'https://lazoneapp.com';
+// Helper to get redirect URL for Stripe based on platform
+const getRedirectOrigin = (): { origin: string; isNative: boolean } => {
+  const isNative = Capacitor.isNativePlatform();
+  
+  if (isNative) {
+    // Use custom URL scheme for native apps
+    return { origin: 'lazone://', isNative: true };
   }
+  
   const origin = window.location.origin;
   if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
-    return 'https://lazoneapp.com';
+    return { origin: 'https://lazoneapp.com', isNative: false };
   }
-  return origin;
+  return { origin, isNative: false };
 };
 
 type PaymentMethod = 'stripe' | 'mobile_money';
@@ -114,9 +118,10 @@ export const CreditPaymentDialog = ({
       const popup = window.open('about:blank', '_blank');
 
       try {
-        const productionOrigin = getProductionOrigin();
-        const successUrl = `${productionOrigin}/credits?payment=success`;
-        const cancelUrl = `${productionOrigin}/credits?payment=cancelled`;
+        const { origin, isNative } = getRedirectOrigin();
+        const creditsPath = isNative ? 'credits' : '/credits';
+        const successUrl = `${origin}${creditsPath}?payment=success`;
+        const cancelUrl = `${origin}${creditsPath}?payment=cancelled`;
 
         const { data, error } = await supabase.functions.invoke('create-credits-checkout', {
           body: {

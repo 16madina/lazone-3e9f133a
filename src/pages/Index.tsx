@@ -270,22 +270,24 @@ const Index = () => {
             >
               <Link to="/credits">
                 <motion.div
-                  className="flex flex-col items-center gap-1 px-3 py-2 rounded-xl bg-gradient-to-br from-amber-500/90 to-orange-600/90 backdrop-blur-md border border-amber-400/30 shadow-lg cursor-pointer"
-                  whileHover={{ scale: 1.05, x: 5 }}
-                  whileTap={{ scale: 0.95 }}
+                  className="flex flex-col items-center gap-0.5 px-1.5 py-1.5 rounded-lg bg-gradient-to-br from-amber-500/90 to-orange-600/90 backdrop-blur-md border border-amber-400/30 shadow-lg cursor-pointer"
+                  whileHover={{ scale: 1.1, x: 3 }}
+                  whileTap={{ scale: 0.9 }}
                   animate={{
+                    y: [0, -3, 0],
                     boxShadow: [
                       '0 0 0 0 rgba(251, 191, 36, 0)',
-                      '0 0 20px 4px rgba(251, 191, 36, 0.4)',
+                      '0 0 15px 3px rgba(251, 191, 36, 0.5)',
                       '0 0 0 0 rgba(251, 191, 36, 0)',
                     ],
                   }}
                   transition={{
+                    y: { duration: 1.5, repeat: Infinity, ease: "easeInOut" },
                     boxShadow: { duration: 2, repeat: Infinity, ease: "easeInOut" }
                   }}
                 >
-                  <Sparkles className="w-5 h-5 text-white" />
-                  <span className="text-white text-xs font-semibold whitespace-nowrap writing-mode-vertical">
+                  <Sparkles className="w-3.5 h-3.5 text-white" />
+                  <span className="text-white text-[10px] font-semibold whitespace-nowrap writing-mode-vertical">
                     Nos offres
                   </span>
                 </motion.div>

@@ -25,7 +25,7 @@ import { useCredits } from '@/hooks/useCredits';
 import { useListingLimit } from '@/hooks/useListingLimit';
 import { CREDITS_PER_PRODUCT, SPONSORED_LISTINGS_PER_PRODUCT, PRODUCT_PRICES_FCFA } from '@/services/storeKitService';
 import { CreditPaymentDialog } from '@/components/credits/CreditPaymentDialog';
-import { convertUsdToLocal, parseUsdPrice, getCurrencyByCountry } from '@/data/currencies';
+import { convertUsdToLocal, convertUsdToLocalAmount, parseUsdPrice, getCurrencyByCountry } from '@/data/currencies';
 import { useToast } from '@/hooks/use-toast';
 
 const CreditsPage = () => {
@@ -108,49 +108,44 @@ const CreditsPage = () => {
   const isAgency = profile?.user_type === 'agence';
   const isPremiumUser = hasActiveSubscription && subscriptionType === 'premium';
   const isProUser = hasActiveSubscription && subscriptionType === 'pro';
-  
+
   // Use synchronized total from useListingLimit
   const totalAvailable = totalCreditsFromLimit;
 
   // Get user's country for local currency display
   const userCountry = profile?.country || null;
   const localCurrency = useMemo(() => getCurrencyByCountry(userCountry), [userCountry]);
-  
+
   // Helper to get local price estimate - ONLY for USD prices
-  // If the price is already in local currency (FCFA/XOF), don't show estimate
+  // If the price is already in local currency, don't show estimate
   const getLocalEstimate = (displayPrice: string): string | null => {
-    // Only convert if the price is in USD (contains $)
-    if (!displayPrice.includes('$')) {
-      return null; // Already in local currency, no conversion needed
-    }
+    if (!displayPrice.includes('$')) return null;
+
     const usdPrice = parseUsdPrice(displayPrice);
     if (!usdPrice) return null;
+
     return convertUsdToLocal(usdPrice, userCountry);
   };
 
-  // Parse price from display string or get from FCFA map
-  // ALWAYS prioritize PRODUCT_PRICES_FCFA for accurate local pricing
+  // Price used for Web/Android payments (Mobile Money) MUST match the displayed estimate.
+  // We keep the UI price in USD and compute the payable amount from the USD->local rate.
   const parsePrice = (productId: string, displayPrice: string): { amount: number; symbol: string } => {
-    // First check if we have the price in our FCFA map - this is the authoritative source
-    const fcfaPrice = PRODUCT_PRICES_FCFA[productId];
-    if (fcfaPrice !== undefined && fcfaPrice > 0) {
-      console.log(`[CreditsPage] Using FCFA price for ${productId}: ${fcfaPrice}`);
-      return { amount: fcfaPrice, symbol: 'FCFA' };
-    }
-    
-    // Fallback: try to parse from displayPrice if it's already in FCFA format
-    if (displayPrice.includes('FCFA') || displayPrice.includes('XOF')) {
-      const cleanPrice = displayPrice.replace(/[^\d]/g, '');
-      const amount = parseInt(cleanPrice, 10) || 0;
-      if (amount >= 100) { // Valid FCFA price (at least 100 FCFA)
-        console.log(`[CreditsPage] Parsed FCFA from displayPrice: ${amount}`);
-        return { amount, symbol: 'FCFA' };
+    const usdPrice = parseUsdPrice(displayPrice);
+    if (usdPrice && userCountry) {
+      const converted = convertUsdToLocalAmount(usdPrice, userCountry);
+      if (converted) {
+        return { amount: converted.amount, symbol: converted.currency.symbol };
       }
     }
-    
-    // Last resort fallback - shouldn't happen if PRODUCT_PRICES_FCFA is complete
-    console.warn(`[CreditsPage] No FCFA price found for ${productId}, using fallback`);
-    return { amount: 500, symbol: 'FCFA' }; // Default minimum price
+
+    // Fallback (should be rare): use fixed FCFA prices
+    const fcfaPrice = PRODUCT_PRICES_FCFA[productId];
+    if (fcfaPrice !== undefined && fcfaPrice > 0) {
+      return { amount: fcfaPrice, symbol: 'FCFA' };
+    }
+
+    // Last resort
+    return { amount: 500, symbol: 'FCFA' };
   };
 
   const handlePurchase = async (product: { id: string; displayName: string; displayPrice: string }) => {
@@ -158,10 +153,10 @@ const CreditsPage = () => {
     if (isIosNative) {
       await purchaseProduct(product.id);
     } else {
-      // On web/Android, show payment method dialog with FCFA prices
+      // On web/Android, show payment method dialog with LOCAL amount to pay
       const { amount, symbol } = parsePrice(product.id, product.displayPrice);
       const formattedPrice = new Intl.NumberFormat('fr-FR').format(amount) + ' ' + symbol;
-      
+
       setSelectedProduct({
         id: product.id,
         name: product.displayName,
@@ -172,6 +167,7 @@ const CreditsPage = () => {
       setPaymentDialogOpen(true);
     }
   };
+
 
   const handleRestore = async () => {
     await restorePurchases();
@@ -484,7 +480,7 @@ const CreditsPage = () => {
             <div className="flex items-start gap-2 p-3 bg-muted/50 rounded-lg">
               <Info className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
               <p className="text-xs text-muted-foreground">
-                Les montants en {localCurrency.symbol} sont des estimations. Le prix final sera converti par votre banque au taux du jour lors du paiement.
+                Les montants en {localCurrency.symbol} sont des estimations. Pour Mobile Money, vous payez le montant affiché ; pour carte bancaire, la conversion dépend de votre banque.
               </p>
             </div>
           )}

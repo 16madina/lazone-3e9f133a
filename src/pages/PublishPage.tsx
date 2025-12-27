@@ -156,6 +156,8 @@ const PublishPage = () => {
   const [description, setDescription] = useState('');
   const [address, setAddress] = useState('');
   const [city, setCity] = useState('');
+  const [customCity, setCustomCity] = useState('');
+  const [isCustomCity, setIsCustomCity] = useState(false);
   const [postalCode, setPostalCode] = useState('');
   const [price, setPrice] = useState('');
   const [area, setArea] = useState('');
@@ -163,6 +165,10 @@ const PublishPage = () => {
   // Country and city selection
   const [selectedCountry, setSelectedCountry] = useState('');
   const [availableCities, setAvailableCities] = useState<string[]>([]);
+  
+  // Commercial specific - Pas de porte
+  const [hasPasDePorte, setHasPasDePorte] = useState(false);
+  const [pasDePorteAmount, setPasDePorteAmount] = useState('');
   
   // Map state
   const [showMap, setShowMap] = useState(false);
@@ -1729,24 +1735,67 @@ const PublishPage = () => {
             {/* City Selector */}
             <div>
               <Label htmlFor="city">Ville <span className="text-destructive">*</span></Label>
-              <Select value={city} onValueChange={setCity} disabled={!selectedCountry}>
-                <SelectTrigger className={`mt-1 ${errors.city && touched.city ? 'border-destructive' : ''}`}>
-                  <SelectValue placeholder={selectedCountry ? "Sélectionner une ville" : "Sélectionnez d'abord un pays"} />
-                </SelectTrigger>
-                <SelectContent className="bg-card border shadow-lg z-50 max-h-64">
-                  {availableCities.map(cityName => (
-                    <SelectItem key={cityName} value={cityName}>
-                      {cityName}
+              {isCustomCity ? (
+                <div className="space-y-2">
+                  <Input
+                    id="customCity"
+                    value={customCity}
+                    onChange={(e) => {
+                      setCustomCity(e.target.value);
+                      setCity(e.target.value);
+                    }}
+                    placeholder="Entrez le nom de la ville"
+                    className={`mt-1 ${errors.city && touched.city ? 'border-destructive' : ''}`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsCustomCity(false);
+                      setCustomCity('');
+                      setCity('');
+                    }}
+                    className="text-xs text-primary hover:underline flex items-center gap-1"
+                  >
+                    ← Retour à la liste des villes
+                  </button>
+                </div>
+              ) : (
+                <Select 
+                  value={city} 
+                  onValueChange={(value) => {
+                    if (value === '__custom__') {
+                      setIsCustomCity(true);
+                      setCity('');
+                    } else {
+                      setCity(value);
+                    }
+                  }} 
+                  disabled={!selectedCountry}
+                >
+                  <SelectTrigger className={`mt-1 ${errors.city && touched.city ? 'border-destructive' : ''}`}>
+                    <SelectValue placeholder={selectedCountry ? "Sélectionner une ville" : "Sélectionnez d'abord un pays"} />
+                  </SelectTrigger>
+                  <SelectContent className="bg-card border shadow-lg z-50 max-h-64">
+                    {availableCities.map(cityName => (
+                      <SelectItem key={cityName} value={cityName}>
+                        {cityName}
+                      </SelectItem>
+                    ))}
+                    <SelectItem value="__custom__" className="text-primary font-medium border-t mt-1 pt-2">
+                      <div className="flex items-center gap-2">
+                        <Plus className="w-4 h-4" />
+                        Ajouter une autre ville
+                      </div>
                     </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                  </SelectContent>
+                </Select>
+              )}
               {touched.city && <ErrorMessage message={errors.city} />}
             </div>
 
             <div>
               <div className="flex items-center gap-2">
-                <Label htmlFor="address">Adresse <span className="text-destructive">*</span></Label>
+                <Label htmlFor="address">Quartier <span className="text-destructive">*</span></Label>
                 {isGeocoding && (
                   <span className="flex items-center gap-1 text-xs text-primary animate-pulse">
                     <Loader2 className="w-3 h-3 animate-spin" />
@@ -1765,7 +1814,7 @@ const PublishPage = () => {
                   handleBlur('address');
                   validateField('address', address);
                 }}
-                placeholder="Quartier, rue..."
+                placeholder="Nom du quartier..."
                 className={`mt-1 ${errors.address && touched.address ? 'border-destructive' : ''}`}
               />
               {touched.address && <ErrorMessage message={errors.address} />}
@@ -2117,11 +2166,59 @@ const PublishPage = () => {
               </Select>
             </div>
 
-            <div>
+            {/* Pas de porte - Only for commercial properties */}
+            {propertyType === 'commercial' && (
+              <div className="space-y-3">
+                <label className="flex items-center justify-between p-3 rounded-xl border bg-background cursor-pointer hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xl">🔑</span>
+                    <div>
+                      <p className="font-medium text-sm">Pas de porte</p>
+                      <p className="text-xs text-muted-foreground">Frais d'entrée pour le local</p>
+                    </div>
+                  </div>
+                  <Checkbox
+                    checked={hasPasDePorte}
+                    onCheckedChange={(checked) => {
+                      setHasPasDePorte(checked === true);
+                      if (!checked) setPasDePorteAmount('');
+                    }}
+                  />
+                </label>
+                
+                {hasPasDePorte && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    className="pl-4"
+                  >
+                    <Label>Montant du pas de porte</Label>
+                    <div className="relative mt-1">
+                      <Input
+                        type="number"
+                        value={pasDePorteAmount}
+                        onChange={(e) => setPasDePorteAmount(e.target.value)}
+                        placeholder="0"
+                        className="pr-16"
+                      />
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground">
+                        FCFA
+                      </span>
+                    </div>
+                  </motion.div>
+                )}
+              </div>
+            )}
+
+            <div className={propertyType === 'commercial' && hasPasDePorte ? 'opacity-50' : ''}>
               <Label className="flex items-center gap-2">
                 <Wallet className="w-4 h-4" /> Caution (nombre de mois)
               </Label>
-              <Select value={depositMonths} onValueChange={setDepositMonths}>
+              <Select 
+                value={depositMonths} 
+                onValueChange={setDepositMonths}
+                disabled={propertyType === 'commercial' && hasPasDePorte}
+              >
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder="Sélectionner" />
                 </SelectTrigger>
@@ -2133,6 +2230,11 @@ const PublishPage = () => {
                   ))}
                 </SelectContent>
               </Select>
+              {propertyType === 'commercial' && hasPasDePorte && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Désactivé car pas de porte sélectionné
+                </p>
+              )}
             </div>
           </motion.div>
         )}

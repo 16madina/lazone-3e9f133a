@@ -60,12 +60,12 @@ export const usePlatformPayment = (): UsePlatformPaymentReturn => {
     // Check if we're in a Capacitor native environment
     if (Capacitor.isNativePlatform()) {
       // Use the deployed app URL for redirects
-      return 'https://lazone.lovable.app';
+      return 'https://lazoneapp.com';
     }
     // For web, use actual origin but fallback to production if localhost
     const origin = window.location.origin;
     if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
-      return 'https://lazone.lovable.app';
+      return 'https://lazoneapp.com';
     }
     return origin;
   };

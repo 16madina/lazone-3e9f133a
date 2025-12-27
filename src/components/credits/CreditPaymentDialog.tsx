@@ -31,11 +31,11 @@ import { Capacitor } from '@capacitor/core';
 // Helper to get production URL for Stripe redirects
 const getProductionOrigin = (): string => {
   if (Capacitor.isNativePlatform()) {
-    return 'https://lazone.lovable.app';
+    return 'https://lazoneapp.com';
   }
   const origin = window.location.origin;
   if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
-    return 'https://lazone.lovable.app';
+    return 'https://lazoneapp.com';
   }
   return origin;
 };

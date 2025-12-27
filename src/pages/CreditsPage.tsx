@@ -116,8 +116,13 @@ const CreditsPage = () => {
   const userCountry = profile?.country || null;
   const localCurrency = useMemo(() => getCurrencyByCountry(userCountry), [userCountry]);
   
-  // Helper to get local price estimate
+  // Helper to get local price estimate - ONLY for USD prices
+  // If the price is already in local currency (FCFA/XOF), don't show estimate
   const getLocalEstimate = (displayPrice: string): string | null => {
+    // Only convert if the price is in USD (contains $)
+    if (!displayPrice.includes('$')) {
+      return null; // Already in local currency, no conversion needed
+    }
     const usdPrice = parseUsdPrice(displayPrice);
     if (!usdPrice) return null;
     return convertUsdToLocal(usdPrice, userCountry);

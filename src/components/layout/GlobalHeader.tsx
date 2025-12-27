@@ -12,7 +12,8 @@ const pagesWithCustomHeader = [
   '/credits',
   '/my-listings',
   '/settings/edit-profile',
-  '/map'
+  '/map',
+  '/messages'
 ];
 
 // Pages that should not show the header at all

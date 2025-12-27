@@ -26,6 +26,19 @@ import { usePaymentNumbers } from '@/hooks/usePaymentNumbers';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import waveLogo from '@/assets/wave-logo.png';
+import { Capacitor } from '@capacitor/core';
+
+// Helper to get production URL for Stripe redirects
+const getProductionOrigin = (): string => {
+  if (Capacitor.isNativePlatform()) {
+    return 'https://lazone.lovable.app';
+  }
+  const origin = window.location.origin;
+  if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+    return 'https://lazone.lovable.app';
+  }
+  return origin;
+};
 
 type PaymentMethod = 'stripe' | 'mobile_money';
 type PaymentStep = 'choose' | 'mobile_money' | 'stripe_fallback' | 'processing' | 'submitted';
@@ -101,8 +114,9 @@ export const CreditPaymentDialog = ({
       const popup = window.open('about:blank', '_blank');
 
       try {
-        const successUrl = `${window.location.origin}/credits?payment=success`;
-        const cancelUrl = `${window.location.origin}/credits?payment=cancelled`;
+        const productionOrigin = getProductionOrigin();
+        const successUrl = `${productionOrigin}/credits?payment=success`;
+        const cancelUrl = `${productionOrigin}/credits?payment=cancelled`;
 
         const { data, error } = await supabase.functions.invoke('create-credits-checkout', {
           body: {

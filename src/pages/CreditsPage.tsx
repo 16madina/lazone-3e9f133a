@@ -23,7 +23,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/hooks/useAuth';
 import { useCredits } from '@/hooks/useCredits';
 import { useListingLimit } from '@/hooks/useListingLimit';
-import { CREDITS_PER_PRODUCT, SPONSORED_LISTINGS_PER_PRODUCT } from '@/services/storeKitService';
+import { CREDITS_PER_PRODUCT, SPONSORED_LISTINGS_PER_PRODUCT, PRODUCT_PRICES_FCFA } from '@/services/storeKitService';
 import { CreditPaymentDialog } from '@/components/credits/CreditPaymentDialog';
 import { convertUsdToLocal, parseUsdPrice, getCurrencyByCountry } from '@/data/currencies';
 
@@ -108,12 +108,25 @@ const CreditsPage = () => {
     return convertUsdToLocal(usdPrice, userCountry);
   };
 
-  // Parse price from display string (e.g., "500 FCFA" -> { amount: 500, symbol: "FCFA" })
-  const parsePrice = (displayPrice: string): { amount: number; symbol: string } => {
-    const parts = displayPrice.replace(/\s+/g, ' ').trim().split(' ');
-    const amount = parseInt(parts[0].replace(/[^\d]/g, ''), 10) || 0;
-    const symbol = parts[1] || 'FCFA';
-    return { amount, symbol };
+  // Parse price from display string or get from FCFA map
+  const parsePrice = (productId: string, displayPrice: string): { amount: number; symbol: string } => {
+    // First check if we have the price in our FCFA map
+    const fcfaPrice = PRODUCT_PRICES_FCFA[productId];
+    if (fcfaPrice) {
+      return { amount: fcfaPrice, symbol: 'FCFA' };
+    }
+    
+    // Fallback: try to parse from displayPrice
+    const cleanPrice = displayPrice.replace(/[^\d\s]/g, ' ').trim();
+    const parts = cleanPrice.split(/\s+/);
+    const amount = parseInt(parts[0], 10) || 0;
+    
+    // Detect symbol
+    if (displayPrice.includes('FCFA')) return { amount, symbol: 'FCFA' };
+    if (displayPrice.includes('XOF')) return { amount, symbol: 'FCFA' };
+    if (displayPrice.includes('$')) return { amount, symbol: 'USD' };
+    
+    return { amount, symbol: 'FCFA' };
   };
 
   const handlePurchase = async (product: { id: string; displayName: string; displayPrice: string }) => {
@@ -121,14 +134,16 @@ const CreditsPage = () => {
     if (isIosNative) {
       await purchaseProduct(product.id);
     } else {
-      // On web/Android, show payment method dialog
-      const { amount, symbol } = parsePrice(product.displayPrice);
+      // On web/Android, show payment method dialog with FCFA prices
+      const { amount, symbol } = parsePrice(product.id, product.displayPrice);
+      const formattedPrice = new Intl.NumberFormat('fr-FR').format(amount) + ' ' + symbol;
+      
       setSelectedProduct({
         id: product.id,
         name: product.displayName,
         price: amount,
         symbol,
-        displayPrice: product.displayPrice,
+        displayPrice: formattedPrice,
       });
       setPaymentDialogOpen(true);
     }

@@ -73,6 +73,15 @@ interface StoreKitPlugin {
   getReceiptData(): Promise<{ success: boolean; entitlements: StoreKitEntitlement[]; receiptData?: string }>;
 }
 
+// Prices in FCFA for web/Android display
+export const PRODUCT_PRICES_FCFA: Record<string, number> = {
+  [PRODUCT_IDS.LISTING_SINGLE]: 500,
+  [PRODUCT_IDS.LISTING_PACK_5]: 2250,
+  [PRODUCT_IDS.LISTING_PACK_10]: 4000,
+  [PRODUCT_IDS.SUB_PRO_MONTHLY]: 12000,
+  [PRODUCT_IDS.SUB_PREMIUM_MONTHLY]: 25000,
+};
+
 // Mock implementation ONLY for web development - NOT for iOS
 const mockStoreKit: StoreKitPlugin = {
   async initialize() {
@@ -86,32 +95,32 @@ const mockStoreKit: StoreKitPlugin = {
         id: PRODUCT_IDS.LISTING_SINGLE,
         displayName: '1 Crédit Annonce',
         description: 'Publiez une annonce immobilière',
-        price: '0.99',
-        displayPrice: '$0.99',
+        price: '500',
+        displayPrice: '500 FCFA',
         type: 'consumable',
       },
       {
         id: PRODUCT_IDS.LISTING_PACK_5,
         displayName: 'Pack 5 Crédits',
-        description: '5 annonces - Économisez 20%',
-        price: '3.99',
-        displayPrice: '$3.99',
+        description: '5 annonces - Économisez 10%',
+        price: '2250',
+        displayPrice: '2 250 FCFA',
         type: 'consumable',
       },
       {
         id: PRODUCT_IDS.LISTING_PACK_10,
         displayName: 'Pack 10 Crédits',
-        description: '10 annonces - Économisez 30%',
-        price: '6.99',
-        displayPrice: '$6.99',
+        description: '10 annonces - Économisez 20%',
+        price: '4000',
+        displayPrice: '4 000 FCFA',
         type: 'consumable',
       },
       {
         id: PRODUCT_IDS.SUB_PRO_MONTHLY,
         displayName: 'Abonnement Pro',
         description: '15 crédits/mois + 1 sponsoring + Badge Pro',
-        price: '7.99',
-        displayPrice: '$7.99/mois',
+        price: '12000',
+        displayPrice: '12 000 FCFA/mois',
         type: 'autoRenewable',
         subscriptionPeriod: { unit: 'month', value: 1 },
       },
@@ -119,8 +128,8 @@ const mockStoreKit: StoreKitPlugin = {
         id: PRODUCT_IDS.SUB_PREMIUM_MONTHLY,
         displayName: 'Abonnement Premium',
         description: '30 crédits/mois + 2 sponsorings + Support prioritaire',
-        price: '12.99',
-        displayPrice: '$12.99/mois',
+        price: '25000',
+        displayPrice: '25 000 FCFA/mois',
         type: 'autoRenewable',
         subscriptionPeriod: { unit: 'month', value: 1 },
       },

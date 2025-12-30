@@ -220,27 +220,26 @@ const Index = () => {
         <Link
           to="/profile"
           state={{ openReferral: true }}
-          className="fixed left-0 top-1/2 -translate-y-1/2 z-50"
+          className="fixed left-0 top-1/3 z-50"
         >
           <motion.div
-            initial={{ x: -100 }}
+            initial={{ x: -50 }}
             animate={{ x: 0 }}
             transition={{ delay: 0.5, type: "spring", stiffness: 100 }}
-            className="flex items-center"
           >
             <motion.div
               animate={{ 
                 boxShadow: [
                   "0 0 0 0 rgba(249, 115, 22, 0.4)",
-                  "0 0 0 10px rgba(249, 115, 22, 0)",
+                  "0 0 0 6px rgba(249, 115, 22, 0)",
                   "0 0 0 0 rgba(249, 115, 22, 0)"
                 ]
               }}
               transition={{ duration: 2, repeat: Infinity }}
-              className="bg-gradient-to-b from-primary to-primary/80 text-white py-4 px-2 rounded-r-xl shadow-lg flex flex-col items-center gap-2 hover:from-primary/90 hover:to-primary/70 transition-colors"
+              className="bg-gradient-to-b from-primary to-primary/80 text-white py-2 px-1 rounded-r-lg shadow-md flex flex-col items-center gap-1 hover:from-primary/90 hover:to-primary/70 transition-colors"
             >
-              <Gift className="w-5 h-5" />
-              <span className="text-xs font-bold tracking-wide" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>
+              <Gift className="w-3.5 h-3.5" />
+              <span className="text-[8px] font-bold tracking-tight" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>
                 PARRAINAGE
               </span>
             </motion.div>

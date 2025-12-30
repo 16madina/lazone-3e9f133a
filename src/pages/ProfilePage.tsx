@@ -838,10 +838,16 @@ const ProfilePage = () => {
                   </div>
                   
                   {/* FREE MODE: Credits and Sponsoring buttons hidden - keep for future re-activation */}
-                  {/* Show remaining free listings only */}
-                  <div className="flex items-center gap-1.5 text-xs text-emerald-600 font-medium ml-7">
-                    <Coins className="w-3.5 h-3.5" />
-                    <span>{remainingFreeListings} annonces gratuites restantes</span>
+                  {/* Show remaining free credits with renewal date */}
+                  <div className="flex flex-col gap-0.5 ml-7">
+                    <div className="flex items-center gap-1.5 text-xs text-emerald-600 font-medium">
+                      <Coins className="w-3.5 h-3.5" />
+                      <span>{remainingFreeListings} crédits restants</span>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                      <RefreshCw className="w-3 h-3" />
+                      Renouvellement le {format(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1), "d MMMM yyyy", { locale: fr })}
+                    </span>
                   </div>
                 </div>
               </div>

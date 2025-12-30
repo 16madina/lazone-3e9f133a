@@ -274,8 +274,10 @@ const ProfilePage = () => {
   const { activeSubscription } = useCredits();
   const { 
     settings: listingSettings, 
-    availableCredits, 
+    availableCredits,
+    freeMonthlyCredits,
     remainingFreeListings,
+    subscriptionCreditsRemaining,
     hasActiveSubscription,
     subscriptionType 
   } = useListingLimit();
@@ -905,13 +907,99 @@ const ProfilePage = () => {
                 <span className="text-[10px] font-medium text-center">Modifier</span>
               </button>
 
-              {/* Crédits restants */}
-              <div className="flex flex-col items-center gap-1 p-2 bg-muted/50 rounded-xl">
-                <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                  <Coins className="w-4 h-4 text-emerald-600" />
-                </div>
-                <span className="text-[10px] font-medium text-center">{remainingFreeListings} crédits</span>
-              </div>
+              {/* Crédits restants - Clickable with Sheet */}
+              <Sheet>
+                <SheetTrigger asChild>
+                  <button className="flex flex-col items-center gap-1 p-2 bg-muted/50 rounded-xl hover:bg-muted transition-colors">
+                    <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                      <Coins className="w-4 h-4 text-emerald-600" />
+                    </div>
+                    <span className="text-[10px] font-medium text-center">{availableCredits} crédits</span>
+                  </button>
+                </SheetTrigger>
+                <SheetContent side="bottom" className="rounded-t-3xl">
+                  <SheetHeader className="text-left pb-4 border-b border-border">
+                    <SheetTitle className="flex items-center gap-2">
+                      <Coins className="w-5 h-5 text-emerald-600" />
+                      Mes Crédits
+                    </SheetTitle>
+                  </SheetHeader>
+                  
+                  <div className="py-6 space-y-6">
+                    {/* Current Credits */}
+                    <div className="text-center">
+                      <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-emerald-500/10 mb-3">
+                        <span className="text-3xl font-bold text-emerald-600">{availableCredits}</span>
+                      </div>
+                      <p className="text-lg font-semibold">Crédits disponibles</p>
+                      <p className="text-sm text-muted-foreground">
+                        Partagés entre les modes Immobilier et Résidence
+                      </p>
+                    </div>
+
+                    {/* Credits Breakdown */}
+                    <div className="space-y-3">
+                      <h4 className="font-medium text-sm text-muted-foreground">Détails</h4>
+                      
+                      <div className="flex items-center justify-between p-3 bg-muted/50 rounded-xl">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                            <RefreshCw className="w-5 h-5 text-emerald-600" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-sm">Crédits mensuels</p>
+                            <p className="text-xs text-muted-foreground">Renouvelés chaque mois</p>
+                          </div>
+                        </div>
+                        <span className="font-bold text-emerald-600">{remainingFreeListings}</span>
+                      </div>
+
+                      {subscriptionCreditsRemaining > 0 && (
+                        <div className="flex items-center justify-between p-3 bg-muted/50 rounded-xl">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                              <Crown className="w-5 h-5 text-primary" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-sm">Abonnement {subscriptionType}</p>
+                              <p className="text-xs text-muted-foreground">Crédits premium</p>
+                            </div>
+                          </div>
+                          <span className="font-bold text-primary">{subscriptionCreditsRemaining}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Renewal Info */}
+                    <div className="p-4 bg-muted/30 rounded-xl border border-border">
+                      <div className="flex items-start gap-3">
+                        <Calendar className="w-5 h-5 text-muted-foreground mt-0.5" />
+                        <div>
+                          <p className="font-medium text-sm">Renouvellement mensuel</p>
+                          <p className="text-xs text-muted-foreground">
+                            Vos crédits gratuits sont renouvelés chaque mois à la date de votre inscription. 
+                            Les crédits non utilisés ne sont pas cumulables.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Usage Info */}
+                    <div className="p-4 bg-primary/5 rounded-xl border border-primary/10">
+                      <div className="flex items-start gap-3">
+                        <Home className="w-5 h-5 text-primary mt-0.5" />
+                        <div>
+                          <p className="font-medium text-sm">Comment utiliser vos crédits</p>
+                          <p className="text-xs text-muted-foreground">
+                            Chaque publication d'annonce consomme 1 crédit. Les crédits sont utilisés dans l'ordre : 
+                            gratuits mensuels, puis abonnement, puis packs achetés.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </SheetContent>
+              </Sheet>
 
               {/* Parrainage */}
               <ReferralSheet

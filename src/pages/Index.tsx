@@ -350,10 +350,10 @@ const Index = () => {
             <FilterChips variant="hero" />
           </div>
 
-          {/* FREE MODE: Sponsored Properties hidden - keep for future re-activation */}
-          {/* <div className="mt-6">
+          {/* Sponsored Properties */}
+          <div className="mt-6">
             <SponsoredPropertiesSection userCountry={selectedCountry?.code} />
-          </div> */}
+          </div>
         </div>
       </div>
 

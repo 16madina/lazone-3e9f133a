@@ -261,38 +261,7 @@ const Index = () => {
 
           {/* Hero Content with Logo */}
           <div className="text-center mb-8 relative">
-            {/* Floating "Nos offres" button on left */}
-            <motion.div
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-20"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.5, duration: 0.4 }}
-            >
-              <Link to="/credits">
-                <motion.div
-                  className="flex flex-col items-center gap-0.5 px-1.5 py-1.5 rounded-lg bg-gradient-to-br from-amber-500/90 to-orange-600/90 backdrop-blur-md border border-amber-400/30 shadow-lg cursor-pointer"
-                  whileHover={{ scale: 1.1, x: 3 }}
-                  whileTap={{ scale: 0.9 }}
-                  animate={{
-                    y: [0, -3, 0],
-                    boxShadow: [
-                      '0 0 0 0 rgba(251, 191, 36, 0)',
-                      '0 0 15px 3px rgba(251, 191, 36, 0.5)',
-                      '0 0 0 0 rgba(251, 191, 36, 0)',
-                    ],
-                  }}
-                  transition={{
-                    y: { duration: 1.5, repeat: Infinity, ease: "easeInOut" },
-                    boxShadow: { duration: 2, repeat: Infinity, ease: "easeInOut" }
-                  }}
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-white" />
-                  <span className="text-white text-[10px] font-semibold whitespace-nowrap writing-mode-vertical">
-                    Nos offres
-                  </span>
-                </motion.div>
-              </Link>
-            </motion.div>
+            {/* FREE MODE: Hidden "Nos offres" button - keep for future re-activation */}
 
             <AppLogo className="h-24 mx-auto mb-4" />
             <AnimatePresence mode="wait">
@@ -348,10 +317,10 @@ const Index = () => {
             <FilterChips variant="hero" />
           </div>
 
-          {/* Sponsored Properties */}
-          <div className="mt-6">
+          {/* FREE MODE: Sponsored Properties hidden - keep for future re-activation */}
+          {/* <div className="mt-6">
             <SponsoredPropertiesSection userCountry={selectedCountry?.code} />
-          </div>
+          </div> */}
         </div>
       </div>
 

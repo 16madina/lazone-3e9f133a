@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Loader2, Info, Sparkles } from 'lucide-react';
+import { Loader2, Info, Sparkles, Gift } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { SearchBar } from '@/components/home/SearchBar';
 import { FilterChips } from '@/components/home/FilterChips';
 import { SponsoredPropertiesSection } from '@/components/home/SponsoredPropertiesSection';
@@ -261,7 +261,17 @@ const Index = () => {
 
           {/* Hero Content with Logo */}
           <div className="text-center mb-8 relative">
-            {/* FREE MODE: Hidden "Nos offres" button - keep for future re-activation */}
+            {/* Parrainage Button - Left side */}
+            {user && (
+              <Link
+                to="/profile"
+                state={{ openReferral: true }}
+                className="absolute left-0 top-0 flex items-center gap-1.5 px-3 py-1.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-white text-xs font-medium hover:bg-white/20 transition-colors"
+              >
+                <Gift className="w-3.5 h-3.5" />
+                <span>Parrainage</span>
+              </Link>
+            )}
 
             <AppLogo className="h-24 mx-auto mb-4" />
             <AnimatePresence mode="wait">

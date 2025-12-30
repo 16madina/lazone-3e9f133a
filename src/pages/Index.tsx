@@ -220,7 +220,7 @@ const Index = () => {
         <Link
           to="/profile"
           state={{ openReferral: true }}
-          className="fixed left-0 top-1/3 z-50"
+          className="fixed left-0 top-[28%] z-50"
         >
           <motion.div
             initial={{ x: -50 }}
@@ -236,7 +236,7 @@ const Index = () => {
                 ]
               }}
               transition={{ duration: 2, repeat: Infinity }}
-              className="bg-gradient-to-b from-primary to-primary/80 text-white py-2 px-1 rounded-r-lg shadow-md flex flex-col items-center gap-1 hover:from-primary/90 hover:to-primary/70 transition-colors"
+              className="bg-gradient-to-b from-primary to-primary/80 text-white py-2 px-1.5 rounded-r-lg shadow-md flex flex-col items-center gap-1 hover:from-primary/90 hover:to-primary/70 transition-colors"
             >
               <Gift className="w-3.5 h-3.5" />
               <span className="text-[8px] font-bold tracking-tight" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>

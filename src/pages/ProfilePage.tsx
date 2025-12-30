@@ -74,7 +74,7 @@ import { BlockedDatesManager } from '@/components/appointment/BlockedDatesManage
 import { useCredits } from '@/hooks/useCredits';
 import { useListingLimit } from '@/hooks/useListingLimit';
 import { useSponsoredListings } from '@/hooks/useSponsoredListings';
-import { ReferralCard } from '@/components/referral/ReferralCard';
+import { ReferralSheet } from '@/components/referral/ReferralSheet';
 
 type TabType = 'annonces' | 'rdv' | 'favoris' | 'parametres';
 
@@ -806,50 +806,45 @@ const ProfilePage = () => {
                 </div>
                 
                 {/* Profile Actions - Stacked vertically */}
-                <div className="mt-4 flex flex-col gap-1.5">
-                  {/* Edit Profile */}
-                  <div className="flex items-center gap-2">
-                    <Sheet open={showProfileSheet} onOpenChange={setShowProfileSheet}>
-                      <SheetTrigger asChild>
-                        <button 
-                          data-tutorial="profile-info"
-                          className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md hover:bg-primary/90 transition-colors"
-                        >
-                          <User className="w-4 h-4" />
-                        </button>
-                      </SheetTrigger>
-                      <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto rounded-t-2xl">
-                        <SheetHeader>
-                          <SheetTitle className="flex items-center gap-2">
-                            <User className="w-5 h-5 text-primary" />
-                            Mon Profil
-                          </SheetTitle>
-                        </SheetHeader>
-                        <div className="mt-4">
-                          <ProfileInfoSheet user={user} reviews={reviews} reviewsLoading={reviewsLoading} />
-                        </div>
-                      </SheetContent>
-                    </Sheet>
-                    <button
-                      onClick={() => navigate('/settings/edit-profile')}
-                      className="text-xs text-primary font-medium hover:underline"
-                    >
-                      Modifier le profil
-                    </button>
-                  </div>
-                  
-                  {/* FREE MODE: Credits and Sponsoring buttons hidden - keep for future re-activation */}
-                  {/* Show remaining free credits with renewal date */}
-                  <div className="flex flex-col gap-0.5 ml-7">
-                    <div className="flex items-center gap-1.5 text-xs text-emerald-600 font-medium">
-                      <Coins className="w-3.5 h-3.5" />
-                      <span>{remainingFreeListings} crédits restants</span>
+                <div className="mt-4 space-y-2">
+                  {/* Modifier le profil */}
+                  <button
+                    onClick={() => navigate('/settings/edit-profile')}
+                    className="w-full flex items-center gap-3 p-3 bg-muted/50 rounded-xl hover:bg-muted transition-colors"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Edit className="w-4 h-4 text-primary" />
                     </div>
-                    <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                      <RefreshCw className="w-3 h-3" />
-                      Renouvellement le {format(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1), "d MMMM yyyy", { locale: fr })}
-                    </span>
+                    <span className="text-sm font-medium">Modifier le profil</span>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground ml-auto" />
+                  </button>
+
+                  {/* Crédits restants */}
+                  <div className="w-full flex items-center gap-3 p-3 bg-muted/50 rounded-xl">
+                    <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                      <Coins className="w-4 h-4 text-emerald-600" />
+                    </div>
+                    <div className="flex-1">
+                      <span className="text-sm font-medium">{remainingFreeListings} crédits restants</span>
+                      <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                        <RefreshCw className="w-3 h-3" />
+                        Renouvellement le {format(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1), "d MMM yyyy", { locale: fr })}
+                      </p>
+                    </div>
                   </div>
+
+                  {/* Parrainage */}
+                  <ReferralSheet
+                    trigger={
+                      <button className="w-full flex items-center gap-3 p-3 bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl hover:from-primary/10 hover:to-primary/15 transition-colors border border-primary/10">
+                        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                          <Share2 className="w-4 h-4 text-primary" />
+                        </div>
+                        <span className="text-sm font-medium">Parrainage</span>
+                        <ChevronRight className="w-4 h-4 text-muted-foreground ml-auto" />
+                      </button>
+                    }
+                  />
                 </div>
               </div>
 
@@ -1258,9 +1253,6 @@ const ProfilePage = () => {
 
             {activeTab === 'parametres' && (
               <div className="space-y-6">
-                {/* Referral Card */}
-                <ReferralCard />
-
                 {/* Compte */}
                 <div>
                   <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-1">Compte</h3>

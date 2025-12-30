@@ -244,12 +244,58 @@ const CreditsPage = () => {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-destructive/10 border border-destructive/30 rounded-xl p-3 flex items-center gap-3"
+            className="bg-destructive/10 border border-destructive/30 rounded-xl p-4 space-y-3"
           >
-            <AlertCircle className="w-5 h-5 text-destructive" />
-            <p className="text-sm text-destructive">
-              {storeKitError}
-            </p>
+            <div className="flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-destructive shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-destructive">
+                  Erreur de chargement
+                </p>
+                <p className="text-xs text-destructive/80 mt-0.5">
+                  {storeKitError}
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full border-destructive/30 text-destructive hover:bg-destructive/10"
+              onClick={() => window.location.reload()}
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Réessayer
+            </Button>
+          </motion.div>
+        )}
+
+        {/* Empty products warning (when initialized but no products loaded) */}
+        {initialized && !loading && creditPacks.length === 0 && subscriptions.length === 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 space-y-3"
+          >
+            <div className="flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
+                  Produits non disponibles
+                </p>
+                <p className="text-xs text-amber-600/80 dark:text-amber-500/80 mt-0.5">
+                  Impossible de charger les abonnements et crédits. Vérifiez votre connexion internet.
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full border-amber-500/30 text-amber-700 dark:text-amber-400 hover:bg-amber-500/10"
+              onClick={() => window.location.reload()}
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Réessayer
+            </Button>
           </motion.div>
         )}
 
@@ -511,7 +557,7 @@ const CreditsPage = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
-          className="space-y-2 px-4"
+          className="space-y-3 px-4"
         >
           <p className="text-center text-sm text-muted-foreground">
             Les crédits sont utilisés pour publier des annonces. Les abonnements se renouvellent automatiquement chaque mois.
@@ -524,6 +570,26 @@ const CreditsPage = () => {
               </p>
             </div>
           )}
+          
+          {/* Legal links - Required by Apple Guideline 3.1.2 */}
+          <div className="text-center space-y-1 pt-2">
+            <p className="text-xs text-muted-foreground">
+              En achetant, vous acceptez nos{' '}
+              <button 
+                onClick={() => navigate('/settings/legal/terms')}
+                className="text-primary underline hover:text-primary/80 transition-colors"
+              >
+                Conditions d'utilisation
+              </button>
+              {' '}et notre{' '}
+              <button 
+                onClick={() => navigate('/settings/legal/privacy')}
+                className="text-primary underline hover:text-primary/80 transition-colors"
+              >
+                Politique de confidentialité
+              </button>
+            </p>
+          </div>
         </motion.div>
       </div>
 

@@ -75,6 +75,7 @@ import { useCredits } from '@/hooks/useCredits';
 import { useListingLimit } from '@/hooks/useListingLimit';
 import { useSponsoredListings } from '@/hooks/useSponsoredListings';
 import { ReferralSheet } from '@/components/referral/ReferralSheet';
+import { ProPremiumBadge, getProPremiumLevel } from '@/components/ProPremiumBadge';
 
 type TabType = 'annonces' | 'rdv' | 'favoris' | 'parametres';
 
@@ -289,6 +290,7 @@ const ProfilePage = () => {
   const premiumMonthlyLimit = listingSettings?.premium_monthly_limit ?? 30;
   const [sendingEmail, setSendingEmail] = useState(false);
   const [propertiesCount, setPropertiesCount] = useState(0);
+  const [totalListingsCount, setTotalListingsCount] = useState(0); // For Pro/Premium badge
   const [properties, setProperties] = useState<Property[]>([]);
   const [favoriteProperties, setFavoriteProperties] = useState<Property[]>([]);
   const [loadingProperties, setLoadingProperties] = useState(false);
@@ -342,12 +344,21 @@ const ProfilePage = () => {
 
   const fetchPropertiesCount = async () => {
     if (!user) return;
+    // Count for current mode
     const { count } = await supabase
       .from('properties')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', user.id)
       .eq('listing_type', listingType);
     setPropertiesCount(count || 0);
+    
+    // Count total listings for Pro/Premium badge (all modes, active only)
+    const { count: totalCount } = await supabase
+      .from('properties')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('is_active', true);
+    setTotalListingsCount(totalCount || 0);
   };
 
   const fetchProperties = async () => {
@@ -812,17 +823,9 @@ const ProfilePage = () => {
                       </div>
                     )}
                     
-                    {/* Premium/Pro Diagonal Ribbon Badge */}
-                    {activeSubscription && (
-                      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                        <div className={`absolute top-[6px] -left-[22px] w-[80px] text-center py-[1px] text-[7px] font-bold text-white uppercase tracking-wider shadow-md transform -rotate-45 ${
-                          activeSubscription.product_id.includes('premium') 
-                            ? 'bg-gradient-to-r from-amber-500 to-orange-500' 
-                            : 'bg-gradient-to-r from-purple-500 to-pink-500'
-                        }`}>
-                          {activeSubscription.product_id.includes('premium') ? 'Premium' : 'Pro'}
-                        </div>
-                      </div>
+                    {/* Pro/Premium Diagonal Ribbon Badge based on listings count */}
+                    {totalListingsCount >= 5 && (
+                      <ProPremiumBadge listingsCount={totalListingsCount} variant="ribbon" />
                     )}
                     
                     {/* Overlay on hover */}

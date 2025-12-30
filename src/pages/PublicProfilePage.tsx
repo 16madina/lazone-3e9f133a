@@ -18,6 +18,7 @@ import { Property } from '@/hooks/useProperties';
 import { toast } from '@/hooks/use-toast';
 import { VendorBadge, BadgeLevel } from '@/components/VendorBadge';
 import { UserTypeBadge } from '@/components/UserTypeBadge';
+import { ProPremiumBadge } from '@/components/ProPremiumBadge';
 
 interface UserProfile {
   id: string;
@@ -65,6 +66,7 @@ const PublicProfilePage = () => {
   const [userBadge, setUserBadge] = useState<BadgeLevel>('none');
   const [activeTab, setActiveTab] = useState<ProfileTab>('immobilier');
   const [userSubscription, setUserSubscription] = useState<{ subscription_type: string } | null>(null);
+  const [totalListingsCount, setTotalListingsCount] = useState(0);
 
   useEffect(() => {
     if (userId) {
@@ -153,6 +155,9 @@ const PublicProfilePage = () => {
       
       setImmobilierProperties(immobilier);
       setResidenceProperties(residence);
+      
+      // Set total listings count for Pro/Premium badge
+      setTotalListingsCount(transformedProperties.length);
     } catch (error) {
       console.error('Error fetching properties:', error);
     } finally {
@@ -394,17 +399,9 @@ const PublicProfilePage = () => {
                   }}
                 />
                 
-                {/* Premium/Pro Diagonal Ribbon Badge */}
-                {userSubscription && (
-                  <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                    <div className={`absolute top-[10px] -left-[26px] w-[90px] text-center py-[2px] text-[7px] font-bold text-white uppercase tracking-wider shadow-md transform -rotate-45 ${
-                      userSubscription.subscription_type.includes('premium') 
-                        ? 'bg-gradient-to-r from-amber-500 to-orange-500' 
-                        : 'bg-gradient-to-r from-purple-500 to-pink-500'
-                    }`}>
-                      {userSubscription.subscription_type.includes('premium') ? 'Premium' : 'Pro'}
-                    </div>
-                  </div>
+                {/* Pro/Premium Diagonal Ribbon Badge based on listings count */}
+                {totalListingsCount >= 5 && (
+                  <ProPremiumBadge listingsCount={totalListingsCount} variant="ribbon" />
                 )}
               </div>
               

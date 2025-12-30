@@ -954,20 +954,7 @@ const ProfilePage = () => {
                         <span className="font-bold text-emerald-600">{remainingFreeListings}</span>
                       </div>
 
-                      {subscriptionCreditsRemaining > 0 && (
-                        <div className="flex items-center justify-between p-3 bg-muted/50 rounded-xl">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                              <Crown className="w-5 h-5 text-primary" />
-                            </div>
-                            <div>
-                              <p className="font-medium text-sm">Abonnement {subscriptionType}</p>
-                              <p className="text-xs text-muted-foreground">Crédits premium</p>
-                            </div>
-                          </div>
-                          <span className="font-bold text-primary">{subscriptionCreditsRemaining}</span>
-                        </div>
-                      )}
+                      {/* Subscription section hidden for Apple compliance */}
                     </div>
 
                     {/* Renewal Info */}
@@ -991,8 +978,7 @@ const ProfilePage = () => {
                         <div>
                           <p className="font-medium text-sm">Comment utiliser vos crédits</p>
                           <p className="text-xs text-muted-foreground">
-                            Chaque publication d'annonce consomme 1 crédit. Les crédits sont utilisés dans l'ordre : 
-                            gratuits mensuels, puis abonnement, puis packs achetés.
+                            Chaque publication d'annonce consomme 1 crédit.
                           </p>
                         </div>
                       </div>

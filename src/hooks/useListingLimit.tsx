@@ -65,6 +65,7 @@ export const useListingLimit = () => {
   const [settings, setSettings] = useState<ListingLimitSettings | null>(null);
   const [userListingsCount, setUserListingsCount] = useState<number>(0);
   const [availableCredits, setAvailableCredits] = useState<number>(0);
+  const [freeMonthlyCredits, setFreeMonthlyCredits] = useState<number>(0);
   const [subscriptionCreditsRemaining, setSubscriptionCreditsRemaining] = useState<number>(0);
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
   const [subscriptionType, setSubscriptionType] = useState<'pro' | 'premium' | null>(null);
@@ -125,6 +126,29 @@ export const useListingLimit = () => {
       setUserListingsCount(0);
     }
   }, [user, currentListingType]);
+
+  // Fetch free monthly credits from user_free_credits table
+  const fetchFreeMonthlyCredits = useCallback(async () => {
+    if (!user) {
+      setFreeMonthlyCredits(0);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('user_free_credits')
+        .select('credits_remaining')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (error) throw error;
+      setFreeMonthlyCredits(data?.credits_remaining ?? 5);
+    } catch (error) {
+      console.error('Error fetching free monthly credits:', error);
+      // Default to 5 if not found (new users)
+      setFreeMonthlyCredits(5);
+    }
+  }, [user]);
 
   // Fetch available credits for current mode from ALL sources:
   // 1. storekit_purchases (credit packs + subscriptions)
@@ -218,16 +242,29 @@ export const useListingLimit = () => {
     }
   }, [user, currentListingType]);
 
-  // Use a credit for a property (from subscription, storekit_purchases, or listing_payments)
+  // Use a credit for a property (priority: free monthly > subscription > storekit packs > listing_payments)
   const useCredit = useCallback(async (propertyId: string): Promise<boolean> => {
     if (!user) return false;
     
-    // Total available = subscription credits + pack credits + listing_payments credits
-    const totalAvailable = subscriptionCreditsRemaining + availableCredits;
+    // Total available = free monthly + subscription credits + pack credits + listing_payments credits
+    const totalAvailable = freeMonthlyCredits + subscriptionCreditsRemaining + availableCredits;
     if (totalAvailable === 0) return false;
 
     try {
-      // Priority 1: Use subscription credits first (if available)
+      // Priority 1: Use free monthly credits first
+      if (freeMonthlyCredits > 0) {
+        const { error: updateError } = await supabase
+          .from('user_free_credits')
+          .update({ credits_remaining: freeMonthlyCredits - 1 })
+          .eq('user_id', user.id);
+
+        if (!updateError) {
+          await fetchFreeMonthlyCredits();
+          return true;
+        }
+      }
+
+      // Priority 2: Use subscription credits (if available)
       if (subscriptionCreditsRemaining > 0 && hasActiveSubscription) {
         const { data: subscription, error: subFetchError } = await supabase
           .from('storekit_purchases')
@@ -254,7 +291,7 @@ export const useListingLimit = () => {
         }
       }
 
-      // Priority 2: Use storekit_purchases credit packs
+      // Priority 3: Use storekit_purchases credit packs
       const { data: creditPacks, error: packError } = await supabase
         .from('storekit_purchases')
         .select('id, credits_amount, credits_used, is_subscription, product_id')
@@ -284,7 +321,7 @@ export const useListingLimit = () => {
         }
       }
 
-      // Priority 3: Use listing_payments credits (legacy)
+      // Priority 4: Use listing_payments credits (legacy)
       const { data: credit, error: fetchError } = await supabase
         .from('listing_payments')
         .select('id')
@@ -317,25 +354,26 @@ export const useListingLimit = () => {
       console.error('Error using credit:', error);
       return false;
     }
-  }, [user, availableCredits, subscriptionCreditsRemaining, hasActiveSubscription, fetchAvailableCredits, currentListingType]);
+  }, [user, freeMonthlyCredits, availableCredits, subscriptionCreditsRemaining, hasActiveSubscription, fetchAvailableCredits, fetchFreeMonthlyCredits, currentListingType]);
 
   // Initialize
   useEffect(() => {
     const init = async () => {
       setLoading(true);
-      await Promise.all([fetchSettings(), fetchUserListingsCount(), fetchAvailableCredits()]);
+      await Promise.all([fetchSettings(), fetchUserListingsCount(), fetchAvailableCredits(), fetchFreeMonthlyCredits()]);
       setLoading(false);
     };
     init();
-  }, [fetchSettings, fetchUserListingsCount, fetchAvailableCredits]);
+  }, [fetchSettings, fetchUserListingsCount, fetchAvailableCredits, fetchFreeMonthlyCredits]);
 
   // Refresh count when user or mode changes
   useEffect(() => {
     if (user) {
       fetchUserListingsCount();
       fetchAvailableCredits();
+      fetchFreeMonthlyCredits();
     }
-  }, [user, currentListingType, fetchUserListingsCount, fetchAvailableCredits]);
+  }, [user, currentListingType, fetchUserListingsCount, fetchAvailableCredits, fetchFreeMonthlyCredits]);
 
   // Get the mode-specific settings
   // FREE MODE: Always return 5 free listings for everyone
@@ -371,13 +409,12 @@ export const useListingLimit = () => {
 
   const freeListingsLimit = getFreeListingsForUserType(profile?.user_type);
   
-  // Total available credits = subscription credits + listing_payments credits
-  const totalAvailableCredits = subscriptionCreditsRemaining + availableCredits;
+  // Total available credits = free monthly + subscription credits + pack credits + listing_payments credits
+  const totalAvailableCredits = freeMonthlyCredits + subscriptionCreditsRemaining + availableCredits;
 
   // Debug logging for payment calculation
   console.log('[useListingLimit] Mode:', currentListingType, 
-    '| Free limit:', freeListingsLimit, 
-    '| User listings:', userListingsCount, 
+    '| Free monthly:', freeMonthlyCredits,
     '| Subscription credits:', subscriptionCreditsRemaining,
     '| Payment credits:', availableCredits,
     '| Total credits:', totalAvailableCredits,
@@ -386,23 +423,19 @@ export const useListingLimit = () => {
     '| Settings enabled:', settings?.enabled,
     '| Loading:', loading);
 
-  // Calculate if user needs to pay (considering ALL available credits)
-  // FREE MODE: Never require payment
-  const exceededLimit = userListingsCount >= freeListingsLimit;
+  // User can publish if they have any credits available
+  const hasCreditsAvailable = totalAvailableCredits > 0;
   
-  // FREE MODE: Payment is never required
-  const needsPayment = false;
+  // Payment is required if no credits available
+  const needsPayment = !hasCreditsAvailable;
 
-  // User has exceeded free limit but has credits (subscription or payments)
-  const canUseCredit = settings?.enabled && 
-    !loading &&
-    exceededLimit && 
-    totalAvailableCredits > 0;
+  // User can use credit if they have any available
+  const canUseCredit = !loading && hasCreditsAvailable;
     
-  console.log('[useListingLimit] Exceeded limit:', exceededLimit, '| Needs payment:', needsPayment, '| Can use credit:', canUseCredit);
+  console.log('[useListingLimit] Has credits:', hasCreditsAvailable, '| Needs payment:', needsPayment, '| Can use credit:', canUseCredit);
 
-  // Get remaining free listings
-  const remainingFreeListings = Math.max(0, freeListingsLimit - userListingsCount);
+  // Get remaining free listings (now based on free monthly credits)
+  const remainingFreeListings = freeMonthlyCredits;
 
   // Convert price to user's currency - use mode-specific price
   const getConvertedPrice = useCallback((countryCode: string | null | undefined): { amount: number; currency: string; symbol: string } => {
@@ -457,7 +490,8 @@ export const useListingLimit = () => {
   return {
     settings,
     userListingsCount,
-    availableCredits: totalAvailableCredits, // Now includes subscription credits
+    availableCredits: totalAvailableCredits, // Includes all credit sources
+    freeMonthlyCredits, // New: expose free monthly credits separately
     subscriptionCreditsRemaining,
     hasActiveSubscription,
     subscriptionType,
@@ -469,6 +503,6 @@ export const useListingLimit = () => {
     getConvertedPrice,
     updateSettings,
     useCredit,
-    refetch: () => Promise.all([fetchSettings(), fetchUserListingsCount(), fetchAvailableCredits()]),
+    refetch: () => Promise.all([fetchSettings(), fetchUserListingsCount(), fetchAvailableCredits(), fetchFreeMonthlyCredits()]),
   };
 };

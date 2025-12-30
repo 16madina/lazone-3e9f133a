@@ -954,6 +954,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_free_credits: {
+        Row: {
+          created_at: string
+          credits_remaining: number
+          last_reset_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          credits_remaining?: number
+          last_reset_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          credits_remaining?: number
+          last_reset_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_reports: {
         Row: {
           created_at: string
@@ -1229,6 +1250,7 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: undefined
       }
+      reset_monthly_free_credits: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"

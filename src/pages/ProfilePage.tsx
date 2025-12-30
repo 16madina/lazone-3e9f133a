@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import heroBg4 from '@/assets/hero-bg-4.jpg';
 import {
@@ -265,6 +265,7 @@ interface Review {
 
 const ProfilePage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { favorites, toggleFavorite, loading: loadingFavoritesHook } = useFavorites();
   const { user, profile, signOut, loading, isEmailVerified, resendVerificationEmail, refreshVerificationStatus } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -293,6 +294,7 @@ const ProfilePage = () => {
   const [activeTab, setActiveTab] = useState<TabType>('annonces');
   const [showProfileSheet, setShowProfileSheet] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [showReferralSheet, setShowReferralSheet] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Settings states
@@ -304,6 +306,15 @@ const ProfilePage = () => {
   const [averageRating, setAverageRating] = useState(0);
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
+
+  // Handle opening referral sheet from navigation state
+  useEffect(() => {
+    if ((location.state as any)?.openReferral) {
+      setShowReferralSheet(true);
+      // Clear the state to prevent reopening on refresh
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, navigate, location.pathname]);
 
   useEffect(() => {
     if (user) {
@@ -904,6 +915,8 @@ const ProfilePage = () => {
 
               {/* Parrainage */}
               <ReferralSheet
+                open={showReferralSheet}
+                onOpenChange={setShowReferralSheet}
                 trigger={
                   <button className="flex flex-col items-center gap-1 p-2 bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl hover:from-primary/10 hover:to-primary/15 transition-colors border border-primary/10">
                     <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">

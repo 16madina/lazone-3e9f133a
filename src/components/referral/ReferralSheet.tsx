@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Copy, Share2, Users, Gift, Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -7,14 +7,20 @@ import { useShare } from '@/hooks/useNativePlugins';
 import { toast } from 'sonner';
 
 interface ReferralSheetProps {
-  trigger: React.ReactNode;
+  trigger?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export const ReferralSheet = ({ trigger }: ReferralSheetProps) => {
+export const ReferralSheet = ({ trigger, open: controlledOpen, onOpenChange }: ReferralSheetProps) => {
   const { referralCode, referralLink, stats, loading } = useReferrals();
   const { share, loading: shareLoading } = useShare();
   const [copied, setCopied] = useState(false);
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+  const setOpen = isControlled ? (onOpenChange || (() => {})) : setInternalOpen;
 
   const handleCopyCode = async () => {
     try {
@@ -38,9 +44,11 @@ export const ReferralSheet = ({ trigger }: ReferralSheetProps) => {
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        {trigger}
-      </SheetTrigger>
+      {trigger && (
+        <SheetTrigger asChild>
+          {trigger}
+        </SheetTrigger>
+      )}
       <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto rounded-t-2xl">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">

@@ -776,16 +776,16 @@ const ProfilePage = () => {
           </div>
 
           {/* Main Content */}
-          <div className="p-5 pt-2">
-            {/* Avatar + Name Row */}
-            <div className="flex items-center gap-3 mb-4">
+          <div className="p-4 pt-2">
+            {/* Avatar + Name + Info Row */}
+            <div className="flex gap-3">
               {/* Avatar with upload button */}
               <div className="flex-shrink-0">
                 <div className="relative">
                   <button
                     onClick={handleAvatarClick}
                     disabled={uploadingAvatar}
-                    className="relative w-16 h-16 rounded-xl overflow-hidden border-3 border-card shadow-md group"
+                    className="relative w-20 h-20 rounded-xl overflow-hidden border-3 border-card shadow-md group"
                   >
                     {profile?.avatar_url ? (
                       <img 
@@ -802,7 +802,7 @@ const ProfilePage = () => {
                     {/* Premium/Pro Diagonal Ribbon Badge */}
                     {activeSubscription && (
                       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                        <div className={`absolute top-[6px] -left-[20px] w-[70px] text-center py-[1px] text-[6px] font-bold text-white uppercase tracking-wider shadow-md transform -rotate-45 ${
+                        <div className={`absolute top-[6px] -left-[22px] w-[80px] text-center py-[1px] text-[7px] font-bold text-white uppercase tracking-wider shadow-md transform -rotate-45 ${
                           activeSubscription.product_id.includes('premium') 
                             ? 'bg-gradient-to-r from-amber-500 to-orange-500' 
                             : 'bg-gradient-to-r from-purple-500 to-pink-500'
@@ -833,11 +833,13 @@ const ProfilePage = () => {
                 </div>
               </div>
 
-              {/* User Name + Type */}
+              {/* User Name + Info */}
               <div className="flex-1 min-w-0">
                 <h1 className="text-lg font-bold text-foreground truncate">
                   {user.user_metadata?.full_name || profile?.full_name || 'Utilisateur'}
                 </h1>
+                
+                {/* User Type Badge */}
                 <div className="flex flex-wrap gap-1 mt-1">
                   {profile?.user_type && profile.user_type !== 'particulier' ? (
                     <UserTypeBadge 
@@ -852,46 +854,56 @@ const ProfilePage = () => {
                     </span>
                   )}
                 </div>
+
+                {/* Contact Info */}
+                <div className="mt-2 space-y-0.5">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Mail className="w-3 h-3" />
+                    <span className="truncate">{user.email}</span>
+                  </div>
+                  {user.user_metadata?.phone && (
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <Phone className="w-3 h-3" />
+                      <span>{user.user_metadata.phone}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Calendar className="w-3 h-3" />
+                    <span>Membre depuis {memberSince}</span>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Profile Actions - Stacked vertically */}
-            <div className="space-y-2">
+            {/* Profile Actions - Compact horizontal row */}
+            <div className="grid grid-cols-3 gap-2 mt-4">
               {/* Modifier le profil */}
               <button
                 onClick={() => navigate('/settings/edit-profile')}
-                className="w-full flex items-center gap-3 p-3 bg-muted/50 rounded-xl hover:bg-muted transition-colors"
+                className="flex flex-col items-center gap-1 p-2 bg-muted/50 rounded-xl hover:bg-muted transition-colors"
               >
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                   <Edit className="w-4 h-4 text-primary" />
                 </div>
-                <span className="text-sm font-medium">Modifier le profil</span>
-                <ChevronRight className="w-4 h-4 text-muted-foreground ml-auto" />
+                <span className="text-[10px] font-medium text-center">Modifier</span>
               </button>
 
               {/* Crédits restants */}
-              <div className="w-full flex items-center gap-3 p-3 bg-muted/50 rounded-xl">
+              <div className="flex flex-col items-center gap-1 p-2 bg-muted/50 rounded-xl">
                 <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
                   <Coins className="w-4 h-4 text-emerald-600" />
                 </div>
-                <div className="flex-1">
-                  <span className="text-sm font-medium">{remainingFreeListings} crédits restants</span>
-                  <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-                    <RefreshCw className="w-3 h-3" />
-                    Renouvellement le {format(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1), "d MMM yyyy", { locale: fr })}
-                  </p>
-                </div>
+                <span className="text-[10px] font-medium text-center">{remainingFreeListings} crédits</span>
               </div>
 
               {/* Parrainage */}
               <ReferralSheet
                 trigger={
-                  <button className="w-full flex items-center gap-3 p-3 bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl hover:from-primary/10 hover:to-primary/15 transition-colors border border-primary/10">
+                  <button className="flex flex-col items-center gap-1 p-2 bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl hover:from-primary/10 hover:to-primary/15 transition-colors border border-primary/10">
                     <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
                       <Share2 className="w-4 h-4 text-primary" />
                     </div>
-                    <span className="text-sm font-medium">Parrainage</span>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground ml-auto" />
+                    <span className="text-[10px] font-medium text-center">Parrainage</span>
                   </button>
                 }
               />

@@ -89,15 +89,15 @@ export const useListingLimit = () => {
       setSettings(settingsValue);
     } catch (error) {
       console.error('Error fetching listing limit settings:', error);
-      // Default settings if not found
+      // Default settings if not found - FREE MODE: 5 listings per month for everyone
       setSettings({
-        enabled: true,
-        free_listings_default: 3,
-        free_listings_agence: 1,
-        free_listings_particulier: 3,
-        free_listings_proprietaire: 3,
-        free_listings_demarcheur: 3,
-        price_per_extra: 1000,
+        enabled: false, // Disable payment requirement
+        free_listings_default: 5,
+        free_listings_agence: 5,
+        free_listings_particulier: 5,
+        free_listings_proprietaire: 5,
+        free_listings_demarcheur: 5,
+        price_per_extra: 0,
         currency: 'XOF',
       });
     }
@@ -338,35 +338,16 @@ export const useListingLimit = () => {
   }, [user, currentListingType, fetchUserListingsCount, fetchAvailableCredits]);
 
   // Get the mode-specific settings
+  // FREE MODE: Always return 5 free listings for everyone
   const getModeSettings = (): ModeLimitSettings => {
-    if (!settings) {
-      return {
-        free_listings_default: 3,
-        free_listings_agence: 1,
-        free_listings_particulier: 3,
-        free_listings_proprietaire: 3,
-        free_listings_demarcheur: 3,
-        price_per_extra: 1000,
-      };
-    }
-
-    // Check if mode-specific settings exist
-    const modeSettings = currentListingType === 'short_term' 
-      ? settings.short_term 
-      : settings.long_term;
-
-    if (modeSettings) {
-      return modeSettings;
-    }
-
-    // Fallback to legacy global settings
+    // FREE MODE - Override all settings to give 5 free listings
     return {
-      free_listings_default: settings.free_listings_default,
-      free_listings_agence: settings.free_listings_agence,
-      free_listings_particulier: settings.free_listings_particulier,
-      free_listings_proprietaire: settings.free_listings_proprietaire,
-      free_listings_demarcheur: settings.free_listings_demarcheur,
-      price_per_extra: settings.price_per_extra,
+      free_listings_default: 5,
+      free_listings_agence: 5,
+      free_listings_particulier: 5,
+      free_listings_proprietaire: 5,
+      free_listings_demarcheur: 5,
+      price_per_extra: 0, // No payment required
     };
   };
 
@@ -406,17 +387,11 @@ export const useListingLimit = () => {
     '| Loading:', loading);
 
   // Calculate if user needs to pay (considering ALL available credits)
-  // Important: when free_listings is 0, payment is always required for the first listing
-  // Fix: Use > instead of >= only when freeListingsLimit > 0, otherwise always require payment
-  const exceededLimit = freeListingsLimit === 0 
-    ? true  // When limit is 0, always exceeded (must pay for every listing)
-    : userListingsCount >= freeListingsLimit;  // Otherwise check if count >= limit
+  // FREE MODE: Never require payment
+  const exceededLimit = userListingsCount >= freeListingsLimit;
   
-  // User needs payment ONLY if they exceeded limit AND have no credits (subscription or payments)
-  const needsPayment = settings?.enabled && 
-    !loading &&
-    exceededLimit && 
-    totalAvailableCredits === 0;
+  // FREE MODE: Payment is never required
+  const needsPayment = false;
 
   // User has exceeded free limit but has credits (subscription or payments)
   const canUseCredit = settings?.enabled && 

@@ -94,7 +94,8 @@ const App = () => {
                       <Route path="/followers/:userId" element={<FollowersPage />} />
                       <Route path="/install" element={<InstallPage />} />
                       <Route path="/reservation/:id" element={<ReservationPage />} />
-                      <Route path="/credits" element={<CreditsPage />} />
+                      {/* FREE MODE: Credits page redirects to home - keep for future re-activation */}
+                      <Route path="/credits" element={<Index />} />
                       <Route path="/dashboard" element={<DashboardPage />} />
                       <Route path="/admin" element={<AdminPage />} />
                       <Route path="/settings/edit-profile" element={<EditProfilePage />} />

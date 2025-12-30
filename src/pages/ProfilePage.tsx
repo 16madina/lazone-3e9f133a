@@ -837,33 +837,12 @@ const ProfilePage = () => {
                     </button>
                   </div>
                   
-                  {/* Credits Button */}
-                  <button
-                    onClick={() => navigate('/credits')}
-                    data-tutorial="profile-credits"
-                    className="flex items-center gap-1.5 text-xs text-amber-600 font-medium hover:underline ml-7"
-                  >
+                  {/* FREE MODE: Credits and Sponsoring buttons hidden - keep for future re-activation */}
+                  {/* Show remaining free listings only */}
+                  <div className="flex items-center gap-1.5 text-xs text-emerald-600 font-medium ml-7">
                     <Coins className="w-3.5 h-3.5" />
-                    Mes Crédits
-                    <span className="ml-1 text-muted-foreground">
-                      ({hasActiveSubscription 
-                        ? (subscriptionType === 'premium' ? `${premiumMonthlyLimit}/mois` : `${proMonthlyLimit}/mois`)
-                        : remainingFreeListings + availableCredits
-                      })
-                    </span>
-                  </button>
-                  
-                  {/* Sponsoring Button - leads to my-listings page */}
-                  <button
-                    onClick={() => navigate('/my-listings')}
-                    className="flex items-center gap-1.5 text-xs text-purple-600 font-medium hover:underline ml-7"
-                  >
-                    <Star className="w-3.5 h-3.5" />
-                    Sponsoring
-                    <span className="ml-1 text-muted-foreground">
-                      ({sponsoredRemaining})
-                    </span>
-                  </button>
+                    <span>{remainingFreeListings} annonces gratuites restantes</span>
+                  </div>
                 </div>
               </div>
 

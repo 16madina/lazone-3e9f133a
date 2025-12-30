@@ -1143,34 +1143,11 @@ const PublishPage = () => {
             : 'Vendez ou louez votre propriété'}
         </p>
         
-        {/* Credits and listings info */}
+        {/* FREE MODE: Show only remaining free listings */}
         <div className="mt-3 flex flex-wrap gap-2" data-tutorial="publish-credits">
-          {/* Show subscription info for subscribers */}
-          {hasActiveSubscription && (
-            <Badge className="bg-green-500 text-white border-green-400">
-              <Check className="w-3 h-3 mr-1" />
-              {subscriptionType === 'premium' ? 'Premium' : 'Pro'}: {availableCredits} crédit{availableCredits > 1 ? 's' : ''} restant{availableCredits > 1 ? 's' : ''}
-            </Badge>
-          )}
-          {/* Show remaining free listings for non-subscribers who haven't exceeded limit */}
-          {!hasActiveSubscription && remainingFreeListings > 0 && (
-            <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
-              {remainingFreeListings} annonce{remainingFreeListings > 1 ? 's' : ''} gratuite{remainingFreeListings > 1 ? 's' : ''} restante{remainingFreeListings > 1 ? 's' : ''}
-            </Badge>
-          )}
-          {/* Show available credits for non-subscribers with credits */}
-          {!hasActiveSubscription && canUseCredit && (
-            <Badge className="bg-green-500 text-white border-green-400 animate-pulse">
-              <Check className="w-3 h-3 mr-1" />
-              {availableCredits} crédit{availableCredits > 1 ? 's' : ''} disponible{availableCredits > 1 ? 's' : ''}
-            </Badge>
-          )}
-          {needsPayment && !canUseCredit && (
-            <Badge variant="secondary" className="bg-amber-500/20 text-amber-100 border-amber-400/30">
-              <Wallet className="w-3 h-3 mr-1" />
-              Paiement requis
-            </Badge>
-          )}
+          <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
+            {remainingFreeListings} annonce{remainingFreeListings > 1 ? 's' : ''} gratuite{remainingFreeListings > 1 ? 's' : ''} restante{remainingFreeListings > 1 ? 's' : ''} ce mois
+          </Badge>
         </div>
       </div>
 

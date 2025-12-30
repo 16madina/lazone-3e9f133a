@@ -253,12 +253,82 @@ class StoreKitService {
 
       this.initialized = true;
 
-      // Pre-fetch all products for display
-      await this.fetchProducts(Object.values(PRODUCT_IDS));
+      // Pre-fetch all products for display - ALWAYS do this even on fallback
+      // This ensures products are shown in UI even if native plugin fails
+      try {
+        await this.fetchProducts(Object.values(PRODUCT_IDS));
+        console.log(`[StoreKit] Products loaded: ${this.products.size} products`);
+      } catch (fetchError) {
+        console.error('[StoreKit] Failed to fetch products:', fetchError);
+        // If fetch fails, manually populate with mock products for display
+        if (this.products.size === 0) {
+          console.log('[StoreKit] Populating fallback products for display...');
+          this.populateFallbackProducts();
+        }
+      }
     } catch (error) {
       console.error('[StoreKit] Initialization error:', error);
-      throw error;
+      // Even on init error, try to populate fallback products
+      this.initialized = true;
+      this.populateFallbackProducts();
     }
+  }
+
+  /**
+   * Populate fallback products for UI display when StoreKit fails
+   * These are display-only and purchases will be blocked
+   */
+  private populateFallbackProducts(): void {
+    const fallbackProducts: StoreKitProduct[] = [
+      {
+        id: PRODUCT_IDS.LISTING_SINGLE,
+        displayName: '1 Crédit Annonce',
+        description: 'Publiez une annonce immobilière',
+        price: '0.99',
+        displayPrice: '$0.99',
+        type: 'consumable',
+      },
+      {
+        id: PRODUCT_IDS.LISTING_PACK_5,
+        displayName: 'Pack 5 Crédits',
+        description: '5 annonces - Économisez 10%',
+        price: '3.99',
+        displayPrice: '$3.99',
+        type: 'consumable',
+      },
+      {
+        id: PRODUCT_IDS.LISTING_PACK_10,
+        displayName: 'Pack 10 Crédits',
+        description: '10 annonces - Économisez 20%',
+        price: '6.99',
+        displayPrice: '$6.99',
+        type: 'consumable',
+      },
+      {
+        id: PRODUCT_IDS.SUB_PRO_MONTHLY,
+        displayName: 'Abonnement Pro',
+        description: '15 crédits/mois + 1 sponsoring + Badge Pro',
+        price: '19.99',
+        displayPrice: '$19.99/mois',
+        type: 'autoRenewable',
+        subscriptionPeriod: { unit: 'month', value: 1 },
+      },
+      {
+        id: PRODUCT_IDS.SUB_PREMIUM_MONTHLY,
+        displayName: 'Abonnement Premium',
+        description: '30 crédits/mois + 2 sponsorings + Support prioritaire',
+        price: '39.99',
+        displayPrice: '$39.99/mois',
+        type: 'autoRenewable',
+        subscriptionPeriod: { unit: 'month', value: 1 },
+      },
+    ];
+
+    fallbackProducts.forEach(product => {
+      this.products.set(product.id, product);
+    });
+    
+    console.log(`[StoreKit] Fallback products populated: ${this.products.size} products`);
   }
 
   /**

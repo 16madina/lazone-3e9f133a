@@ -14,6 +14,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AppLogo } from '@/components/AppLogo';
 import { AppModeSwitch } from '@/components/home/AppModeSwitch';
 import { ModeSwitchSplash } from '@/components/ModeSwitchSplash';
+import { ReferralSheet } from '@/components/referral/ReferralSheet';
 import SectionTutorialButton from '@/components/tutorial/SectionTutorialButton';
 import { useAppStore, AppMode } from '@/stores/appStore';
 import { useProperties } from '@/hooks/useProperties';
@@ -47,6 +48,7 @@ const Index = () => {
   const [showGeoAlert, setShowGeoAlert] = useState(false);
   const [adBanners, setAdBanners] = useState<AdBannerData[]>([]);
   const [initialCountrySet, setInitialCountrySet] = useState(false);
+  const [referralSheetOpen, setReferralSheetOpen] = useState(false);
 
   const handleModeSwitch = (newMode: AppMode) => {
     setPendingMode(newMode);
@@ -217,34 +219,36 @@ const Index = () => {
     <div className="min-h-screen pb-32 relative">
       {/* Parrainage Button - Fixed left side vertical */}
       {user && (
-        <Link
-          to="/profile"
-          state={{ openReferral: true }}
-          className="fixed left-0 top-[28%] z-50"
-        >
-          <motion.div
-            initial={{ x: -50 }}
-            animate={{ x: 0 }}
-            transition={{ delay: 0.5, type: "spring", stiffness: 100 }}
+        <>
+          <button
+            onClick={() => setReferralSheetOpen(true)}
+            className="fixed left-0 top-[28%] z-50"
           >
             <motion.div
-              animate={{ 
-                boxShadow: [
-                  "0 0 0 0 rgba(249, 115, 22, 0.4)",
-                  "0 0 0 6px rgba(249, 115, 22, 0)",
-                  "0 0 0 0 rgba(249, 115, 22, 0)"
-                ]
-              }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="bg-gradient-to-b from-primary to-primary/80 text-white py-2 px-1.5 rounded-r-lg shadow-md flex flex-col items-center gap-1 hover:from-primary/90 hover:to-primary/70 transition-colors"
+              initial={{ x: -50 }}
+              animate={{ x: 0 }}
+              transition={{ delay: 0.5, type: "spring", stiffness: 100 }}
             >
-              <Gift className="w-3.5 h-3.5" />
-              <span className="text-[8px] font-bold tracking-tight" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>
-                PARRAINAGE
-              </span>
+              <motion.div
+                animate={{ 
+                  boxShadow: [
+                    "0 0 0 0 rgba(249, 115, 22, 0.4)",
+                    "0 0 0 6px rgba(249, 115, 22, 0)",
+                    "0 0 0 0 rgba(249, 115, 22, 0)"
+                  ]
+                }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="bg-gradient-to-b from-primary to-primary/80 text-white py-2 px-1.5 rounded-r-lg shadow-md flex flex-col items-center gap-1 hover:from-primary/90 hover:to-primary/70 transition-colors"
+              >
+                <Gift className="w-3.5 h-3.5" />
+                <span className="text-[8px] font-bold tracking-tight" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>
+                  PARRAINAGE
+                </span>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        </Link>
+          </button>
+          <ReferralSheet open={referralSheetOpen} onOpenChange={setReferralSheetOpen} />
+        </>
       )}
       {/* Mode Switch Splash */}
       {isModeSwitching && pendingMode && (

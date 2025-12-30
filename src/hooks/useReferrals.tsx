@@ -28,8 +28,8 @@ export const useReferrals = () => {
     bonusCreditsEarned: 0,
   });
 
-  // Cast profile to access referral_code which is newly added
-  const referralCode = (profile as any)?.referral_code || '';
+  // Get referral_code from profile
+  const referralCode = profile?.referral_code || '';
 
   const fetchReferrals = async () => {
     if (!user) return;

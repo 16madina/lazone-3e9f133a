@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Loader2, Settings, DollarSign, Users, TrendingUp, BarChart3, Home, Building, Crown, Zap, Star } from 'lucide-react';
+import { Loader2, Settings, DollarSign, Users, TrendingUp, BarChart3, Home, Building, Crown, Zap, Star, Coins, RefreshCw } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -39,6 +39,11 @@ const ListingLimitsTab = () => {
     recentPayments: [],
   });
   const [loadingStats, setLoadingStats] = useState(true);
+  
+  // Monthly free credits settings
+  const [monthlyFreeCredits, setMonthlyFreeCredits] = useState(5);
+  const [savingCreditsConfig, setSavingCreditsConfig] = useState(false);
+  const [loadingCreditsConfig, setLoadingCreditsConfig] = useState(true);
 
   // Initialize mode tab based on current app mode
   useEffect(() => {
@@ -130,6 +135,31 @@ const ListingLimitsTab = () => {
     fetchStats();
   }, []);
 
+  // Fetch monthly free credits config
+  useEffect(() => {
+    const fetchCreditsConfig = async () => {
+      setLoadingCreditsConfig(true);
+      try {
+        const { data, error } = await supabase
+          .from('app_settings')
+          .select('value')
+          .eq('id', 'monthly_free_credits')
+          .maybeSingle();
+
+        if (!error && data?.value) {
+          const configValue = data.value as { credits_per_month?: number };
+          setMonthlyFreeCredits(configValue.credits_per_month ?? 5);
+        }
+      } catch (error) {
+        console.error('Error fetching monthly credits config:', error);
+      } finally {
+        setLoadingCreditsConfig(false);
+      }
+    };
+
+    fetchCreditsConfig();
+  }, []);
+
   const handleSave = async () => {
     if (!localSettings) return;
 
@@ -148,6 +178,39 @@ const ListingLimitsTab = () => {
         description: 'Impossible de sauvegarder les paramètres',
         variant: 'destructive',
       });
+    }
+  };
+
+  const handleSaveMonthlyCredits = async () => {
+    setSavingCreditsConfig(true);
+    try {
+      // Upsert the monthly_free_credits setting
+      const { error } = await supabase
+        .from('app_settings')
+        .upsert({
+          id: 'monthly_free_credits',
+          value: { credits_per_month: monthlyFreeCredits },
+          updated_at: new Date().toISOString(),
+        });
+
+      if (error) throw error;
+
+      // Update all users' free credits to the new value (for future resets)
+      // Note: This only affects the CHECK constraint max, actual reset happens via cron
+      
+      toast({
+        title: 'Paramètres enregistrés',
+        description: `Les crédits mensuels sont maintenant de ${monthlyFreeCredits}`,
+      });
+    } catch (error) {
+      console.error('Error saving monthly credits config:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de sauvegarder les paramètres',
+        variant: 'destructive',
+      });
+    } finally {
+      setSavingCreditsConfig(false);
     }
   };
 
@@ -182,6 +245,58 @@ const ListingLimitsTab = () => {
       </TabsContent>
 
       <TabsContent value="settings" className="space-y-6">
+      {/* Monthly Free Credits Section */}
+      <div className="bg-emerald-500/5 p-4 rounded-xl border border-emerald-500/30">
+        <div className="flex items-center gap-2 mb-4">
+          <Coins className="w-5 h-5 text-emerald-600" />
+          <h3 className="font-semibold text-emerald-700 dark:text-emerald-400">Crédits mensuels gratuits</h3>
+        </div>
+        
+        <p className="text-sm text-muted-foreground mb-4">
+          Nombre de crédits gratuits renouvelés chaque mois pour tous les utilisateurs. 
+          Ces crédits sont partagés entre les deux modes (Immobilier et Résidence) et ne sont pas cumulables.
+        </p>
+        
+        <div className="flex items-center gap-4">
+          {loadingCreditsConfig ? (
+            <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
+          ) : (
+            <>
+              <div className="flex-1 max-w-[150px]">
+                <Label className="text-sm text-muted-foreground">Crédits/mois</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  max="50"
+                  value={monthlyFreeCredits}
+                  onChange={(e) => setMonthlyFreeCredits(parseInt(e.target.value) || 0)}
+                  className="mt-1"
+                />
+              </div>
+              <Button 
+                onClick={handleSaveMonthlyCredits} 
+                disabled={savingCreditsConfig}
+                variant="outline"
+                className="mt-5 border-emerald-500 text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950"
+              >
+                {savingCreditsConfig ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Enregistrer
+                  </>
+                )}
+              </Button>
+            </>
+          )}
+        </div>
+        
+        <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-3">
+          Note: Les crédits sont renouvelés automatiquement chaque mois à la date d'inscription de l'utilisateur.
+        </p>
+      </div>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-2 gap-4">
         <div className="bg-card p-4 rounded-xl border">

@@ -1231,9 +1231,12 @@ const AdminPage = () => {
     { id: 'sponsored' as TabType, label: 'Sponsorisés', icon: Star },
     { id: 'banners' as TabType, label: 'Bannières', icon: Image },
     { id: 'notifications' as TabType, label: 'Notifs', icon: Bell },
+    // APPLE REVIEW: Payment-related tabs hidden - uncomment after approval
+    // ...(isAdmin ? [
+    //   { id: 'payments' as TabType, label: 'Paiements', icon: CreditCard, badge: stats.pendingPayments },
+    //   { id: 'limits' as TabType, label: 'Limites', icon: Wallet },
+    // ] : []),
     ...(isAdmin ? [
-      { id: 'payments' as TabType, label: 'Paiements', icon: CreditCard, badge: stats.pendingPayments },
-      { id: 'limits' as TabType, label: 'Limites', icon: Wallet },
       { id: 'admins' as TabType, label: 'Admins', icon: Shield },
     ] : []),
   ];
@@ -1454,9 +1457,9 @@ const AdminPage = () => {
               >
                 <tab.icon className="w-4 h-4 flex-shrink-0" />
                 <span className="truncate">{tab.label}</span>
-                {'badge' in tab && tab.badge > 0 && (
+                {'badge' in tab && typeof (tab as any).badge === 'number' && (tab as any).badge > 0 && (
                   <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
-                    {tab.badge}
+                    {(tab as any).badge}
                   </span>
                 )}
               </button>

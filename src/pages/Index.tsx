@@ -214,7 +214,39 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen pb-32">
+    <div className="min-h-screen pb-32 relative">
+      {/* Parrainage Button - Fixed left side vertical */}
+      {user && (
+        <Link
+          to="/profile"
+          state={{ openReferral: true }}
+          className="fixed left-0 top-1/2 -translate-y-1/2 z-50"
+        >
+          <motion.div
+            initial={{ x: -100 }}
+            animate={{ x: 0 }}
+            transition={{ delay: 0.5, type: "spring", stiffness: 100 }}
+            className="flex items-center"
+          >
+            <motion.div
+              animate={{ 
+                boxShadow: [
+                  "0 0 0 0 rgba(249, 115, 22, 0.4)",
+                  "0 0 0 10px rgba(249, 115, 22, 0)",
+                  "0 0 0 0 rgba(249, 115, 22, 0)"
+                ]
+              }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="bg-gradient-to-b from-primary to-primary/80 text-white py-4 px-2 rounded-r-xl shadow-lg flex flex-col items-center gap-2 hover:from-primary/90 hover:to-primary/70 transition-colors"
+            >
+              <Gift className="w-5 h-5" />
+              <span className="text-xs font-bold tracking-wide" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>
+                PARRAINAGE
+              </span>
+            </motion.div>
+          </motion.div>
+        </Link>
+      )}
       {/* Mode Switch Splash */}
       {isModeSwitching && pendingMode && (
         <ModeSwitchSplash 
@@ -260,19 +292,7 @@ const Index = () => {
           </header>
 
           {/* Hero Content with Logo */}
-          <div className="text-center mb-8 relative">
-            {/* Parrainage Button - Left side */}
-            {user && (
-              <Link
-                to="/profile"
-                state={{ openReferral: true }}
-                className="absolute left-0 top-0 flex items-center gap-1.5 px-3 py-1.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-white text-xs font-medium hover:bg-white/20 transition-colors"
-              >
-                <Gift className="w-3.5 h-3.5" />
-                <span>Parrainage</span>
-              </Link>
-            )}
-
+          <div className="text-center mb-8">
             <AppLogo className="h-24 mx-auto mb-4" />
             <AnimatePresence mode="wait">
               <motion.h1 

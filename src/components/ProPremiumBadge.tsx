@@ -64,7 +64,7 @@ export const ProPremiumBadge = ({
   if (variant === 'ribbon') {
     return (
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className={`absolute top-[6px] -left-[22px] w-[80px] text-center py-[1px] text-[7px] font-bold text-white uppercase tracking-wider shadow-md transform -rotate-45 ${config.gradient}`}>
+        <div className={`absolute top-[8px] -left-[26px] w-[90px] text-center py-[2px] text-[7px] font-bold text-white uppercase tracking-wider shadow-md transform -rotate-45 ${config.gradient}`}>
           {config.name}
         </div>
       </div>

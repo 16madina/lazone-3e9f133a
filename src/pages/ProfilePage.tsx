@@ -785,7 +785,7 @@ const ProfilePage = () => {
                   <button
                     onClick={handleAvatarClick}
                     disabled={uploadingAvatar}
-                    className="relative w-20 h-20 rounded-xl overflow-hidden border-3 border-card shadow-md group"
+                    className="relative w-24 h-24 rounded-xl overflow-hidden border-3 border-card shadow-md group"
                   >
                     {profile?.avatar_url ? (
                       <img 
@@ -865,6 +865,12 @@ const ProfilePage = () => {
                     <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                       <Phone className="w-3 h-3" />
                       <span>{user.user_metadata.phone}</span>
+                    </div>
+                  )}
+                  {(profile?.country || user.user_metadata?.country) && (
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <MapPin className="w-3 h-3" />
+                      <span>{profile?.country || user.user_metadata?.country}</span>
                     </div>
                   )}
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">

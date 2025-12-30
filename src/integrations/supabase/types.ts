@@ -495,6 +495,7 @@ export type Database = {
           last_seen_at: string | null
           phone: string | null
           push_token: string | null
+          referral_code: string | null
           updated_at: string
           user_id: string
           user_type: Database["public"]["Enums"]["user_type"] | null
@@ -512,6 +513,7 @@ export type Database = {
           last_seen_at?: string | null
           phone?: string | null
           push_token?: string | null
+          referral_code?: string | null
           updated_at?: string
           user_id: string
           user_type?: Database["public"]["Enums"]["user_type"] | null
@@ -529,6 +531,7 @@ export type Database = {
           last_seen_at?: string | null
           phone?: string | null
           push_token?: string | null
+          referral_code?: string | null
           updated_at?: string
           user_id?: string
           user_type?: Database["public"]["Enums"]["user_type"] | null
@@ -780,6 +783,39 @@ export type Database = {
           id?: string
           p256dh?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          bonus_granted: boolean
+          completed_at: string | null
+          created_at: string
+          id: string
+          referral_code: string
+          referred_id: string
+          referrer_id: string
+          status: string
+        }
+        Insert: {
+          bonus_granted?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          referral_code: string
+          referred_id: string
+          referrer_id: string
+          status?: string
+        }
+        Update: {
+          bonus_granted?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          referral_code?: string
+          referred_id?: string
+          referrer_id?: string
+          status?: string
         }
         Relationships: []
       }

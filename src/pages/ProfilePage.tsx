@@ -74,6 +74,7 @@ import { BlockedDatesManager } from '@/components/appointment/BlockedDatesManage
 import { useCredits } from '@/hooks/useCredits';
 import { useListingLimit } from '@/hooks/useListingLimit';
 import { useSponsoredListings } from '@/hooks/useSponsoredListings';
+import { ReferralCard } from '@/components/referral/ReferralCard';
 
 type TabType = 'annonces' | 'rdv' | 'favoris' | 'parametres';
 
@@ -1257,6 +1258,9 @@ const ProfilePage = () => {
 
             {activeTab === 'parametres' && (
               <div className="space-y-6">
+                {/* Referral Card */}
+                <ReferralCard />
+
                 {/* Compte */}
                 <div>
                   <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-1">Compte</h3>

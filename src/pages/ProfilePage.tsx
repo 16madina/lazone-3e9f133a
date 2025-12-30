@@ -211,9 +211,9 @@ const AdminButton = () => {
   return (
     <button
       onClick={() => navigate('/admin')}
-      className="flex-shrink-0 px-3 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg text-sm font-medium flex items-center gap-1.5 hover:opacity-90 transition-opacity"
+      className="flex-shrink-0 px-2 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg text-xs font-medium flex items-center gap-1 hover:opacity-90 transition-opacity"
     >
-      <Crown className="w-4 h-4" />
+      <Crown className="w-3 h-3" />
       Admin
     </button>
   );
@@ -749,16 +749,43 @@ const ProfilePage = () => {
       {/* Profile Card */}
       <div className="px-4 -mt-16">
         <div className="bg-card rounded-2xl shadow-lg overflow-hidden">
+          {/* Top Right Buttons - Bell, Admin, Logout */}
+          <div className="flex items-center justify-end gap-1.5 p-3 pb-0">
+            {/* Notifications Button */}
+            <button
+              onClick={() => navigate('/notifications')}
+              className="relative flex-shrink-0 p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+            >
+              <Bell className="w-4 h-4" />
+              {notificationCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-primary text-primary-foreground text-[10px] rounded-full flex items-center justify-center">
+                  {notificationCount > 9 ? '9+' : notificationCount}
+                </span>
+              )}
+            </button>
+            {/* Admin Button - smaller */}
+            <AdminButton />
+            {/* Logout Button - smaller */}
+            <button
+              onClick={handleSignOut}
+              className="flex-shrink-0 p-1.5 text-primary border border-primary rounded-lg hover:bg-primary/10 transition-colors"
+              title="Déconnexion"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
           {/* Main Content */}
-          <div className="p-5">
-            <div className="flex gap-4">
+          <div className="p-5 pt-2">
+            {/* Avatar + Name Row */}
+            <div className="flex items-center gap-3 mb-4">
               {/* Avatar with upload button */}
               <div className="flex-shrink-0">
                 <div className="relative">
                   <button
                     onClick={handleAvatarClick}
                     disabled={uploadingAvatar}
-                    className="relative w-24 h-24 rounded-xl overflow-hidden border-4 border-card shadow-md group"
+                    className="relative w-16 h-16 rounded-xl overflow-hidden border-3 border-card shadow-md group"
                   >
                     {profile?.avatar_url ? (
                       <img 
@@ -768,14 +795,14 @@ const ProfilePage = () => {
                       />
                     ) : (
                       <div className="w-full h-full bg-muted flex items-center justify-center">
-                        <span className="text-3xl">👤</span>
+                        <span className="text-2xl">👤</span>
                       </div>
                     )}
                     
                     {/* Premium/Pro Diagonal Ribbon Badge */}
                     {activeSubscription && (
                       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                        <div className={`absolute top-[8px] -left-[28px] w-[100px] text-center py-[2px] text-[8px] font-bold text-white uppercase tracking-wider shadow-md transform -rotate-45 ${
+                        <div className={`absolute top-[6px] -left-[20px] w-[70px] text-center py-[1px] text-[6px] font-bold text-white uppercase tracking-wider shadow-md transform -rotate-45 ${
                           activeSubscription.product_id.includes('premium') 
                             ? 'bg-gradient-to-r from-amber-500 to-orange-500' 
                             : 'bg-gradient-to-r from-purple-500 to-pink-500'
@@ -788,15 +815,15 @@ const ProfilePage = () => {
                     {/* Overlay on hover */}
                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                       {uploadingAvatar ? (
-                        <Loader2 className="w-6 h-6 text-white animate-spin" />
+                        <Loader2 className="w-5 h-5 text-white animate-spin" />
                       ) : (
-                        <Camera className="w-6 h-6 text-white" />
+                        <Camera className="w-5 h-5 text-white" />
                       )}
                     </div>
                   </button>
                   
                   {/* Verification Badge */}
-                  <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${
+                  <div className={`absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap ${
                     isEmailVerified 
                       ? 'bg-green-500 text-white' 
                       : 'bg-primary text-primary-foreground'
@@ -804,146 +831,92 @@ const ProfilePage = () => {
                     {isEmailVerified ? 'Vérifié' : 'Non vérifié'}
                   </div>
                 </div>
-                
-                {/* Profile Actions - Stacked vertically */}
-                <div className="mt-4 space-y-2">
-                  {/* Modifier le profil */}
-                  <button
-                    onClick={() => navigate('/settings/edit-profile')}
-                    className="w-full flex items-center gap-3 p-3 bg-muted/50 rounded-xl hover:bg-muted transition-colors"
-                  >
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Edit className="w-4 h-4 text-primary" />
-                    </div>
-                    <span className="text-sm font-medium">Modifier le profil</span>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground ml-auto" />
-                  </button>
-
-                  {/* Crédits restants */}
-                  <div className="w-full flex items-center gap-3 p-3 bg-muted/50 rounded-xl">
-                    <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                      <Coins className="w-4 h-4 text-emerald-600" />
-                    </div>
-                    <div className="flex-1">
-                      <span className="text-sm font-medium">{remainingFreeListings} crédits restants</span>
-                      <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-                        <RefreshCw className="w-3 h-3" />
-                        Renouvellement le {format(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1), "d MMM yyyy", { locale: fr })}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Parrainage */}
-                  <ReferralSheet
-                    trigger={
-                      <button className="w-full flex items-center gap-3 p-3 bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl hover:from-primary/10 hover:to-primary/15 transition-colors border border-primary/10">
-                        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                          <Share2 className="w-4 h-4 text-primary" />
-                        </div>
-                        <span className="text-sm font-medium">Parrainage</span>
-                        <ChevronRight className="w-4 h-4 text-muted-foreground ml-auto" />
-                      </button>
-                    }
-                  />
-                </div>
               </div>
 
-              {/* User Info */}
-              <div className="flex-1 min-w-0 mt-2">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    {/* Notifications Button */}
-                    <button
-                      onClick={() => navigate('/notifications')}
-                      className="relative flex-shrink-0 p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
-                    >
-                      <Bell className="w-5 h-5" />
-                      {notificationCount > 0 && (
-                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground text-xs rounded-full flex items-center justify-center">
-                          {notificationCount > 9 ? '9+' : notificationCount}
-                        </span>
-                      )}
-                    </button>
-                    {/* Admin Button */}
-                    <AdminButton />
-                    {/* Logout Button */}
-                    <button
-                      onClick={handleSignOut}
-                      className="flex-shrink-0 p-2 text-primary border border-primary rounded-lg hover:bg-primary/10 transition-colors"
-                      title="Déconnexion"
-                    >
-                      <LogOut className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-                
-                {/* User Name - on separate line */}
-                <div className="flex items-center gap-2 mt-2">
-                  <h1 className="text-lg font-bold text-foreground">
-                    {user.user_metadata?.full_name || profile?.full_name || 'Utilisateur'}
-                  </h1>
-                </div>
-
-                {/* Tags */}
-                <div className="flex flex-wrap gap-1.5 mt-2">
+              {/* User Name + Type */}
+              <div className="flex-1 min-w-0">
+                <h1 className="text-lg font-bold text-foreground truncate">
+                  {user.user_metadata?.full_name || profile?.full_name || 'Utilisateur'}
+                </h1>
+                <div className="flex flex-wrap gap-1 mt-1">
                   {profile?.user_type && profile.user_type !== 'particulier' ? (
                     <UserTypeBadge 
                       userType={profile.user_type} 
                       agencyName={profile.agency_name}
-                      size="md"
+                      size="sm"
                     />
                   ) : (
-                    <span className="px-2 py-0.5 bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20 rounded-full text-xs font-medium flex items-center gap-1">
-                      <User className="w-3 h-3" />
+                    <span className="px-1.5 py-0.5 bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20 rounded-full text-[10px] font-medium flex items-center gap-0.5">
+                      <User className="w-2.5 h-2.5" />
                       Particulier
                     </span>
                   )}
-                  {!isEmailVerified && (
-                    <>
-                      <span className="px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full text-xs font-medium">
-                        ⚠ Email non vérifié
-                      </span>
-                      <button 
-                        onClick={handleResendVerification}
-                        disabled={sendingEmail}
-                        className="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-medium flex items-center gap-1 hover:bg-green-200 transition-colors disabled:opacity-50"
-                      >
-                        {sendingEmail ? (
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                        ) : (
-                          <RefreshCw className="w-3 h-3" />
-                        )}
-                        Renvoyer le lien
-                      </button>
-                    </>
-                  )}
-                </div>
-
-                {/* Contact Info */}
-                <div className="mt-3 space-y-1">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Mail className="w-4 h-4" />
-                    <span className="truncate">{user.email}</span>
-                  </div>
-                  {user.user_metadata?.phone && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Phone className="w-4 h-4" />
-                      <span>{user.user_metadata.phone}</span>
-                    </div>
-                  )}
-                  {user.user_metadata?.city && user.user_metadata?.country && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <MapPin className="w-4 h-4" />
-                      <span>{user.user_metadata.city}, {user.user_metadata.country}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Calendar className="w-4 h-4" />
-                    <span>Membre depuis {memberSince}</span>
-                  </div>
                 </div>
               </div>
             </div>
+
+            {/* Profile Actions - Stacked vertically */}
+            <div className="space-y-2">
+              {/* Modifier le profil */}
+              <button
+                onClick={() => navigate('/settings/edit-profile')}
+                className="w-full flex items-center gap-3 p-3 bg-muted/50 rounded-xl hover:bg-muted transition-colors"
+              >
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Edit className="w-4 h-4 text-primary" />
+                </div>
+                <span className="text-sm font-medium">Modifier le profil</span>
+                <ChevronRight className="w-4 h-4 text-muted-foreground ml-auto" />
+              </button>
+
+              {/* Crédits restants */}
+              <div className="w-full flex items-center gap-3 p-3 bg-muted/50 rounded-xl">
+                <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                  <Coins className="w-4 h-4 text-emerald-600" />
+                </div>
+                <div className="flex-1">
+                  <span className="text-sm font-medium">{remainingFreeListings} crédits restants</span>
+                  <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                    <RefreshCw className="w-3 h-3" />
+                    Renouvellement le {format(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1), "d MMM yyyy", { locale: fr })}
+                  </p>
+                </div>
+              </div>
+
+              {/* Parrainage */}
+              <ReferralSheet
+                trigger={
+                  <button className="w-full flex items-center gap-3 p-3 bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl hover:from-primary/10 hover:to-primary/15 transition-colors border border-primary/10">
+                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                      <Share2 className="w-4 h-4 text-primary" />
+                    </div>
+                    <span className="text-sm font-medium">Parrainage</span>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground ml-auto" />
+                  </button>
+                }
+              />
+            </div>
+
+            {/* Email verification warning */}
+            {!isEmailVerified && (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                <span className="px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full text-xs font-medium">
+                  ⚠ Email non vérifié
+                </span>
+                <button 
+                  onClick={handleResendVerification}
+                  disabled={sendingEmail}
+                  className="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-medium flex items-center gap-1 hover:bg-green-200 transition-colors disabled:opacity-50"
+                >
+                  {sendingEmail ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <RefreshCw className="w-3 h-3" />
+                  )}
+                  Renvoyer le lien
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Stats Row */}

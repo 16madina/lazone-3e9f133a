@@ -1,7 +1,7 @@
-import { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useRef, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Mail, Lock, User, ArrowLeft, Eye, EyeOff, Phone, MapPin, ChevronDown, Check, Globe, AlertCircle, Moon, Sun, ArrowRight } from 'lucide-react';
+import { Mail, Lock, User, ArrowLeft, Eye, EyeOff, Phone, MapPin, ChevronDown, Check, Globe, AlertCircle, Moon, Sun, ArrowRight, Gift } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
@@ -34,6 +34,7 @@ interface FormErrors {
 
 const AuthPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { theme, toggleTheme } = useTheme();
   const { refreshVerificationStatus } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
@@ -58,6 +59,16 @@ const AuthPage = () => {
   const [showForgotPasswordDialog, setShowForgotPasswordDialog] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [resetLoading, setResetLoading] = useState(false);
+  const [referralCode, setReferralCode] = useState('');
+
+  // Check for referral code in URL
+  useEffect(() => {
+    const ref = searchParams.get('ref');
+    if (ref) {
+      setReferralCode(ref.toUpperCase());
+      setIsLogin(false); // Switch to signup mode when coming from referral
+    }
+  }, [searchParams]);
 
   const [formData, setFormData] = useState({
     email: '',
@@ -382,12 +393,38 @@ const AuthPage = () => {
           await sendVerificationEmail(formData.email, formData.firstName, data.user.id);
         }
         
+        // Apply referral code if provided
+        if (data.user && referralCode) {
+          try {
+            // Find referrer by code
+            const { data: referrerProfile } = await supabase
+              .from('profiles')
+              .select('user_id')
+              .eq('referral_code', referralCode.toUpperCase())
+              .maybeSingle();
+            
+            if (referrerProfile && referrerProfile.user_id !== data.user.id) {
+              await supabase
+                .from('referrals')
+                .insert({
+                  referrer_id: referrerProfile.user_id,
+                  referred_id: data.user.id,
+                  referral_code: referralCode.toUpperCase(),
+                });
+            }
+          } catch (refError) {
+            console.error('Error applying referral:', refError);
+          }
+        }
+        
         // Force refresh profile to get updated avatar_url
         await refreshVerificationStatus();
         
         toast({
           title: 'Compte créé!',
-          description: 'Bienvenue sur LaZone! Votre compte est actif.',
+          description: referralCode 
+            ? 'Bienvenue sur LaZone! Publiez votre première annonce pour recevoir votre crédit bonus.'
+            : 'Bienvenue sur LaZone! Votre compte est actif.',
         });
         navigate('/profile');
       }
@@ -931,6 +968,28 @@ const AuthPage = () => {
                 </div>
               </div>
               <InputError message={touched.confirmPassword ? errors.confirmPassword : undefined} />
+            </div>
+          )}
+
+          {/* Referral Code Input - Signup only */}
+          {!isLogin && (
+            <div className="glass-card p-1">
+              <div className="flex items-center gap-2 px-3 py-2.5">
+                <Gift className="w-4 h-4 text-primary flex-shrink-0" />
+                <input
+                  type="text"
+                  placeholder="Code parrainage (optionnel)"
+                  value={referralCode}
+                  onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                  className="flex-1 bg-transparent outline-none text-sm font-mono uppercase tracking-wider"
+                  maxLength={8}
+                />
+              </div>
+              {referralCode && (
+                <p className="text-[10px] text-emerald-600 px-3 pb-2">
+                  +1 crédit gratuit après votre 1ère annonce
+                </p>
+              )}
             </div>
           )}
 

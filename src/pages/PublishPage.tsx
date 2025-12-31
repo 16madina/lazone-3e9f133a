@@ -1143,10 +1143,10 @@ const PublishPage = () => {
             : 'Vendez ou louez votre propriété'}
         </p>
         
-        {/* FREE MODE: Show only remaining free listings */}
+        {/* Credits display - Total available credits */}
         <div className="mt-3 flex flex-wrap gap-2" data-tutorial="publish-credits">
           <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
-            {remainingFreeListings} annonce{remainingFreeListings > 1 ? 's' : ''} gratuite{remainingFreeListings > 1 ? 's' : ''} restante{remainingFreeListings > 1 ? 's' : ''} ce mois
+            {availableCredits} crédit{availableCredits > 1 ? 's' : ''} disponible{availableCredits > 1 ? 's' : ''}
           </Badge>
         </div>
       </div>

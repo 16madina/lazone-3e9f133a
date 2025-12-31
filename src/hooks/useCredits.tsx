@@ -67,9 +67,13 @@ export function useCredits(): UseCreditsReturn {
   // Get free credits limit based on user type
   const freeCreditsLimit = profile?.user_type === 'agence' ? 1 : 3;
 
-  // Calculate credits from purchases
-  const totalCredits = purchases.reduce((sum, p) => sum + p.credits_amount, 0);
-  const usedCredits = purchases.reduce((sum, p) => sum + p.credits_used, 0);
+  // Calculate credits from ACTIVE purchases only (excluding subscriptions for availableCredits display)
+  // Subscriptions are handled separately via subscriptionCreditsRemaining in useListingLimit
+  const activePurchases = purchases.filter(p => p.status === 'active');
+  const nonSubscriptionPurchases = activePurchases.filter(p => !p.is_subscription && !p.product_id.includes('sub.') && !p.product_id.includes('agency.'));
+  
+  const totalCredits = nonSubscriptionPurchases.reduce((sum, p) => sum + p.credits_amount, 0);
+  const usedCredits = nonSubscriptionPurchases.reduce((sum, p) => sum + p.credits_used, 0);
   const availableCredits = totalCredits - usedCredits;
   const freeCreditsRemaining = Math.max(0, freeCreditsLimit - freeListingsUsed);
 

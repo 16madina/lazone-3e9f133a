@@ -70,6 +70,7 @@ import { fr } from 'date-fns/locale';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { CreditPurchaseSheet } from '@/components/credits/CreditPurchaseSheet';
 import { AppointmentsTab } from '@/components/appointment/AppointmentsTab';
 import { PendingListingsSection } from '@/components/profile/PendingListingsSection';
 import { BlockedDatesManager } from '@/components/appointment/BlockedDatesManager';
@@ -301,6 +302,8 @@ const ProfilePage = () => {
   const [showProfileSheet, setShowProfileSheet] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [showReferralSheet, setShowReferralSheet] = useState(false);
+  const [creditsSheetOpen, setCreditsSheetOpen] = useState(false);
+  const [purchaseSheetOpen, setPurchaseSheetOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Settings states
@@ -313,10 +316,38 @@ const ProfilePage = () => {
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
 
-  // Handle opening referral sheet from navigation state
+  // Handle opening sheets from navigation state
   useEffect(() => {
-    if ((location.state as any)?.openReferral) {
+    const state = (location.state as any) || {};
+
+    if (state.openReferral) {
       setShowReferralSheet(true);
+    }
+
+    if (state.openCredits) {
+      setCreditsSheetOpen(true);
+    }
+
+    if (state.openPurchase) {
+      setPurchaseSheetOpen(true);
+    }
+
+    if (state.payment === 'success') {
+      toast({
+        title: 'Paiement réussi !',
+        description: 'Vos crédits ont été ajoutés à votre compte.',
+      });
+    }
+
+    if (state.payment === 'cancelled') {
+      toast({
+        title: 'Paiement annulé',
+        description: 'Vous pouvez réessayer à tout moment.',
+        variant: 'destructive',
+      });
+    }
+
+    if (state.openReferral || state.openCredits || state.openPurchase || state.payment) {
       // Clear the state to prevent reopening on refresh
       navigate(location.pathname, { replace: true, state: {} });
     }
@@ -913,7 +944,7 @@ const ProfilePage = () => {
               </button>
 
               {/* Crédits restants - Clickable with Sheet */}
-              <Sheet>
+              <Sheet open={creditsSheetOpen} onOpenChange={setCreditsSheetOpen}>
                 <SheetTrigger asChild>
                   <button className="flex flex-col items-center gap-1 p-2 bg-muted/50 rounded-xl hover:bg-muted transition-colors">
                     <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
@@ -991,8 +1022,11 @@ const ProfilePage = () => {
 
                     {/* Buy Credits Button - Only visible on Android/Web */}
                     {!(Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios') && (
-                      <Button 
-                        onClick={() => navigate('/credits?open=purchase')}
+                      <Button
+                        onClick={() => {
+                          setCreditsSheetOpen(false);
+                          setPurchaseSheetOpen(true);
+                        }}
                         className="w-full h-12 text-base font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg"
                         size="lg"
                       >
@@ -1443,7 +1477,7 @@ const ProfilePage = () => {
                 <div>
                   <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-1">Paiements</h3>
                   <div className="space-y-2">
-                    <button onClick={() => navigate('/credits')} className="w-full flex items-center justify-between p-3 bg-muted/50 rounded-xl hover:bg-muted transition-colors">
+                    <button onClick={() => setCreditsSheetOpen(true)} className="w-full flex items-center justify-between p-3 bg-muted/50 rounded-xl hover:bg-muted transition-colors">
                       <div className="flex items-center gap-3">
                         <Coins className="w-5 h-5 text-amber-500" />
                         <span className="text-sm font-medium">Mes Crédits</span>
@@ -1667,6 +1701,8 @@ const ProfilePage = () => {
           </div>
         </div>
       </div>
+
+      <CreditPurchaseSheet open={purchaseSheetOpen} onOpenChange={setPurchaseSheetOpen} />
 
       {user && <SectionTutorialButton section="profile" />}
     </div>

@@ -138,7 +138,7 @@ const MyListingsPage = () => {
     }
     
     if (!subscriptionType) {
-      navigate('/credits');
+      navigate('/profile', { state: { openPurchase: true } });
       return;
     }
     

@@ -1,0 +1,189 @@
+{
+  "appPolicies" : {
+    "eula" : "",
+    "policies" : [
+      {
+        "locale" : "en_US",
+        "policyText" : "",
+        "policyURL" : ""
+      }
+    ]
+  },
+  "identifier" : "B152CF11",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+    {
+      "displayPrice" : "2.99",
+      "familyShareable" : false,
+      "internalID" : "6757018020",
+      "localizations" : [
+        {
+          "description" : "Publiez une annonce immobilière",
+          "displayName" : "1 Crédit Annonce",
+          "locale" : "fr"
+        }
+      ],
+      "productID" : "com.lazone.listing.single",
+      "referenceName" : "Annonce Unique",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "6.99",
+      "familyShareable" : false,
+      "internalID" : "6757026705",
+      "localizations" : [
+        {
+          "description" : "10 crédits pour publier vos annonces",
+          "displayName" : "Pack 10 Crédits",
+          "locale" : "fr"
+        }
+      ],
+      "productID" : "com.lazone.listing.pack10",
+      "referenceName" : "Pack 10 Crédits",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "3.99",
+      "familyShareable" : false,
+      "internalID" : "6757025684",
+      "localizations" : [
+        {
+          "description" : "5 crédits pour publier vos annonces",
+          "displayName" : "Pack 5 Crédits",
+          "locale" : "fr"
+        }
+      ],
+      "productID" : "com.lazone.listing.pack5",
+      "referenceName" : "Pack 5 Crédits",
+      "type" : "Consumable"
+    }
+  ],
+  "settings" : {
+    "_applicationInternalID" : "6756757879",
+    "_developerTeamID" : "6XW2XM3NDF",
+    "_failTransactionsEnabled" : false,
+    "_lastSynchronizedDate" : 788475857.03756201,
+    "_locale" : "en_US",
+    "_storefront" : "USA",
+    "_storeKitErrors" : [
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Load Products"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Purchase"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Verification"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Store Sync"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Subscription Status"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Transaction"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Manage Subscriptions Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Refund Request Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Offer Code Redeem Sheet"
+      }
+    ]
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "21869557",
+      "localizations" : [
+
+      ],
+      "name" : "LaZone Pro",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "9.99",
+          "familyShareable" : false,
+          "groupNumber" : 2,
+          "internalID" : "6757026721",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "30 annonces/mois + 2 sponsorings",
+              "displayName" : "LaZone Premium",
+              "locale" : "fr"
+            }
+          ],
+          "productID" : "com.lazone.sub.premium.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "LaZone Premium",
+          "subscriptionGroupID" : "21869557",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "4.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "6757027046",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "30 annonces/mois + 2 sponsorings",
+              "displayName" : "Abonnement Pro",
+              "locale" : "fr"
+            }
+          ],
+          "productID" : "com.lazone.sub.pro.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "LaZone Pro",
+          "subscriptionGroupID" : "21869557",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}

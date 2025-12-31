@@ -414,7 +414,7 @@ const CreditsPage = () => {
                   Acheter des crédits
                 </Button>
               </SheetTrigger>
-              <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl">
+              <SheetContent side="bottom" className="h-[100dvh] rounded-none">
                 <SheetHeader className="pb-4">
                   <SheetTitle className="flex items-center gap-2 text-xl">
                     <Coins className="w-6 h-6 text-primary" />
@@ -422,7 +422,7 @@ const CreditsPage = () => {
                   </SheetTitle>
                 </SheetHeader>
                 
-                <div className="overflow-y-auto h-[calc(85vh-80px)] space-y-6 pb-8">
+                <div className="overflow-y-auto h-[calc(100dvh-80px)] space-y-6 pb-8">
                   {/* Credit Packs */}
                   <div>
                     <div className="flex items-center gap-2 mb-4">

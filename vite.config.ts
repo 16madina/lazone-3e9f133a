@@ -115,4 +115,21 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      external: [
+        '@capacitor/app',
+        '@capacitor/core',
+        '@capacitor/camera',
+        '@capacitor/geolocation',
+        '@capacitor/haptics',
+        '@capacitor/keyboard',
+        '@capacitor/push-notifications',
+        '@capacitor/share',
+        '@capacitor/status-bar',
+        '@capacitor/device',
+        '@capacitor-firebase/messaging',
+      ],
+    },
+  },
 }));

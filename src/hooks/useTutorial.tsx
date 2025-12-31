@@ -237,7 +237,7 @@ const sectionTutorials: Record<TutorialSection, TutorialStep[]> = {
     {
       id: 'publish-credits',
       title: 'Crédits disponibles 💳',
-      description: 'Vous avez des annonces gratuites ou des crédits. Pro = 15/mois !',
+      description: 'Vos crédits gratuits mensuels + achats. Cliquez pour voir le détail.',
       target: '[data-tutorial="publish-credits"]',
       position: 'bottom'
     },
@@ -265,7 +265,7 @@ const sectionTutorials: Record<TutorialSection, TutorialStep[]> = {
     {
       id: 'publish-payment',
       title: 'Paiement 💰',
-      description: 'Si pas de crédit, payez par Mobile Money ou achetez un abonnement.',
+      description: 'Plus de crédit ? Achetez des packs de crédits pour continuer à publier.',
       position: 'bottom'
     },
     {
@@ -327,7 +327,7 @@ const sectionTutorials: Record<TutorialSection, TutorialStep[]> = {
     {
       id: 'profile-credits',
       title: 'Mes crédits 💳',
-      description: 'Gérez vos crédits pour publier. Pro = 15/mois, Premium = illimité.',
+      description: 'Vos crédits gratuits + achats. Cliquez pour voir le détail.',
       target: '[data-tutorial="profile-credits"]',
       position: 'bottom'
     },
@@ -449,7 +449,7 @@ const sectionResidenceTutorials: Record<TutorialSection, TutorialStep[]> = {
     {
       id: 'publish-credits',
       title: 'Crédits disponibles 💳',
-      description: 'Vous avez des annonces gratuites ou des crédits. Pro = 15/mois !',
+      description: 'Vos crédits gratuits mensuels + achats. Cliquez pour voir le détail.',
       target: '[data-tutorial="publish-credits"]',
       position: 'bottom'
     },
@@ -484,7 +484,7 @@ const sectionResidenceTutorials: Record<TutorialSection, TutorialStep[]> = {
     {
       id: 'publish-payment',
       title: 'Paiement 💰',
-      description: 'Si pas de crédit, payez par Mobile Money ou achetez un abonnement.',
+      description: 'Plus de crédit ? Achetez des packs de crédits pour continuer à publier.',
       position: 'bottom'
     },
     {
@@ -546,7 +546,7 @@ const sectionResidenceTutorials: Record<TutorialSection, TutorialStep[]> = {
     {
       id: 'profile-credits',
       title: 'Mes crédits 💳',
-      description: 'Gérez vos crédits pour publier. Pro = 15/mois, Premium = illimité.',
+      description: 'Vos crédits gratuits + achats. Cliquez pour voir le détail.',
       target: '[data-tutorial="profile-credits"]',
       position: 'bottom'
     },

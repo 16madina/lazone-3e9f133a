@@ -83,8 +83,17 @@ const CreditsPage = () => {
   useEffect(() => {
     if (!user) {
       navigate('/auth');
+      return;
     }
-  }, [user, navigate]);
+    
+    // Check if we should auto-open the purchase sheet
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('buy') === 'true' && !hideMonetization) {
+      setPurchaseSheetOpen(true);
+      // Clean up URL
+      window.history.replaceState({}, '', '/credits');
+    }
+  }, [user, navigate, hideMonetization]);
 
   // Store last selected product for retry functionality
   const [lastProductForRetry, setLastProductForRetry] = useState<{

@@ -95,19 +95,26 @@ const CreditsPage = () => {
     displayPrice: string;
   } | null>(null);
 
-  // Check for payment success/cancel in URL params and refresh credits
-  // Also handle ?open=purchase to auto-open the purchase sheet
+  // Handle ?open=purchase to auto-open the purchase sheet
+  // This runs when initialized changes to ensure hideMonetization is correctly determined
   useEffect(() => {
+    if (!initialized) return;
+    
     const params = new URLSearchParams(window.location.search);
-    const payment = params.get('payment');
     const openParam = params.get('open');
     
-    // Auto-open purchase sheet if requested
+    // Auto-open purchase sheet if requested (only on Android/Web)
     if (openParam === 'purchase' && !hideMonetization) {
       setPurchaseSheetOpen(true);
       // Clean up URL
       window.history.replaceState({}, '', '/credits');
     }
+  }, [initialized, hideMonetization]);
+
+  // Check for payment success/cancel in URL params and refresh credits
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const payment = params.get('payment');
     
     if (payment) {
       // Always close the payment dialog when returning from payment

@@ -66,6 +66,7 @@ const CreditsPage = () => {
   // Payment dialog state
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [purchaseSheetOpen, setPurchaseSheetOpen] = useState(false);
+  const [openedViaPurchaseParam, setOpenedViaPurchaseParam] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<{
     id: string;
     name: string;
@@ -99,17 +100,29 @@ const CreditsPage = () => {
   // This runs when initialized changes to ensure hideMonetization is correctly determined
   useEffect(() => {
     if (!initialized) return;
-    
+
     const params = new URLSearchParams(window.location.search);
     const openParam = params.get('open');
-    
+
     // Auto-open purchase sheet if requested (only on Android/Web)
     if (openParam === 'purchase' && !hideMonetization) {
+      setOpenedViaPurchaseParam(true);
       setPurchaseSheetOpen(true);
-      // Clean up URL
+      // Clean up URL (we keep state in openedViaPurchaseParam)
       window.history.replaceState({}, '', '/credits');
     }
   }, [initialized, hideMonetization]);
+
+  const handlePurchaseSheetOpenChange = (open: boolean) => {
+    setPurchaseSheetOpen(open);
+
+    // If this page was only opened to show the purchase popup,
+    // closing the popup should take the user back to where they came from.
+    if (!open && openedViaPurchaseParam) {
+      setOpenedViaPurchaseParam(false);
+      navigate(-1);
+    }
+  };
 
   // Check for payment success/cancel in URL params and refresh credits
   useEffect(() => {
@@ -404,7 +417,7 @@ const CreditsPage = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <Sheet open={purchaseSheetOpen} onOpenChange={setPurchaseSheetOpen}>
+            <Sheet open={purchaseSheetOpen} onOpenChange={handlePurchaseSheetOpenChange}>
               <SheetTrigger asChild>
                 <Button 
                   className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg"

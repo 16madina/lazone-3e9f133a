@@ -96,8 +96,7 @@ const App = () => {
                       <Route path="/install" element={<InstallPage />} />
                       <Route path="/invite" element={<SmartLinkPage />} />
                       <Route path="/reservation/:id" element={<ReservationPage />} />
-                      {/* FREE MODE: Credits page redirects to home - keep for future re-activation */}
-                      <Route path="/credits" element={<Index />} />
+                      <Route path="/credits" element={<CreditsPage />} />
                       <Route path="/dashboard" element={<DashboardPage />} />
                       <Route path="/admin" element={<AdminPage />} />
                       <Route path="/settings/edit-profile" element={<EditProfilePage />} />

@@ -96,9 +96,18 @@ const CreditsPage = () => {
   } | null>(null);
 
   // Check for payment success/cancel in URL params and refresh credits
+  // Also handle ?open=purchase to auto-open the purchase sheet
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const payment = params.get('payment');
+    const openParam = params.get('open');
+    
+    // Auto-open purchase sheet if requested
+    if (openParam === 'purchase' && !hideMonetization) {
+      setPurchaseSheetOpen(true);
+      // Clean up URL
+      window.history.replaceState({}, '', '/credits');
+    }
     
     if (payment) {
       // Always close the payment dialog when returning from payment

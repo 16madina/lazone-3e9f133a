@@ -40,6 +40,7 @@ interface UseCreditsReturn {
   purchaseWithStripe: (productId: string) => Promise<{ success: boolean; url?: string }>;
   restorePurchases: () => Promise<void>;
   useCredit: () => Promise<boolean>;
+  refreshCredits: () => Promise<void>;
   
   // State
   loading: boolean;
@@ -49,6 +50,7 @@ interface UseCreditsReturn {
   isMockMode: boolean;
   isPurchaseAvailable: boolean;
   storeKitError: string | null;
+  lastUpdatedAt: Date | null;
 }
 
 export function useCredits(): UseCreditsReturn {
@@ -63,6 +65,7 @@ export function useCredits(): UseCreditsReturn {
   const [initialized, setInitialized] = useState(false);
   const [freeListingsUsed, setFreeListingsUsed] = useState(0);
   const [storeKitError, setStoreKitError] = useState<string | null>(null);
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
 
   // Get free credits limit based on user type
   const freeCreditsLimit = profile?.user_type === 'agence' ? 1 : 3;
@@ -109,44 +112,54 @@ export function useCredits(): UseCreditsReturn {
   }, []);
 
   // Fetch user's purchases and listings count
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!user?.id) {
-        setLoading(false);
-        return;
-      }
+  const fetchCreditsData = useCallback(async () => {
+    if (!user?.id) {
+      setLoading(false);
+      return;
+    }
 
-      setLoading(true);
-      try {
-        // Fetch StoreKit purchases
-        const { data: purchasesData, error: purchasesError } = await supabase
-          .from('storekit_purchases')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
+    setLoading(true);
+    try {
+      // Fetch StoreKit purchases
+      const { data: purchasesData, error: purchasesError } = await supabase
+        .from('storekit_purchases')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
 
-        if (purchasesError) throw purchasesError;
-        setPurchases((purchasesData || []) as StoreKitPurchase[]);
+      if (purchasesError) throw purchasesError;
+      setPurchases((purchasesData || []) as StoreKitPurchase[]);
 
-        // Count active listings to determine free credits used
-        const { count, error: countError } = await supabase
-          .from('properties')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', user.id)
-          .eq('is_active', true);
+      // Count active listings to determine free credits used
+      const { count, error: countError } = await supabase
+        .from('properties')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('is_active', true);
 
-        if (countError) throw countError;
-        setFreeListingsUsed(count || 0);
+      if (countError) throw countError;
+      setFreeListingsUsed(count || 0);
+      setLastUpdatedAt(new Date());
 
-      } catch (error) {
-        console.error('Failed to fetch credits data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+    } catch (error) {
+      console.error('Failed to fetch credits data:', error);
+    } finally {
+      setLoading(false);
+    }
   }, [user?.id]);
+
+  useEffect(() => {
+    fetchCreditsData();
+  }, [fetchCreditsData]);
+
+  // Refresh credits manually
+  const refreshCredits = useCallback(async () => {
+    await fetchCreditsData();
+    toast({
+      title: 'Crédits actualisés',
+      description: 'Vos données de crédits ont été mises à jour',
+    });
+  }, [fetchCreditsData, toast]);
 
   // Check if we're on iOS native
   const isIosNative = Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios';
@@ -456,6 +469,7 @@ export function useCredits(): UseCreditsReturn {
     purchaseWithStripe,
     restorePurchases,
     useCredit,
+    refreshCredits,
     loading,
     purchasing,
     initialized,
@@ -463,5 +477,6 @@ export function useCredits(): UseCreditsReturn {
     isMockMode: storeKitService.isMockMode(),
     isPurchaseAvailable: storeKitService.isPurchaseAvailable(),
     storeKitError,
+    lastUpdatedAt,
   };
 }

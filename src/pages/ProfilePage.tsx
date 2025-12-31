@@ -275,7 +275,7 @@ const ProfilePage = () => {
   const { theme, toggleTheme } = useTheme();
   const { appMode, isResidence } = useAppMode();
   const { unreadCount: notificationCount } = useNotifications();
-  const { activeSubscription } = useCredits();
+  const { activeSubscription, refreshCredits, lastUpdatedAt, loading: creditsLoading } = useCredits();
   const { 
     settings: listingSettings, 
     availableCredits,
@@ -955,10 +955,26 @@ const ProfilePage = () => {
                 </SheetTrigger>
                 <SheetContent side="bottom" className="rounded-t-3xl">
                   <SheetHeader className="text-left pb-4 border-b border-border">
-                    <SheetTitle className="flex items-center gap-2">
-                      <Coins className="w-5 h-5 text-emerald-600" />
-                      Mes Crédits
-                    </SheetTitle>
+                    <div className="flex items-center justify-between">
+                      <SheetTitle className="flex items-center gap-2">
+                        <Coins className="w-5 h-5 text-emerald-600" />
+                        Mes Crédits
+                      </SheetTitle>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={refreshCredits}
+                        disabled={creditsLoading}
+                        className="h-8 px-2"
+                      >
+                        <RefreshCw className={`w-4 h-4 ${creditsLoading ? 'animate-spin' : ''}`} />
+                      </Button>
+                    </div>
+                    {lastUpdatedAt && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Dernière mise à jour : {format(lastUpdatedAt, "HH:mm", { locale: fr })}
+                      </p>
+                    )}
                   </SheetHeader>
                   
                   <div className="py-6 space-y-6">

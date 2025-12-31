@@ -56,6 +56,10 @@ const CreditsPage = () => {
     isPurchaseAvailable,
     storeKitError,
   } = useCredits();
+
+  // Hide monetization only on iOS (Apple review compliance)
+  // Android and Web can see and use Stripe payments
+  const hideMonetization = isIosNative;
   const { toast } = useToast();
 
   // Payment dialog state
@@ -375,182 +379,186 @@ const CreditsPage = () => {
           </Card>
         </motion.div>
 
-        {/* Credit Packs Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          <div className="flex items-center gap-2 mb-4">
-            <Package className="w-5 h-5 text-primary" />
-            <h2 className="font-semibold text-lg">Packs de crédits</h2>
-          </div>
-
-          {loading || !initialized ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map(i => (
-                <Skeleton key={i} className="h-24 rounded-xl" />
-              ))}
+        {/* Credit Packs Section - Hidden on iOS for Apple compliance */}
+        {!hideMonetization && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <Package className="w-5 h-5 text-primary" />
+              <h2 className="font-semibold text-lg">Packs de crédits</h2>
             </div>
-          ) : (
-            <div className="space-y-3">
-              {creditPacks.map((product, index) => {
-                const credits = CREDITS_PER_PRODUCT[product.id] || 1;
-                const isBestValue = product.id.includes('pack10');
-                
-                return (
-                  <motion.div
-                    key={product.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.1 * index }}
-                  >
-                    <Card className={`relative overflow-hidden transition-all hover:shadow-lg ${isBestValue ? 'border-primary ring-1 ring-primary/30' : ''}`}>
-                      {isBestValue && (
-                        <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-bl-lg font-medium">
-                          -20%
-                        </div>
-                      )}
-                      <CardContent className="p-4 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                            credits === 1 ? 'bg-blue-500/20' : 
-                            credits === 5 ? 'bg-purple-500/20' : 'bg-amber-500/20'
-                          }`}>
-                            <Coins className={`w-5 h-5 ${
-                              credits === 1 ? 'text-blue-500' : 
-                              credits === 5 ? 'text-purple-500' : 'text-amber-500'
-                            }`} />
+
+            {loading || !initialized ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map(i => (
+                  <Skeleton key={i} className="h-24 rounded-xl" />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {creditPacks.map((product, index) => {
+                  const credits = CREDITS_PER_PRODUCT[product.id] || 1;
+                  const isBestValue = product.id.includes('pack10');
+                  
+                  return (
+                    <motion.div
+                      key={product.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.1 * index }}
+                    >
+                      <Card className={`relative overflow-hidden transition-all hover:shadow-lg ${isBestValue ? 'border-primary ring-1 ring-primary/30' : ''}`}>
+                        {isBestValue && (
+                          <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-bl-lg font-medium">
+                            -20%
                           </div>
-                          <div>
-                            <p className="font-semibold">{product.displayName}</p>
-                            <p className="text-sm text-muted-foreground">{product.description}</p>
+                        )}
+                        <CardContent className="p-4 flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                              credits === 1 ? 'bg-blue-500/20' : 
+                              credits === 5 ? 'bg-purple-500/20' : 'bg-amber-500/20'
+                            }`}>
+                              <Coins className={`w-5 h-5 ${
+                                credits === 1 ? 'text-blue-500' : 
+                                credits === 5 ? 'text-purple-500' : 'text-amber-500'
+                              }`} />
+                            </div>
+                            <div>
+                              <p className="font-semibold">{product.displayName}</p>
+                              <p className="text-sm text-muted-foreground">{product.description}</p>
+                            </div>
                           </div>
-                        </div>
-                        <div className="flex flex-col items-end gap-1">
-                          <Button
-                            onClick={() => handlePurchase(product)}
-                            disabled={purchasing}
-                            className={isBestValue ? 'bg-primary' : ''}
-                            size="sm"
-                          >
-                            {product.displayPrice}
-                          </Button>
-                          {localCurrency && getLocalEstimate(product.displayPrice) && (
-                            <span className="text-xs text-muted-foreground">
-                              {getLocalEstimate(product.displayPrice)}
-                            </span>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                );
-              })}
-            </div>
-          )}
-        </motion.div>
+                          <div className="flex flex-col items-end gap-1">
+                            <Button
+                              onClick={() => handlePurchase(product)}
+                              disabled={purchasing}
+                              className={isBestValue ? 'bg-primary' : ''}
+                              size="sm"
+                            >
+                              {product.displayPrice}
+                            </Button>
+                            {localCurrency && getLocalEstimate(product.displayPrice) && (
+                              <span className="text-xs text-muted-foreground">
+                                {getLocalEstimate(product.displayPrice)}
+                              </span>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            )}
+          </motion.div>
+        )}
 
-        {/* Subscriptions Section (for everyone) */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <div className="flex items-center gap-2 mb-4">
-            <Crown className="w-5 h-5 text-amber-500" />
-            <h2 className="font-semibold text-lg">Abonnements</h2>
-          </div>
-
-          {loading || !initialized ? (
-            <div className="space-y-3">
-              {[1, 2].map(i => (
-                <Skeleton key={i} className="h-32 rounded-xl" />
-              ))}
+        {/* Subscriptions Section - Hidden on iOS for Apple compliance */}
+        {!hideMonetization && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <Crown className="w-5 h-5 text-amber-500" />
+              <h2 className="font-semibold text-lg">Abonnements</h2>
             </div>
-          ) : (
-            <div className="space-y-3">
-              {subscriptions.map((product, index) => {
-                const isActive = activeSubscription?.product_id === product.id;
-                const isPro = product.id.includes('pro');
-                const isPremium = product.id.includes('premium');
-                
-                // Get credits and sponsorings from constants
-                const credits = CREDITS_PER_PRODUCT[product.id] || 0;
-                const sponsorings = SPONSORED_LISTINGS_PER_PRODUCT[product.id] || 0;
-                
-                const features = isPremium 
-                  ? [`${credits} crédits/mois`, `${sponsorings} sponsorings/mois`, 'Mise en avant', 'Support prioritaire', 'Badge Premium']
-                  : [`${credits} crédits/mois`, `${sponsorings} sponsoring/mois`, 'Badge Pro'];
 
-                return (
-                  <motion.div
-                    key={product.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.1 * index }}
-                  >
-                    <Card className={`relative overflow-hidden transition-all ${
-                      isPremium ? 'bg-gradient-to-br from-amber-500/10 to-orange-500/10 border-amber-500/30' :
-                      isPro ? 'bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/30' :
-                      ''
-                    } ${isActive ? 'ring-2 ring-green-500' : ''}`}>
-                      {isPremium && (
-                        <div className="absolute top-0 right-0">
-                          <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-none rounded-bl-lg">
-                            <Star className="w-3 h-3 mr-1" />
-                            Populaire
-                          </Badge>
-                        </div>
-                      )}
-                      {isActive && (
-                        <div className="absolute top-0 left-0">
-                          <Badge className="bg-green-500 rounded-none rounded-br-lg">
-                            <Check className="w-3 h-3 mr-1" />
-                            Actif
-                          </Badge>
-                        </div>
-                      )}
-                      <CardHeader className="pb-2">
-                        <CardTitle className="flex items-center gap-2">
-                          {isPremium && <Crown className="w-5 h-5 text-amber-500" />}
-                          {isPro && <Zap className="w-5 h-5 text-purple-500" />}
-                          {product.displayName}
-                        </CardTitle>
-                        <CardDescription>{product.description}</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <ul className="space-y-1 mb-4">
-                          {features.map((feature, i) => (
-                            <li key={i} className="flex items-center gap-2 text-sm">
-                              <Check className="w-4 h-4 text-green-500" />
-                              {feature}
-                            </li>
-                          ))}
-                        </ul>
-                        <div className="flex flex-col gap-1">
-                          <Button
-                            className="w-full"
-                            variant={isPremium ? 'default' : 'outline'}
-                            onClick={() => handlePurchase(product)}
-                            disabled={purchasing || isActive}
-                          >
-                            {isActive ? 'Abonnement actif' : product.displayPrice}
-                          </Button>
-                          {!isActive && localCurrency && getLocalEstimate(product.displayPrice) && (
-                            <span className="text-xs text-muted-foreground text-center">
-                              {getLocalEstimate(product.displayPrice)}
-                            </span>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                );
-              })}
-            </div>
-          )}
-        </motion.div>
+            {loading || !initialized ? (
+              <div className="space-y-3">
+                {[1, 2].map(i => (
+                  <Skeleton key={i} className="h-32 rounded-xl" />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {subscriptions.map((product, index) => {
+                  const isActive = activeSubscription?.product_id === product.id;
+                  const isPro = product.id.includes('pro');
+                  const isPremium = product.id.includes('premium');
+                  
+                  // Get credits and sponsorings from constants
+                  const credits = CREDITS_PER_PRODUCT[product.id] || 0;
+                  const sponsorings = SPONSORED_LISTINGS_PER_PRODUCT[product.id] || 0;
+                  
+                  const features = isPremium 
+                    ? [`${credits} crédits/mois`, `${sponsorings} sponsorings/mois`, 'Mise en avant', 'Support prioritaire', 'Badge Premium']
+                    : [`${credits} crédits/mois`, `${sponsorings} sponsoring/mois`, 'Badge Pro'];
+
+                  return (
+                    <motion.div
+                      key={product.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.1 * index }}
+                    >
+                      <Card className={`relative overflow-hidden transition-all ${
+                        isPremium ? 'bg-gradient-to-br from-amber-500/10 to-orange-500/10 border-amber-500/30' :
+                        isPro ? 'bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/30' :
+                        ''
+                      } ${isActive ? 'ring-2 ring-green-500' : ''}`}>
+                        {isPremium && (
+                          <div className="absolute top-0 right-0">
+                            <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-none rounded-bl-lg">
+                              <Star className="w-3 h-3 mr-1" />
+                              Populaire
+                            </Badge>
+                          </div>
+                        )}
+                        {isActive && (
+                          <div className="absolute top-0 left-0">
+                            <Badge className="bg-green-500 rounded-none rounded-br-lg">
+                              <Check className="w-3 h-3 mr-1" />
+                              Actif
+                            </Badge>
+                          </div>
+                        )}
+                        <CardHeader className="pb-2">
+                          <CardTitle className="flex items-center gap-2">
+                            {isPremium && <Crown className="w-5 h-5 text-amber-500" />}
+                            {isPro && <Zap className="w-5 h-5 text-purple-500" />}
+                            {product.displayName}
+                          </CardTitle>
+                          <CardDescription>{product.description}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <ul className="space-y-1 mb-4">
+                            {features.map((feature, i) => (
+                              <li key={i} className="flex items-center gap-2 text-sm">
+                                <Check className="w-4 h-4 text-green-500" />
+                                {feature}
+                              </li>
+                            ))}
+                          </ul>
+                          <div className="flex flex-col gap-1">
+                            <Button
+                              className="w-full"
+                              variant={isPremium ? 'default' : 'outline'}
+                              onClick={() => handlePurchase(product)}
+                              disabled={purchasing || isActive}
+                            >
+                              {isActive ? 'Abonnement actif' : product.displayPrice}
+                            </Button>
+                            {!isActive && localCurrency && getLocalEstimate(product.displayPrice) && (
+                              <span className="text-xs text-muted-foreground text-center">
+                                {getLocalEstimate(product.displayPrice)}
+                              </span>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            )}
+          </motion.div>
+        )}
 
         {/* Help Text */}
         <motion.div

@@ -2,12 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>CAPACITOR_DEBUG</key>
+	<key>CAPACITOR_DEBUG</key>
 	<string>$(CAPACITOR_DEBUG)</string>
 	<key>CFBundleDevelopmentRegion</key>
-	<string>en</string>
+	<string>fr</string>
 	<key>CFBundleDisplayName</key>
-        <string>LaZone</string>
+	<string>LaZone</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -24,10 +24,10 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>UILaunchStoryboardName</key>
-	<string>LaunchScreen</string>
-	<key>UIMainStoryboardFile</key>
-	<string>Main</string>
+	<key>NSCameraUsageDescription</key>
+	<string>To take photos and videos for your profile and listings.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>To automatically geotag your listings and show them to nearby users.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
@@ -47,6 +47,14 @@
 			</array>
 		</dict>
 	</dict>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIMainStoryboardFile</key>
+	<string>Main</string>
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
 		<string>armv7</string>
@@ -66,9 +74,23 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
-	<key>NSCameraUsageDescription</key>
-	<string>To take photos and videos for your profile and listings.</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>To automatically geotag your listings and show them to nearby users.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>LaZone utilise votre localisation pour afficher des biens immobiliers pertinents près de vous et faciliter la saisie des adresses.
+</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>LaZone utilise Face ID pour sécuriser l’accès à votre compte et faciliter une connexion rapide et sécurisée.
+</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>LaZone utilise votre localisation, même lorsque l’application est en arrière-plan, afin d’améliorer la pertinence des annonces immobilières.
+</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>LaZone utilise le microphone pour enregistrer des messages audio lorsque vous communiquez avec d’autres utilisateurs.
+</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>LaZone accède à votre photothèque afin de vous permettre de sélectionner des photos pour vos annonces immobilières.
+</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>LaZone peut enregistrer dans votre photothèque les photos que vous prenez ou modifiez depuis l’application.
+</string>
 </dict>
 </plist>

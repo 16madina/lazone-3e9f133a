@@ -4,7 +4,7 @@
     "details": [
       {
         "appIDs": [
-          "TEAM_ID.com.lazone.afrique"
+          "6XW2XM3NDF.com.lazone.afrique"
         ],
         "paths": [
           "/auth*",
@@ -30,7 +30,7 @@
   },
   "webcredentials": {
     "apps": [
-      "TEAM_ID.com.lazone.afrique"
+      "6XW2XM3NDF.com.lazone.afrique"
     ]
   }
 }

@@ -946,11 +946,11 @@ const PublishPage = () => {
       if (needsPayment && !canUseCredit && !hasPaid) {
         setLoading(false);
         setPendingPropertyId(property.id);
-        toast({ 
-          title: 'Crédits insuffisants', 
+        toast({
+          title: 'Crédits insuffisants',
           description: 'Votre annonce est en attente. Veuillez acheter des crédits pour la publier.',
         });
-        navigate('/credits');
+        navigate('/profile', { state: { openPurchase: true } });
         return;
       }
 

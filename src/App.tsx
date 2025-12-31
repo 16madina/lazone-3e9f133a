@@ -45,22 +45,22 @@ import DashboardPage from "./pages/DashboardPage";
 import EditPropertyPage from "./pages/EditPropertyPage";
 import NetworkStatusPage from "./pages/settings/NetworkStatusPage";
 import ReservationPage from "./pages/ReservationPage";
-import CreditsPage from "./pages/CreditsPage";
+import CreditsRedirectPage from "./pages/CreditsRedirectPage";
 import SmartLinkPage from "./pages/SmartLinkPage";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { PushNotificationBanner } from "@/components/PushNotificationBanner";
 import { NotificationDeepLinkHandler } from "@/components/NotificationDeepLinkHandler";
 import { DeepLinkHandler } from "@/components/DeepLinkHandler";
-
+ 
 const queryClient = new QueryClient();
-
+ 
 const App = () => {
   const [showSplash, setShowSplash] = useState(true);
-
+ 
   const handleSplashComplete = () => {
     setShowSplash(false);
   };
-
+ 
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
@@ -96,7 +96,7 @@ const App = () => {
                       <Route path="/install" element={<InstallPage />} />
                       <Route path="/invite" element={<SmartLinkPage />} />
                       <Route path="/reservation/:id" element={<ReservationPage />} />
-                      <Route path="/credits" element={<CreditsPage />} />
+                      <Route path="/credits" element={<CreditsRedirectPage />} />
                       <Route path="/dashboard" element={<DashboardPage />} />
                       <Route path="/admin" element={<AdminPage />} />
                       <Route path="/settings/edit-profile" element={<EditProfilePage />} />

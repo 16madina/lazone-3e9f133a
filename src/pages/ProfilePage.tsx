@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
 import { motion } from 'framer-motion';
 import heroBg4 from '@/assets/hero-bg-4.jpg';
 import {
@@ -37,6 +38,7 @@ import {
   EyeIcon,
   UserX,
   CreditCard,
+  ShoppingCart,
   Award,
   Database,
   RotateCcw,
@@ -986,6 +988,18 @@ const ProfilePage = () => {
                         </div>
                       </div>
                     </div>
+
+                    {/* Buy Credits Button - Only visible on Android/Web */}
+                    {!(Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios') && (
+                      <Button 
+                        onClick={() => navigate('/credits')}
+                        className="w-full h-12 text-base font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg"
+                        size="lg"
+                      >
+                        <ShoppingCart className="w-5 h-5 mr-2" />
+                        Acheter des crédits
+                      </Button>
+                    )}
                   </div>
                 </SheetContent>
               </Sheet>

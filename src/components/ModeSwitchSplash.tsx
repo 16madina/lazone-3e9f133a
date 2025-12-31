@@ -4,7 +4,7 @@ import { AppMode } from '@/stores/appStore';
 import { getSoundInstance } from '@/hooks/useSound';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { Capacitor } from '@capacitor/core';
-import lazoneLogo from '@/assets/lazone-logo-new.png';
+import { AppLogo } from '@/components/AppLogo';
 
 interface ModeSwitchSplashProps {
   targetMode: AppMode;
@@ -149,9 +149,7 @@ export const ModeSwitchSplash = ({ targetMode, onComplete }: ModeSwitchSplashPro
                     background: 'radial-gradient(circle at 30% 30%, rgba(255,255,255,0.4) 0%, transparent 60%)'
                   }}
                 />
-                <img 
-                  src={lazoneLogo} 
-                  alt="LaZone" 
+                <AppLogo 
                   className="w-full h-full object-contain relative z-10 drop-shadow-lg"
                   style={{
                     filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3))'

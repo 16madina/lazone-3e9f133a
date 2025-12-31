@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import { Gift, Download, Smartphone, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { AppLogo } from '@/components/AppLogo';
 import splashBg from '@/assets/splash-bg-10.jpg';
-import logoImage from '@/assets/lazone-logo-new.png';
 
 const APP_STORE_URL = 'https://apps.apple.com/app/lazone-afrique/id6740092997';
 const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.lazone.afrique';
@@ -12,7 +12,6 @@ const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.lazone
 const SmartLinkPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const location = useLocation();
   const [platform, setPlatform] = useState<'ios' | 'android' | 'web'>('web');
   const [referralCode, setReferralCode] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(3);
@@ -97,7 +96,7 @@ const SmartLinkPage = () => {
         }}
       >
         <div className="glass-card p-8 max-w-md w-full text-center space-y-6">
-          <img src={logoImage} alt="LaZone" className="h-16 mx-auto" />
+          <AppLogo className="h-16 w-auto mx-auto" />
           
           {referralCode && (
             <div className="bg-primary/20 border border-primary/30 rounded-xl p-4">
@@ -165,7 +164,7 @@ const SmartLinkPage = () => {
       }}
     >
       <div className="glass-card p-8 max-w-md w-full text-center space-y-6">
-        <img src={logoImage} alt="LaZone" className="h-16 mx-auto" />
+        <AppLogo className="h-16 w-auto mx-auto" />
         
         {referralCode && (
           <div className="bg-primary/20 border border-primary/30 rounded-xl p-4">

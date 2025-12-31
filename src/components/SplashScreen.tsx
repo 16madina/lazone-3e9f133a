@@ -1,7 +1,7 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getSoundInstance } from '@/hooks/useSound';
-import logoLazone from '@/assets/logo-lazone.png';
+import { AppLogo } from '@/components/AppLogo';
 import heroBg1 from '@/assets/hero-bg.jpg';
 import heroBg2 from '@/assets/hero-bg-2.jpg';
 import heroBg3 from '@/assets/hero-bg-3.jpg';
@@ -31,9 +31,6 @@ const backgroundImages = [
 
 export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
   const [phase, setPhase] = useState<'logo' | 'text' | 'exit'>('logo');
-  // Prefer a public path for the splash logo (more reliable for PWA/native), fallback to bundled asset.
-  const primaryLogoSrc = `${import.meta.env.BASE_URL}images/logo-lazone.png`;
-  const [logoSrc, setLogoSrc] = useState<string>(primaryLogoSrc);
 
   // Random background image selected once per mount
   const backgroundImage = useMemo(() => {
@@ -141,14 +138,7 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
             />
             
             {/* Logo - Extra Large with pulse */}
-            <motion.img
-              src={logoSrc}
-              alt="LaZone"
-              className="w-80 h-80 object-contain relative z-10 drop-shadow-2xl"
-              onError={() => {
-                // If the public path fails for any reason, fall back to the bundled asset.
-                if (logoSrc !== logoLazone) setLogoSrc(logoLazone);
-              }}
+            <motion.div
               initial={{ filter: 'brightness(0) invert(1)', scale: 0.9 }}
               animate={{
                 filter: 'brightness(1) invert(0)',
@@ -158,7 +148,10 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
                 filter: { duration: 0.5, delay: 0.3 },
                 scale: { duration: 2, ease: 'easeInOut', repeat: Infinity, delay: 0.5 },
               }}
-            />
+              className="relative z-10"
+            >
+              <AppLogo className="w-80 h-80 object-contain drop-shadow-2xl" />
+            </motion.div>
           </motion.div>
 
           {/* Slogan */}

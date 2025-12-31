@@ -26,6 +26,27 @@ import { usePaymentNumbers } from '@/hooks/usePaymentNumbers';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import waveLogo from '@/assets/wave-logo.png';
+import { Capacitor } from '@capacitor/core';
+
+// Helper to get redirect URL for Stripe based on platform
+// Android native uses custom URL scheme, web uses lazoneapp.com
+const getRedirectOrigin = (): { origin: string; isNative: boolean } => {
+  const platform = Capacitor.getPlatform();
+  const isNativePlatform = Capacitor.isNativePlatform();
+  
+  console.log('[getRedirectOrigin] Platform:', platform, 'isNativePlatform:', isNativePlatform);
+  
+  // Android native app: use deep link scheme
+  if (isNativePlatform && platform === 'android') {
+    console.log('[getRedirectOrigin] Using Android deep link: lazone://');
+    return { origin: 'lazone://', isNative: true };
+  }
+  
+  // For web (including preview), ALWAYS use production domain
+  // This ensures redirects work correctly and don't go to lovableproject.com
+  console.log('[getRedirectOrigin] Using production URL: https://lazoneapp.com');
+  return { origin: 'https://lazoneapp.com', isNative: false };
+};
 
 type PaymentMethod = 'stripe' | 'mobile_money';
 type PaymentStep = 'choose' | 'mobile_money' | 'stripe_fallback' | 'processing' | 'submitted';
@@ -97,38 +118,48 @@ export const CreditPaymentDialog = ({
       setIsProcessing(true);
       setStep('processing');
 
-      // Open popup immediately before async call
-      const popup = window.open('about:blank', '_blank');
-
       try {
-        const successUrl = `${window.location.origin}/credits?payment=success`;
-        const cancelUrl = `${window.location.origin}/credits?payment=cancelled`;
+        const { origin, isNative } = getRedirectOrigin();
+        const creditsPath = isNative ? 'credits' : '/credits';
+        const successUrl = `${origin}${creditsPath}?payment=success`;
+        const cancelUrl = `${origin}${creditsPath}?payment=cancelled`;
+
+        console.log('[Stripe] Creating checkout with:', { successUrl, cancelUrl, isNative });
 
         const { data, error } = await supabase.functions.invoke('create-credits-checkout', {
           body: {
             productId,
             successUrl,
             cancelUrl,
+            amount: price.amount,
+            currency: price.symbol === 'FCFA' ? 'XOF' : price.symbol,
           },
         });
 
         if (error) {
-          popup?.close();
           throw new Error(error.message);
         }
 
         const url = data?.url;
+        console.log('[Stripe] Got checkout URL:', url);
+        
         if (url) {
-          if (popup && !popup.closed) {
-            popup.location.href = url;
-            handleClose();
+          // On Android native, use window.location to open in browser
+          // This will open the URL in the system browser and allow deep link return
+          if (isNative) {
+            console.log('[Stripe] Android native - redirecting to:', url);
+            window.location.href = url;
           } else {
-            // Popup was blocked, show fallback
-            setStripeUrl(url);
-            setStep('stripe_fallback');
+            // On web, try popup first, fallback if blocked
+            const popup = window.open(url, '_blank');
+            if (!popup || popup.closed) {
+              setStripeUrl(url);
+              setStep('stripe_fallback');
+            } else {
+              handleClose();
+            }
           }
         } else {
-          popup?.close();
           throw new Error('URL de paiement non reçue');
         }
       } catch (error) {

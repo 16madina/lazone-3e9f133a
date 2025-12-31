@@ -360,6 +360,14 @@ const AdminPage = () => {
   const [sponsorDialog, setSponsorDialog] = useState<SponsorDialogData>({ open: false, property: null });
   const [addAdminDialog, setAddAdminDialog] = useState(false);
   const [bannerDialog, setBannerDialog] = useState<{ open: boolean; banner: BannerData | null }>({ open: false, banner: null });
+  const [creditsDialog, setCreditsDialog] = useState<{ open: boolean; userId: string; userName: string }>({ open: false, userId: '', userName: '' });
+  
+  // Credits management states
+  const [creditsToAdd, setCreditsToAdd] = useState('1');
+  const [creditsReason, setCreditsReason] = useState('');
+  const [userCurrentCredits, setUserCurrentCredits] = useState(0);
+  const [loadingCredits, setLoadingCredits] = useState(false);
+  const [savingCredits, setSavingCredits] = useState(false);
   
   // Banner form states
   const [bannerTitle, setBannerTitle] = useState('');
@@ -868,6 +876,76 @@ const AdminPage = () => {
     }
   };
 
+  // Fetch user credits when opening credits dialog
+  const fetchUserCredits = async (userId: string) => {
+    setLoadingCredits(true);
+    try {
+      // Get credits from storekit_purchases
+      const { data: purchases, error } = await supabase
+        .from('storekit_purchases')
+        .select('credits_amount, credits_used')
+        .eq('user_id', userId)
+        .eq('status', 'active');
+
+      if (error) throw error;
+
+      const totalCredits = (purchases || []).reduce((acc, p) => {
+        return acc + (p.credits_amount - p.credits_used);
+      }, 0);
+
+      setUserCurrentCredits(Math.max(0, totalCredits));
+    } catch (error) {
+      console.error('Error fetching user credits:', error);
+      setUserCurrentCredits(0);
+    } finally {
+      setLoadingCredits(false);
+    }
+  };
+
+  const handleOpenCreditsDialog = (userId: string, userName: string) => {
+    setCreditsDialog({ open: true, userId, userName });
+    setCreditsToAdd('1');
+    setCreditsReason('');
+    fetchUserCredits(userId);
+  };
+
+  const handleAddCredits = async () => {
+    const amount = parseInt(creditsToAdd);
+    if (isNaN(amount) || amount <= 0) {
+      toast({ title: 'Montant invalide', variant: 'destructive' });
+      return;
+    }
+
+    setSavingCredits(true);
+    try {
+      // Insert a new credit entry (similar to referral bonus)
+      const { error } = await supabase
+        .from('storekit_purchases')
+        .insert({
+          user_id: creditsDialog.userId,
+          product_id: 'admin_bonus',
+          transaction_id: `admin_${user?.id}_${Date.now()}`,
+          credits_amount: amount,
+          credits_used: 0,
+          status: 'active',
+          is_subscription: false,
+        });
+
+      if (error) throw error;
+
+      toast({ 
+        title: 'Crédits ajoutés',
+        description: `${amount} crédit(s) ajouté(s) à ${creditsDialog.userName}`,
+      });
+      setCreditsDialog({ open: false, userId: '', userName: '' });
+    } catch (error) {
+      console.error('Error adding credits:', error);
+      toast({ title: 'Erreur lors de l\'ajout des crédits', variant: 'destructive' });
+    } finally {
+      setSavingCredits(false);
+    }
+  };
+
   const handleSendMessage = async () => {
     if (!messageContent.trim()) return;
 
@@ -1231,9 +1309,12 @@ const AdminPage = () => {
     { id: 'sponsored' as TabType, label: 'Sponsorisés', icon: Star },
     { id: 'banners' as TabType, label: 'Bannières', icon: Image },
     { id: 'notifications' as TabType, label: 'Notifs', icon: Bell },
+    // APPLE REVIEW: Payment-related tabs hidden - uncomment after approval
+    // ...(isAdmin ? [
+    //   { id: 'payments' as TabType, label: 'Paiements', icon: CreditCard, badge: stats.pendingPayments },
+    //   { id: 'limits' as TabType, label: 'Limites', icon: Wallet },
+    // ] : []),
     ...(isAdmin ? [
-      { id: 'payments' as TabType, label: 'Paiements', icon: CreditCard, badge: stats.pendingPayments },
-      { id: 'limits' as TabType, label: 'Limites', icon: Wallet },
       { id: 'admins' as TabType, label: 'Admins', icon: Shield },
     ] : []),
   ];
@@ -1454,9 +1535,9 @@ const AdminPage = () => {
               >
                 <tab.icon className="w-4 h-4 flex-shrink-0" />
                 <span className="truncate">{tab.label}</span>
-                {'badge' in tab && tab.badge > 0 && (
+                {'badge' in tab && typeof (tab as any).badge === 'number' && (tab as any).badge > 0 && (
                   <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
-                    {tab.badge}
+                    {(tab as any).badge}
                   </span>
                 )}
               </button>
@@ -1677,6 +1758,15 @@ const AdminPage = () => {
                         >
                           <Mail className="w-4 h-4" />
                           Email
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleOpenCreditsDialog(userData.user_id, userData.full_name || '')}
+                          className="justify-start gap-2 text-emerald-600 border-emerald-600 hover:bg-emerald-50"
+                        >
+                          <Wallet className="w-4 h-4" />
+                          Crédits
                         </Button>
                         {userData.is_banned ? (
                           <Button
@@ -2802,6 +2892,70 @@ const AdminPage = () => {
             <Button onClick={handleSaveBanner} disabled={uploadingBanner || !!bannerLinkUrlError}>
               {uploadingBanner && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               {bannerDialog.banner ? 'Mettre à jour' : 'Créer'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Credits Management Dialog */}
+      <Dialog open={creditsDialog.open} onOpenChange={(open) => !open && setCreditsDialog({ open: false, userId: '', userName: '' })}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Wallet className="w-5 h-5 text-emerald-600" />
+              Gérer les crédits
+            </DialogTitle>
+            <DialogDescription>
+              {creditsDialog.userName}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {/* Current credits */}
+            <div className="bg-muted rounded-xl p-4 text-center">
+              <p className="text-sm text-muted-foreground mb-1">Crédits actuels</p>
+              {loadingCredits ? (
+                <Loader2 className="w-6 h-6 animate-spin mx-auto text-muted-foreground" />
+              ) : (
+                <p className="text-3xl font-bold text-emerald-600">{userCurrentCredits}</p>
+              )}
+            </div>
+            
+            {/* Add credits form */}
+            <div>
+              <Label>Nombre de crédits à ajouter</Label>
+              <Input
+                type="number"
+                min="1"
+                max="100"
+                value={creditsToAdd}
+                onChange={(e) => setCreditsToAdd(e.target.value)}
+                placeholder="1"
+                className="mt-1"
+              />
+            </div>
+            
+            <div>
+              <Label>Raison (optionnel)</Label>
+              <Textarea
+                value={creditsReason}
+                onChange={(e) => setCreditsReason(e.target.value)}
+                placeholder="Ex: Bonus fidélité, compensation..."
+                className="mt-1"
+                rows={2}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreditsDialog({ open: false, userId: '', userName: '' })}>
+              Annuler
+            </Button>
+            <Button 
+              onClick={handleAddCredits} 
+              disabled={savingCredits || !creditsToAdd || parseInt(creditsToAdd) <= 0}
+              className="bg-emerald-600 hover:bg-emerald-700"
+            >
+              {savingCredits && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Ajouter {creditsToAdd || 0} crédit(s)
             </Button>
           </DialogFooter>
         </DialogContent>

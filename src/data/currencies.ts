@@ -139,20 +139,31 @@ export const usdExchangeRates: Record<string, number> = {
  * @returns Prix estimé en devise locale formaté, ou null si pas de conversion disponible
  */
 export const convertUsdToLocal = (usdPrice: number, countryCode: string | null): string | null => {
+  const converted = convertUsdToLocalAmount(usdPrice, countryCode);
+  if (!converted) return null;
+
+  const formattedPrice = new Intl.NumberFormat('fr-FR').format(converted.amount);
+  return `~${formattedPrice} ${converted.currency.symbol}`;
+};
+
+/**
+ * Convertit un prix USD en devise locale et retourne le montant numérique.
+ * Utile quand on doit afficher un montant à payer (ex: Mobile Money).
+ */
+export const convertUsdToLocalAmount = (
+  usdPrice: number,
+  countryCode: string | null
+): { amount: number; currency: Currency } | null => {
   if (!countryCode) return null;
-  
+
   const currency = countryCurrencyMap[countryCode];
   if (!currency) return null;
-  
+
   const rate = usdExchangeRates[currency.code];
   if (!rate) return null;
-  
-  const localPrice = Math.round(usdPrice * rate);
-  
-  // Formater avec séparateurs de milliers
-  const formattedPrice = new Intl.NumberFormat('fr-FR').format(localPrice);
-  
-  return `~${formattedPrice} ${currency.symbol}`;
+
+  const amount = Math.round(usdPrice * rate);
+  return { amount, currency };
 };
 
 /**
@@ -162,10 +173,10 @@ export const parseUsdPrice = (displayPrice: string): number | null => {
   // Enlever le symbole $ et convertir en nombre
   const match = displayPrice.match(/[\d.,]+/);
   if (!match) return null;
-  
+
   // Remplacer la virgule par un point pour les formats européens
   const priceStr = match[0].replace(',', '.');
   const price = parseFloat(priceStr);
-  
+
   return isNaN(price) ? null : price;
 };

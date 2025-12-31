@@ -664,29 +664,49 @@ export const useShare = () => {
   }): Promise<ShareResult | null> => {
     setLoading(true);
     try {
-      // Check if share is available
-      const canShare = await Share.canShare();
-      
-      if (!canShare.value) {
-        // Fallback to clipboard
-        if (options.url) {
-          await navigator.clipboard.writeText(options.url);
-          toast({
-            title: 'Lien copié',
-            description: 'Le lien a été copié dans le presse-papiers'
+      // On native platforms, use Capacitor Share plugin
+      if (isNativePlatform()) {
+        const canShare = await Share.canShare();
+        
+        if (canShare.value) {
+          const result = await Share.share({
+            title: options.title || 'LaZone',
+            text: options.text,
+            url: options.url,
+            dialogTitle: options.dialogTitle || 'Partager'
           });
+          return result;
         }
-        return null;
       }
-
-      const result = await Share.share({
-        title: options.title || 'LaZone',
-        text: options.text,
-        url: options.url,
-        dialogTitle: options.dialogTitle || 'Partager'
-      });
-
-      return result;
+      
+      // On web, use Web Share API if available
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: options.title || 'LaZone',
+            text: options.text,
+            url: options.url,
+          });
+          return { activityType: 'web-share' } as ShareResult;
+        } catch (webShareError: any) {
+          // User cancelled - this is normal
+          if (webShareError.name === 'AbortError') {
+            return null;
+          }
+          // NotAllowedError means share was blocked, fall through to clipboard
+          console.log('Web Share failed, falling back to clipboard:', webShareError);
+        }
+      }
+      
+      // Final fallback: copy to clipboard
+      if (options.url) {
+        await navigator.clipboard.writeText(options.url);
+        toast({
+          title: 'Lien copié',
+          description: 'Le lien a été copié dans le presse-papiers'
+        });
+      }
+      return null;
     } catch (error: any) {
       // User cancelled share
       if (error.message?.includes('cancelled') || error.message?.includes('canceled')) {

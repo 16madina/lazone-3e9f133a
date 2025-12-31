@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Loader2, Info, Sparkles } from 'lucide-react';
+import { Loader2, Info, Sparkles, Gift } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { SearchBar } from '@/components/home/SearchBar';
 import { FilterChips } from '@/components/home/FilterChips';
 import { SponsoredPropertiesSection } from '@/components/home/SponsoredPropertiesSection';
@@ -14,6 +14,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AppLogo } from '@/components/AppLogo';
 import { AppModeSwitch } from '@/components/home/AppModeSwitch';
 import { ModeSwitchSplash } from '@/components/ModeSwitchSplash';
+import { ReferralSheet } from '@/components/referral/ReferralSheet';
 import SectionTutorialButton from '@/components/tutorial/SectionTutorialButton';
 import { useAppStore, AppMode } from '@/stores/appStore';
 import { useProperties } from '@/hooks/useProperties';
@@ -47,6 +48,7 @@ const Index = () => {
   const [showGeoAlert, setShowGeoAlert] = useState(false);
   const [adBanners, setAdBanners] = useState<AdBannerData[]>([]);
   const [initialCountrySet, setInitialCountrySet] = useState(false);
+  const [referralSheetOpen, setReferralSheetOpen] = useState(false);
 
   const handleModeSwitch = (newMode: AppMode) => {
     setPendingMode(newMode);
@@ -214,7 +216,40 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen pb-32">
+    <div className="min-h-screen pb-32 relative">
+      {/* Parrainage Button - Fixed left side vertical */}
+      {user && (
+        <>
+          <button
+            onClick={() => setReferralSheetOpen(true)}
+            className="fixed left-0 top-[28%] z-50"
+          >
+            <motion.div
+              initial={{ x: -50 }}
+              animate={{ x: 0 }}
+              transition={{ delay: 0.5, type: "spring", stiffness: 100 }}
+            >
+              <motion.div
+                animate={{ 
+                  boxShadow: [
+                    "0 0 0 0 rgba(249, 115, 22, 0.4)",
+                    "0 0 0 6px rgba(249, 115, 22, 0)",
+                    "0 0 0 0 rgba(249, 115, 22, 0)"
+                  ]
+                }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="bg-gradient-to-b from-primary to-primary/80 text-white py-2 px-1.5 rounded-r-lg shadow-md flex flex-col items-center gap-1 hover:from-primary/90 hover:to-primary/70 transition-colors"
+              >
+                <Gift className="w-3.5 h-3.5" />
+                <span className="text-[8px] font-bold tracking-tight" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>
+                  PARRAINAGE
+                </span>
+              </motion.div>
+            </motion.div>
+          </button>
+          <ReferralSheet open={referralSheetOpen} onOpenChange={setReferralSheetOpen} />
+        </>
+      )}
       {/* Mode Switch Splash */}
       {isModeSwitching && pendingMode && (
         <ModeSwitchSplash 
@@ -260,40 +295,7 @@ const Index = () => {
           </header>
 
           {/* Hero Content with Logo */}
-          <div className="text-center mb-8 relative">
-            {/* Floating "Nos offres" button on left */}
-            <motion.div
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-20"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.5, duration: 0.4 }}
-            >
-              <Link to="/credits">
-                <motion.div
-                  className="flex flex-col items-center gap-0.5 px-1.5 py-1.5 rounded-lg bg-gradient-to-br from-amber-500/90 to-orange-600/90 backdrop-blur-md border border-amber-400/30 shadow-lg cursor-pointer"
-                  whileHover={{ scale: 1.1, x: 3 }}
-                  whileTap={{ scale: 0.9 }}
-                  animate={{
-                    y: [0, -3, 0],
-                    boxShadow: [
-                      '0 0 0 0 rgba(251, 191, 36, 0)',
-                      '0 0 15px 3px rgba(251, 191, 36, 0.5)',
-                      '0 0 0 0 rgba(251, 191, 36, 0)',
-                    ],
-                  }}
-                  transition={{
-                    y: { duration: 1.5, repeat: Infinity, ease: "easeInOut" },
-                    boxShadow: { duration: 2, repeat: Infinity, ease: "easeInOut" }
-                  }}
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-white" />
-                  <span className="text-white text-[10px] font-semibold whitespace-nowrap writing-mode-vertical">
-                    Nos offres
-                  </span>
-                </motion.div>
-              </Link>
-            </motion.div>
-
+          <div className="text-center mb-8">
             <AppLogo className="h-24 mx-auto mb-4" />
             <AnimatePresence mode="wait">
               <motion.h1 

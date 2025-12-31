@@ -54,6 +54,25 @@ export const usePlatformPayment = (): UsePlatformPaymentReturn => {
   // Determine preferred payment method based on platform
   const preferredMethod: PaymentMethod = platform === 'ios' ? 'apple_iap' : 'stripe';
 
+  // Get the appropriate redirect URL based on platform
+  // Only Android uses custom URL scheme (iOS uses Apple IAP, not Stripe)
+  // Web uses the production domain
+  const getRedirectOrigin = (): string => {
+    // Only use custom URL scheme on Android (iOS uses Apple IAP instead of Stripe)
+    if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android') {
+      return 'lazone://';
+    }
+    // For web and iOS, use actual origin but fallback to production if localhost
+    const origin = window.location.origin;
+    if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      return 'https://lazoneapp.com';
+    }
+    return origin;
+  };
+
+  // Check if we should use deep link scheme
+  const isNative = Capacitor.isNativePlatform();
+
   // Opens an external URL, working around iframe restrictions
   const openExternalUrl = (url: string): { opened: boolean; url: string } => {
     // Try window.open first (works best in iframes)
@@ -94,13 +113,18 @@ export const usePlatformPayment = (): UsePlatformPaymentReturn => {
       }
 
       const mode = params.listingType === 'short_term' ? 'residence' : 'lazone';
-      const successUrl = new URL(`${window.location.origin}/publish`);
+      const redirectOrigin = getRedirectOrigin();
+      
+      // Build success URL - use path format for deep links
+      const successPath = isNative ? 'publish' : '/publish';
+      const successUrl = new URL(`${redirectOrigin}${successPath}`);
       successUrl.searchParams.set('payment', 'success');
       successUrl.searchParams.set('mode', mode);
       successUrl.searchParams.set('listingType', params.listingType);
       if (params.propertyId) successUrl.searchParams.set('propertyId', params.propertyId);
 
-      const cancelUrl = new URL(`${window.location.origin}/publish`);
+      const cancelPath = isNative ? 'publish' : '/publish';
+      const cancelUrl = new URL(`${redirectOrigin}${cancelPath}`);
       cancelUrl.searchParams.set('payment', 'cancelled');
       cancelUrl.searchParams.set('mode', mode);
       cancelUrl.searchParams.set('listingType', params.listingType);

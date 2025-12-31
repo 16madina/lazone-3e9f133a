@@ -495,6 +495,7 @@ export type Database = {
           last_seen_at: string | null
           phone: string | null
           push_token: string | null
+          referral_code: string | null
           updated_at: string
           user_id: string
           user_type: Database["public"]["Enums"]["user_type"] | null
@@ -512,6 +513,7 @@ export type Database = {
           last_seen_at?: string | null
           phone?: string | null
           push_token?: string | null
+          referral_code?: string | null
           updated_at?: string
           user_id: string
           user_type?: Database["public"]["Enums"]["user_type"] | null
@@ -529,6 +531,7 @@ export type Database = {
           last_seen_at?: string | null
           phone?: string | null
           push_token?: string | null
+          referral_code?: string | null
           updated_at?: string
           user_id?: string
           user_type?: Database["public"]["Enums"]["user_type"] | null
@@ -560,6 +563,7 @@ export type Database = {
           listing_type: string
           lng: number | null
           minimum_stay: number | null
+          pas_de_porte: number | null
           postal_code: string | null
           price: number
           price_per_night: number | null
@@ -594,6 +598,7 @@ export type Database = {
           listing_type?: string
           lng?: number | null
           minimum_stay?: number | null
+          pas_de_porte?: number | null
           postal_code?: string | null
           price: number
           price_per_night?: number | null
@@ -628,6 +633,7 @@ export type Database = {
           listing_type?: string
           lng?: number | null
           minimum_stay?: number | null
+          pas_de_porte?: number | null
           postal_code?: string | null
           price?: number
           price_per_night?: number | null
@@ -780,6 +786,39 @@ export type Database = {
         }
         Relationships: []
       }
+      referrals: {
+        Row: {
+          bonus_granted: boolean
+          completed_at: string | null
+          created_at: string
+          id: string
+          referral_code: string
+          referred_id: string
+          referrer_id: string
+          status: string
+        }
+        Insert: {
+          bonus_granted?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          referral_code: string
+          referred_id: string
+          referrer_id: string
+          status?: string
+        }
+        Update: {
+          bonus_granted?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          referral_code?: string
+          referred_id?: string
+          referrer_id?: string
+          status?: string
+        }
+        Relationships: []
+      }
       storekit_purchases: {
         Row: {
           created_at: string
@@ -912,6 +951,27 @@ export type Database = {
           follower_id?: string
           following_id?: string
           id?: string
+        }
+        Relationships: []
+      }
+      user_free_credits: {
+        Row: {
+          created_at: string
+          credits_remaining: number
+          last_reset_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          credits_remaining?: number
+          last_reset_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          credits_remaining?: number
+          last_reset_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -1190,6 +1250,7 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: undefined
       }
+      reset_monthly_free_credits: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"

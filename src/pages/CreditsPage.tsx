@@ -23,9 +23,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/hooks/useAuth';
 import { useCredits } from '@/hooks/useCredits';
 import { useListingLimit } from '@/hooks/useListingLimit';
-import { CREDITS_PER_PRODUCT, SPONSORED_LISTINGS_PER_PRODUCT } from '@/services/storeKitService';
+import { CREDITS_PER_PRODUCT, SPONSORED_LISTINGS_PER_PRODUCT, PRODUCT_PRICES_FCFA } from '@/services/storeKitService';
 import { CreditPaymentDialog } from '@/components/credits/CreditPaymentDialog';
-import { convertUsdToLocal, parseUsdPrice, getCurrencyByCountry } from '@/data/currencies';
+import { convertUsdToLocal, convertUsdToLocalAmount, parseUsdPrice, getCurrencyByCountry } from '@/data/currencies';
+import { useToast } from '@/hooks/use-toast';
 
 const CreditsPage = () => {
   const navigate = useNavigate();
@@ -55,6 +56,7 @@ const CreditsPage = () => {
     isPurchaseAvailable,
     storeKitError,
   } = useCredits();
+  const { toast } = useToast();
 
   // Payment dialog state
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
@@ -78,42 +80,112 @@ const CreditsPage = () => {
     }
   }, [user, navigate]);
 
-  // Check for payment success/cancel in URL params
+  // Store last selected product for retry functionality
+  const [lastProductForRetry, setLastProductForRetry] = useState<{
+    id: string;
+    name: string;
+    price: number;
+    symbol: string;
+    displayPrice: string;
+  } | null>(null);
+
+  // Check for payment success/cancel in URL params and refresh credits
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const payment = params.get('payment');
+    
+    if (payment) {
+      // Always close the payment dialog when returning from payment
+      setPaymentDialogOpen(false);
+      // Keep the last product for retry but clear selected
+      if (selectedProduct) {
+        setLastProductForRetry(selectedProduct);
+      }
+      setSelectedProduct(null);
+    }
+    
     if (payment === 'success') {
       // Clear params and show success message
       window.history.replaceState({}, '', '/credits');
+      setLastProductForRetry(null);
+      toast({
+        title: '🎉 Paiement réussi !',
+        description: 'Vos crédits ont été ajoutés à votre compte.',
+      });
+      // Force page reload to refresh credits data
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     } else if (payment === 'cancelled') {
       window.history.replaceState({}, '', '/credits');
+      const { dismiss } = toast({
+        title: 'Paiement annulé',
+        description: 'Vous pouvez réessayer à tout moment.',
+        variant: 'destructive',
+        duration: 10000,
+        action: (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="border-destructive-foreground/20 hover:bg-destructive-foreground/10"
+            onClick={() => {
+              dismiss();
+              // Reopen payment dialog with last product if available
+              if (lastProductForRetry) {
+                setSelectedProduct(lastProductForRetry);
+                setPaymentDialogOpen(true);
+              }
+            }}
+          >
+            <RefreshCw className="w-3 h-3 mr-1" />
+            Réessayer
+          </Button>
+        ),
+      });
     }
   }, []);
 
   const isAgency = profile?.user_type === 'agence';
   const isPremiumUser = hasActiveSubscription && subscriptionType === 'premium';
   const isProUser = hasActiveSubscription && subscriptionType === 'pro';
-  
+
   // Use synchronized total from useListingLimit
   const totalAvailable = totalCreditsFromLimit;
 
   // Get user's country for local currency display
   const userCountry = profile?.country || null;
   const localCurrency = useMemo(() => getCurrencyByCountry(userCountry), [userCountry]);
-  
-  // Helper to get local price estimate
+
+  // Helper to get local price estimate - ONLY for USD prices
+  // If the price is already in local currency, don't show estimate
   const getLocalEstimate = (displayPrice: string): string | null => {
+    if (!displayPrice.includes('$')) return null;
+
     const usdPrice = parseUsdPrice(displayPrice);
     if (!usdPrice) return null;
+
     return convertUsdToLocal(usdPrice, userCountry);
   };
 
-  // Parse price from display string (e.g., "500 FCFA" -> { amount: 500, symbol: "FCFA" })
-  const parsePrice = (displayPrice: string): { amount: number; symbol: string } => {
-    const parts = displayPrice.replace(/\s+/g, ' ').trim().split(' ');
-    const amount = parseInt(parts[0].replace(/[^\d]/g, ''), 10) || 0;
-    const symbol = parts[1] || 'FCFA';
-    return { amount, symbol };
+  // Price used for Web/Android payments (Mobile Money) MUST match the displayed estimate.
+  // We keep the UI price in USD and compute the payable amount from the USD->local rate.
+  const parsePrice = (productId: string, displayPrice: string): { amount: number; symbol: string } => {
+    const usdPrice = parseUsdPrice(displayPrice);
+    if (usdPrice && userCountry) {
+      const converted = convertUsdToLocalAmount(usdPrice, userCountry);
+      if (converted) {
+        return { amount: converted.amount, symbol: converted.currency.symbol };
+      }
+    }
+
+    // Fallback (should be rare): use fixed FCFA prices
+    const fcfaPrice = PRODUCT_PRICES_FCFA[productId];
+    if (fcfaPrice !== undefined && fcfaPrice > 0) {
+      return { amount: fcfaPrice, symbol: 'FCFA' };
+    }
+
+    // Last resort
+    return { amount: 500, symbol: 'FCFA' };
   };
 
   const handlePurchase = async (product: { id: string; displayName: string; displayPrice: string }) => {
@@ -121,18 +193,21 @@ const CreditsPage = () => {
     if (isIosNative) {
       await purchaseProduct(product.id);
     } else {
-      // On web/Android, show payment method dialog
-      const { amount, symbol } = parsePrice(product.displayPrice);
+      // On web/Android, show payment method dialog with LOCAL amount to pay
+      const { amount, symbol } = parsePrice(product.id, product.displayPrice);
+      const formattedPrice = new Intl.NumberFormat('fr-FR').format(amount) + ' ' + symbol;
+
       setSelectedProduct({
         id: product.id,
         name: product.displayName,
         price: amount,
         symbol,
-        displayPrice: product.displayPrice,
+        displayPrice: formattedPrice,
       });
       setPaymentDialogOpen(true);
     }
   };
+
 
   const handleRestore = async () => {
     await restorePurchases();
@@ -169,12 +244,58 @@ const CreditsPage = () => {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-destructive/10 border border-destructive/30 rounded-xl p-3 flex items-center gap-3"
+            className="bg-destructive/10 border border-destructive/30 rounded-xl p-4 space-y-3"
           >
-            <AlertCircle className="w-5 h-5 text-destructive" />
-            <p className="text-sm text-destructive">
-              {storeKitError}
-            </p>
+            <div className="flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-destructive shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-destructive">
+                  Erreur de chargement
+                </p>
+                <p className="text-xs text-destructive/80 mt-0.5">
+                  {storeKitError}
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full border-destructive/30 text-destructive hover:bg-destructive/10"
+              onClick={() => window.location.reload()}
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Réessayer
+            </Button>
+          </motion.div>
+        )}
+
+        {/* Empty products warning (when initialized but no products loaded) */}
+        {initialized && !loading && creditPacks.length === 0 && subscriptions.length === 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 space-y-3"
+          >
+            <div className="flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
+                  Produits non disponibles
+                </p>
+                <p className="text-xs text-amber-600/80 dark:text-amber-500/80 mt-0.5">
+                  Impossible de charger les abonnements et crédits. Vérifiez votre connexion internet.
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full border-amber-500/30 text-amber-700 dark:text-amber-400 hover:bg-amber-500/10"
+              onClick={() => window.location.reload()}
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Réessayer
+            </Button>
           </motion.div>
         )}
 
@@ -436,7 +557,7 @@ const CreditsPage = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
-          className="space-y-2 px-4"
+          className="space-y-3 px-4"
         >
           <p className="text-center text-sm text-muted-foreground">
             Les crédits sont utilisés pour publier des annonces. Les abonnements se renouvellent automatiquement chaque mois.
@@ -445,10 +566,30 @@ const CreditsPage = () => {
             <div className="flex items-start gap-2 p-3 bg-muted/50 rounded-lg">
               <Info className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
               <p className="text-xs text-muted-foreground">
-                Les montants en {localCurrency.symbol} sont des estimations. Le prix final sera converti par votre banque au taux du jour lors du paiement.
+                Les montants en {localCurrency.symbol} sont des estimations. Pour Mobile Money, vous payez le montant affiché ; pour carte bancaire, la conversion dépend de votre banque.
               </p>
             </div>
           )}
+          
+          {/* Legal links - Required by Apple Guideline 3.1.2 */}
+          <div className="text-center space-y-1 pt-2">
+            <p className="text-xs text-muted-foreground">
+              En achetant, vous acceptez nos{' '}
+              <button 
+                onClick={() => navigate('/settings/legal/terms')}
+                className="text-primary underline hover:text-primary/80 transition-colors"
+              >
+                Conditions d'utilisation
+              </button>
+              {' '}et notre{' '}
+              <button 
+                onClick={() => navigate('/settings/legal/privacy')}
+                className="text-primary underline hover:text-primary/80 transition-colors"
+              >
+                Politique de confidentialité
+              </button>
+            </p>
+          </div>
         </motion.div>
       </div>
 

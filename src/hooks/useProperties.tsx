@@ -34,10 +34,12 @@ export interface Property {
   agencyName?: string | null;
   // Discount tiers
   hasDiscounts?: boolean;
-  // Subscription info
+  // Subscription info (hidden for Apple compliance)
   subscriptionType?: SubscriptionType;
   isSponsored?: boolean;
   sponsoredUntil?: string | null;
+  // Listings count for Pro/Premium badge
+  ownerListingsCount?: number;
 }
 
 export const useProperties = () => {
@@ -79,7 +81,7 @@ export const useProperties = () => {
       const userIds = [...new Set((propertiesData || []).map(p => p.user_id))];
       const { data: badgesData } = await supabase
         .from('user_badges')
-        .select('user_id, badge_level')
+        .select('user_id, badge_level, listings_count')
         .in('user_id', userIds);
 
       // Fetch user profiles for user_type and agency_name
@@ -89,6 +91,7 @@ export const useProperties = () => {
         .in('user_id', userIds);
 
       // Fetch public subscription status for users (safe for non-logged-in users)
+      // Hidden for Apple compliance but keeping data fetch
       const { data: subscriptionsData } = await supabase
         .from('user_subscriptions')
         .select('user_id, subscription_type, is_active')
@@ -97,6 +100,11 @@ export const useProperties = () => {
 
       const badgeMap = new Map(
         (badgesData || []).map(b => [b.user_id, b.badge_level as BadgeLevel])
+      );
+
+      // Map for listings count (for Pro/Premium badge based on listings)
+      const listingsCountMap = new Map(
+        (badgesData || []).map(b => [b.user_id, b.listings_count || 0])
       );
 
       const profileMap = new Map(
@@ -157,6 +165,7 @@ export const useProperties = () => {
           subscriptionType: subscriptionMap.get(p.user_id) || null,
           isSponsored: p.is_sponsored || false,
           sponsoredUntil: p.sponsored_until || null,
+          ownerListingsCount: listingsCountMap.get(p.user_id) || 0,
         };
       });
 

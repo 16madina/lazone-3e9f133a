@@ -1,4 +1,5 @@
 import { useAppStore } from '@/stores/appStore';
+import { motion } from 'framer-motion';
 
 // Filtres pour LaZone (long terme)
 const longTermFilters = [
@@ -26,6 +27,31 @@ interface FilterChipsProps {
   variant?: 'default' | 'hero';
 }
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.06,
+      delayChildren: 0.1,
+    },
+  },
+};
+
+const chipVariants = {
+  hidden: { opacity: 0, x: -20, scale: 0.9 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    scale: 1,
+    transition: {
+      type: 'spring' as const,
+      stiffness: 300,
+      damping: 24,
+    },
+  },
+};
+
 export const FilterChips = ({ variant = 'default' }: FilterChipsProps) => {
   const { activeFilter, setActiveFilter, appMode } = useAppStore();
 
@@ -34,28 +60,37 @@ export const FilterChips = ({ variant = 'default' }: FilterChipsProps) => {
   const filters = isResidence ? shortTermFilters : longTermFilters;
 
   return (
-    <div className="flex gap-2 overflow-x-auto scrollbar-hide py-2 -mx-4 px-4">
+    <motion.div 
+      className="flex gap-2 overflow-x-auto scrollbar-hide py-2 -mx-4 px-4"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      key={appMode} // Re-animate when mode changes
+    >
       {filters.map((filter) => {
         const isActive = activeFilter === filter.id;
         return (
-          <button
+          <motion.button
             key={filter.id}
+            variants={chipVariants}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => setActiveFilter(filter.id)}
-            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-all duration-200 active:scale-95 ${
+            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-sm font-medium whitespace-nowrap transition-colors duration-300 ${
               isActive 
                 ? isResidence
-                  ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' 
-                  : 'gradient-primary text-primary-foreground shadow-lg'
+                  ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/40 border border-emerald-400/30' 
+                  : 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/40 border border-primary/30'
                 : isHero 
-                  ? 'bg-white/90 backdrop-blur-sm text-foreground shadow-sm hover:bg-white' 
-                  : 'glass text-foreground hover:bg-white/20'
+                  ? 'bg-white/40 backdrop-blur-md text-foreground border border-white/50 shadow-sm hover:bg-white/60 hover:shadow-md hover:border-white/70' 
+                  : 'bg-white/20 backdrop-blur-md text-foreground border border-white/30 hover:bg-white/30 hover:border-white/50'
             }`}
           >
-            <span>{filter.emoji}</span>
+            <span className="text-base">{filter.emoji}</span>
             <span className="text-inherit">{filter.label}</span>
-          </button>
+          </motion.button>
         );
       })}
-    </div>
+    </motion.div>
   );
 };

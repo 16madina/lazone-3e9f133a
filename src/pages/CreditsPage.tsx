@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useAuth } from '@/hooks/useAuth';
 import { useCredits } from '@/hooks/useCredits';
 import { useListingLimit } from '@/hooks/useListingLimit';
@@ -64,6 +65,7 @@ const CreditsPage = () => {
 
   // Payment dialog state
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [purchaseSheetOpen, setPurchaseSheetOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<{
     id: string;
     name: string;
@@ -379,225 +381,248 @@ const CreditsPage = () => {
           </Card>
         </motion.div>
 
-        {/* Credit Packs Section - Hidden on iOS for Apple compliance */}
+        {/* Buy Credits Button - Only visible on Android/Web */}
         {!hideMonetization && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <div className="flex items-center gap-2 mb-4">
-              <Package className="w-5 h-5 text-primary" />
-              <h2 className="font-semibold text-lg">Packs de crédits</h2>
-            </div>
+            <Sheet open={purchaseSheetOpen} onOpenChange={setPurchaseSheetOpen}>
+              <SheetTrigger asChild>
+                <Button 
+                  className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg"
+                  size="lg"
+                >
+                  <Coins className="w-5 h-5 mr-2" />
+                  Acheter des crédits
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl">
+                <SheetHeader className="pb-4">
+                  <SheetTitle className="flex items-center gap-2 text-xl">
+                    <Coins className="w-6 h-6 text-primary" />
+                    Acheter des crédits
+                  </SheetTitle>
+                </SheetHeader>
+                
+                <div className="overflow-y-auto h-[calc(85vh-80px)] space-y-6 pb-8">
+                  {/* Credit Packs */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-4">
+                      <Package className="w-5 h-5 text-primary" />
+                      <h2 className="font-semibold text-lg">Packs de crédits</h2>
+                    </div>
 
-            {loading || !initialized ? (
-              <div className="space-y-3">
-                {[1, 2, 3].map(i => (
-                  <Skeleton key={i} className="h-24 rounded-xl" />
-                ))}
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {creditPacks.map((product, index) => {
-                  const credits = CREDITS_PER_PRODUCT[product.id] || 1;
-                  const isBestValue = product.id.includes('pack10');
-                  
-                  return (
-                    <motion.div
-                      key={product.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.1 * index }}
-                    >
-                      <Card className={`relative overflow-hidden transition-all hover:shadow-lg ${isBestValue ? 'border-primary ring-1 ring-primary/30' : ''}`}>
-                        {isBestValue && (
-                          <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-bl-lg font-medium">
-                            -20%
-                          </div>
-                        )}
-                        <CardContent className="p-4 flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                              credits === 1 ? 'bg-blue-500/20' : 
-                              credits === 5 ? 'bg-purple-500/20' : 'bg-amber-500/20'
-                            }`}>
-                              <Coins className={`w-5 h-5 ${
-                                credits === 1 ? 'text-blue-500' : 
-                                credits === 5 ? 'text-purple-500' : 'text-amber-500'
-                              }`} />
-                            </div>
-                            <div>
-                              <p className="font-semibold">{product.displayName}</p>
-                              <p className="text-sm text-muted-foreground">{product.description}</p>
-                            </div>
-                          </div>
-                          <div className="flex flex-col items-end gap-1">
-                            <Button
-                              onClick={() => handlePurchase(product)}
-                              disabled={purchasing}
-                              className={isBestValue ? 'bg-primary' : ''}
-                              size="sm"
-                            >
-                              {product.displayPrice}
-                            </Button>
-                            {localCurrency && getLocalEstimate(product.displayPrice) && (
-                              <span className="text-xs text-muted-foreground">
-                                {getLocalEstimate(product.displayPrice)}
-                              </span>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            )}
+                    {loading || !initialized ? (
+                      <div className="space-y-3">
+                        {[1, 2, 3].map(i => (
+                          <Skeleton key={i} className="h-24 rounded-xl" />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {creditPacks.map((product, index) => {
+                          const credits = CREDITS_PER_PRODUCT[product.id] || 1;
+                          const isBestValue = product.id.includes('pack10');
+                          
+                          return (
+                            <Card key={product.id} className={`relative overflow-hidden transition-all hover:shadow-lg ${isBestValue ? 'border-primary ring-1 ring-primary/30' : ''}`}>
+                              {isBestValue && (
+                                <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-bl-lg font-medium">
+                                  -20%
+                                </div>
+                              )}
+                              <CardContent className="p-4 flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                                    credits === 1 ? 'bg-blue-500/20' : 
+                                    credits === 5 ? 'bg-purple-500/20' : 'bg-amber-500/20'
+                                  }`}>
+                                    <Coins className={`w-5 h-5 ${
+                                      credits === 1 ? 'text-blue-500' : 
+                                      credits === 5 ? 'text-purple-500' : 'text-amber-500'
+                                    }`} />
+                                  </div>
+                                  <div>
+                                    <p className="font-semibold">{product.displayName}</p>
+                                    <p className="text-sm text-muted-foreground">{product.description}</p>
+                                  </div>
+                                </div>
+                                <div className="flex flex-col items-end gap-1">
+                                  <Button
+                                    onClick={() => {
+                                      handlePurchase(product);
+                                      setPurchaseSheetOpen(false);
+                                    }}
+                                    disabled={purchasing}
+                                    className={isBestValue ? 'bg-primary' : ''}
+                                    size="sm"
+                                  >
+                                    {product.displayPrice}
+                                  </Button>
+                                  {localCurrency && getLocalEstimate(product.displayPrice) && (
+                                    <span className="text-xs text-muted-foreground">
+                                      {getLocalEstimate(product.displayPrice)}
+                                    </span>
+                                  )}
+                                </div>
+                              </CardContent>
+                            </Card>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Subscriptions */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-4">
+                      <Crown className="w-5 h-5 text-amber-500" />
+                      <h2 className="font-semibold text-lg">Abonnements</h2>
+                    </div>
+
+                    {loading || !initialized ? (
+                      <div className="space-y-3">
+                        {[1, 2].map(i => (
+                          <Skeleton key={i} className="h-32 rounded-xl" />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {subscriptions.map((product) => {
+                          const isActive = activeSubscription?.product_id === product.id;
+                          const isPro = product.id.includes('pro');
+                          const isPremium = product.id.includes('premium');
+                          
+                          const credits = CREDITS_PER_PRODUCT[product.id] || 0;
+                          const sponsorings = SPONSORED_LISTINGS_PER_PRODUCT[product.id] || 0;
+                          
+                          const features = isPremium 
+                            ? [`${credits} crédits/mois`, `${sponsorings} sponsorings/mois`, 'Mise en avant', 'Support prioritaire', 'Badge Premium']
+                            : [`${credits} crédits/mois`, `${sponsorings} sponsoring/mois`, 'Badge Pro'];
+
+                          return (
+                            <Card key={product.id} className={`relative overflow-hidden transition-all ${
+                              isPremium ? 'bg-gradient-to-br from-amber-500/10 to-orange-500/10 border-amber-500/30' :
+                              isPro ? 'bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/30' :
+                              ''
+                            } ${isActive ? 'ring-2 ring-green-500' : ''}`}>
+                              {isPremium && (
+                                <div className="absolute top-0 right-0">
+                                  <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-none rounded-bl-lg">
+                                    <Star className="w-3 h-3 mr-1" />
+                                    Populaire
+                                  </Badge>
+                                </div>
+                              )}
+                              {isActive && (
+                                <div className="absolute top-0 left-0">
+                                  <Badge className="bg-green-500 rounded-none rounded-br-lg">
+                                    <Check className="w-3 h-3 mr-1" />
+                                    Actif
+                                  </Badge>
+                                </div>
+                              )}
+                              <CardHeader className="pb-2">
+                                <CardTitle className="flex items-center gap-2">
+                                  {isPremium && <Crown className="w-5 h-5 text-amber-500" />}
+                                  {isPro && <Zap className="w-5 h-5 text-purple-500" />}
+                                  {product.displayName}
+                                </CardTitle>
+                                <CardDescription>{product.description}</CardDescription>
+                              </CardHeader>
+                              <CardContent>
+                                <ul className="space-y-1 mb-4">
+                                  {features.map((feature, i) => (
+                                    <li key={i} className="flex items-center gap-2 text-sm">
+                                      <Check className="w-4 h-4 text-green-500" />
+                                      {feature}
+                                    </li>
+                                  ))}
+                                </ul>
+                                <div className="flex flex-col gap-1">
+                                  <Button
+                                    className="w-full"
+                                    variant={isPremium ? 'default' : 'outline'}
+                                    onClick={() => {
+                                      handlePurchase(product);
+                                      setPurchaseSheetOpen(false);
+                                    }}
+                                    disabled={purchasing || isActive}
+                                  >
+                                    {isActive ? 'Abonnement actif' : product.displayPrice}
+                                  </Button>
+                                  {!isActive && localCurrency && getLocalEstimate(product.displayPrice) && (
+                                    <span className="text-xs text-muted-foreground text-center">
+                                      {getLocalEstimate(product.displayPrice)}
+                                    </span>
+                                  )}
+                                </div>
+                              </CardContent>
+                            </Card>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Legal info inside sheet */}
+                  <div className="space-y-3 pt-4 border-t border-border">
+                    <p className="text-center text-sm text-muted-foreground">
+                      Les crédits sont utilisés pour publier des annonces. Les abonnements se renouvellent automatiquement chaque mois.
+                    </p>
+                    {localCurrency && (
+                      <div className="flex items-start gap-2 p-3 bg-muted/50 rounded-lg">
+                        <Info className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
+                        <p className="text-xs text-muted-foreground">
+                          Les montants en {localCurrency.symbol} sont des estimations. Pour Mobile Money, vous payez le montant affiché ; pour carte bancaire, la conversion dépend de votre banque.
+                        </p>
+                      </div>
+                    )}
+                    <div className="text-center space-y-1 pt-2">
+                      <p className="text-xs text-muted-foreground">
+                        En achetant, vous acceptez nos{' '}
+                        <button 
+                          onClick={() => navigate('/settings/legal/terms')}
+                          className="text-primary underline hover:text-primary/80 transition-colors"
+                        >
+                          Conditions d'utilisation
+                        </button>
+                        {' '}et notre{' '}
+                        <button 
+                          onClick={() => navigate('/settings/legal/privacy')}
+                          className="text-primary underline hover:text-primary/80 transition-colors"
+                        >
+                          Politique de confidentialité
+                        </button>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
           </motion.div>
         )}
 
-        {/* Subscriptions Section - Hidden on iOS for Apple compliance */}
-        {!hideMonetization && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <div className="flex items-center gap-2 mb-4">
-              <Crown className="w-5 h-5 text-amber-500" />
-              <h2 className="font-semibold text-lg">Abonnements</h2>
-            </div>
-
-            {loading || !initialized ? (
-              <div className="space-y-3">
-                {[1, 2].map(i => (
-                  <Skeleton key={i} className="h-32 rounded-xl" />
-                ))}
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {subscriptions.map((product, index) => {
-                  const isActive = activeSubscription?.product_id === product.id;
-                  const isPro = product.id.includes('pro');
-                  const isPremium = product.id.includes('premium');
-                  
-                  // Get credits and sponsorings from constants
-                  const credits = CREDITS_PER_PRODUCT[product.id] || 0;
-                  const sponsorings = SPONSORED_LISTINGS_PER_PRODUCT[product.id] || 0;
-                  
-                  const features = isPremium 
-                    ? [`${credits} crédits/mois`, `${sponsorings} sponsorings/mois`, 'Mise en avant', 'Support prioritaire', 'Badge Premium']
-                    : [`${credits} crédits/mois`, `${sponsorings} sponsoring/mois`, 'Badge Pro'];
-
-                  return (
-                    <motion.div
-                      key={product.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.1 * index }}
-                    >
-                      <Card className={`relative overflow-hidden transition-all ${
-                        isPremium ? 'bg-gradient-to-br from-amber-500/10 to-orange-500/10 border-amber-500/30' :
-                        isPro ? 'bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/30' :
-                        ''
-                      } ${isActive ? 'ring-2 ring-green-500' : ''}`}>
-                        {isPremium && (
-                          <div className="absolute top-0 right-0">
-                            <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-none rounded-bl-lg">
-                              <Star className="w-3 h-3 mr-1" />
-                              Populaire
-                            </Badge>
-                          </div>
-                        )}
-                        {isActive && (
-                          <div className="absolute top-0 left-0">
-                            <Badge className="bg-green-500 rounded-none rounded-br-lg">
-                              <Check className="w-3 h-3 mr-1" />
-                              Actif
-                            </Badge>
-                          </div>
-                        )}
-                        <CardHeader className="pb-2">
-                          <CardTitle className="flex items-center gap-2">
-                            {isPremium && <Crown className="w-5 h-5 text-amber-500" />}
-                            {isPro && <Zap className="w-5 h-5 text-purple-500" />}
-                            {product.displayName}
-                          </CardTitle>
-                          <CardDescription>{product.description}</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <ul className="space-y-1 mb-4">
-                            {features.map((feature, i) => (
-                              <li key={i} className="flex items-center gap-2 text-sm">
-                                <Check className="w-4 h-4 text-green-500" />
-                                {feature}
-                              </li>
-                            ))}
-                          </ul>
-                          <div className="flex flex-col gap-1">
-                            <Button
-                              className="w-full"
-                              variant={isPremium ? 'default' : 'outline'}
-                              onClick={() => handlePurchase(product)}
-                              disabled={purchasing || isActive}
-                            >
-                              {isActive ? 'Abonnement actif' : product.displayPrice}
-                            </Button>
-                            {!isActive && localCurrency && getLocalEstimate(product.displayPrice) && (
-                              <span className="text-xs text-muted-foreground text-center">
-                                {getLocalEstimate(product.displayPrice)}
-                              </span>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            )}
-          </motion.div>
-        )}
-
-        {/* Help Text */}
+        {/* Help Text - Different content based on platform */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
           className="space-y-3 px-4"
         >
-          <p className="text-center text-sm text-muted-foreground">
-            Les crédits sont utilisés pour publier des annonces. Les abonnements se renouvellent automatiquement chaque mois.
-          </p>
-          {localCurrency && (
-            <div className="flex items-start gap-2 p-3 bg-muted/50 rounded-lg">
-              <Info className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
-              <p className="text-xs text-muted-foreground">
-                Les montants en {localCurrency.symbol} sont des estimations. Pour Mobile Money, vous payez le montant affiché ; pour carte bancaire, la conversion dépend de votre banque.
-              </p>
-            </div>
-          )}
-          
-          {/* Legal links - Required by Apple Guideline 3.1.2 */}
-          <div className="text-center space-y-1 pt-2">
-            <p className="text-xs text-muted-foreground">
-              En achetant, vous acceptez nos{' '}
-              <button 
-                onClick={() => navigate('/settings/legal/terms')}
-                className="text-primary underline hover:text-primary/80 transition-colors"
-              >
-                Conditions d'utilisation
-              </button>
-              {' '}et notre{' '}
-              <button 
-                onClick={() => navigate('/settings/legal/privacy')}
-                className="text-primary underline hover:text-primary/80 transition-colors"
-              >
-                Politique de confidentialité
-              </button>
+          {hideMonetization ? (
+            // iOS: Show simple info without purchase mentions
+            <p className="text-center text-sm text-muted-foreground">
+              Les crédits sont utilisés pour publier des annonces. Vous recevez {freeCreditsLimit} crédits gratuits chaque mois.
             </p>
-          </div>
+          ) : (
+            // Android/Web: Show full info (legal text is in the sheet)
+            <p className="text-center text-sm text-muted-foreground">
+              Les crédits sont utilisés pour publier des annonces.
+            </p>
+          )}
         </motion.div>
       </div>
 

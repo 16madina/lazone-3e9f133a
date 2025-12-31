@@ -10,13 +10,22 @@ const getAppPlugin = async () => {
 };
 
 /**
- * Hook to handle deep links for payment redirects
- * Listens for lazone:// URLs and navigates accordingly
+ * Hook to handle deep links for payment redirects and referrals
+ * Listens for lazone:// URLs and https://lazoneapp.com URLs
  */
 export const useDeepLinks = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Check for pending referral code from SmartLinkPage (after app install)
+    const pendingRef = localStorage.getItem('pendingReferralCode');
+    if (pendingRef) {
+      // Only apply once, then clear
+      localStorage.removeItem('pendingReferralCode');
+      navigate(`/auth?ref=${pendingRef}`, { replace: true });
+      return;
+    }
+
     // Only setup listeners on native platforms
     if (!Capacitor.isNativePlatform()) {
       return;
@@ -48,6 +57,21 @@ export const useDeepLinks = () => {
             const params = url.searchParams;
 
             console.log('[DeepLink] Parsed path:', path, 'params:', Object.fromEntries(params));
+
+            // Handle referral deep links
+            const referralCode = params.get('ref');
+            if (referralCode || path.includes('/auth')) {
+              const authPath = referralCode ? `/auth?ref=${referralCode}` : '/auth';
+              navigate(authPath, { replace: true });
+              
+              if (referralCode) {
+                toast({
+                  title: 'Code de parrainage détecté 🎁',
+                  description: `Le code ${referralCode} sera appliqué à votre inscription.`,
+                });
+              }
+              return;
+            }
 
             // Handle payment redirects
             const paymentStatus = params.get('payment');
@@ -94,8 +118,9 @@ export const useDeepLinks = () => {
                 navigate(`/publish${mode ? `?mode=${mode}` : ''}`);
               }
             } else {
-              // Generic deep link - just navigate to the path
-              navigate(path || '/');
+              // Generic deep link - just navigate to the path with query params
+              const fullPath = params.toString() ? `${path}?${params.toString()}` : path;
+              navigate(fullPath || '/', { replace: true });
             }
           } catch (error) {
             console.error('[DeepLink] Error parsing URL:', error);

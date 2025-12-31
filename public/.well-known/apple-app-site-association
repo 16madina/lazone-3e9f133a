@@ -1,0 +1,36 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appIDs": [
+          "6XW2XM3NDF.com.lazone.afrique"
+        ],
+        "paths": [
+          "/auth*",
+          "/property/*",
+          "/user/*",
+          "/credits*",
+          "/publish*",
+          "/dashboard*",
+          "/reservation/*"
+        ],
+        "components": [
+          {
+            "/": "/auth*",
+            "comment": "Matches auth page with referral codes"
+          },
+          {
+            "/": "/property/*",
+            "comment": "Matches property detail pages"
+          }
+        ]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": [
+      "6XW2XM3NDF.com.lazone.afrique"
+    ]
+  }
+}

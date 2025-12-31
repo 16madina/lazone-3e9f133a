@@ -1,0 +1,36 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appIDs": [
+          "TEAM_ID.com.lazone.afrique"
+        ],
+        "paths": [
+          "/auth*",
+          "/property/*",
+          "/user/*",
+          "/credits*",
+          "/publish*",
+          "/dashboard*",
+          "/reservation/*"
+        ],
+        "components": [
+          {
+            "/": "/auth*",
+            "comment": "Matches auth page with referral codes"
+          },
+          {
+            "/": "/property/*",
+            "comment": "Matches property detail pages"
+          }
+        ]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": [
+      "TEAM_ID.com.lazone.afrique"
+    ]
+  }
+}

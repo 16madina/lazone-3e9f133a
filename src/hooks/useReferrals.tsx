@@ -134,7 +134,8 @@ export const useReferrals = () => {
 
   const getReferralLink = () => {
     if (!referralCode) return '';
-    return `${window.location.origin}/auth?ref=${referralCode}`;
+    // Use /invite for smart app detection and store fallback
+    return `${window.location.origin}/invite?ref=${referralCode}`;
   };
 
   useEffect(() => {

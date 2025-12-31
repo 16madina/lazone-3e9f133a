@@ -46,6 +46,7 @@ import EditPropertyPage from "./pages/EditPropertyPage";
 import NetworkStatusPage from "./pages/settings/NetworkStatusPage";
 import ReservationPage from "./pages/ReservationPage";
 import CreditsPage from "./pages/CreditsPage";
+import SmartLinkPage from "./pages/SmartLinkPage";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { PushNotificationBanner } from "@/components/PushNotificationBanner";
 import { NotificationDeepLinkHandler } from "@/components/NotificationDeepLinkHandler";
@@ -93,6 +94,7 @@ const App = () => {
                       <Route path="/followers" element={<FollowersPage />} />
                       <Route path="/followers/:userId" element={<FollowersPage />} />
                       <Route path="/install" element={<InstallPage />} />
+                      <Route path="/invite" element={<SmartLinkPage />} />
                       <Route path="/reservation/:id" element={<ReservationPage />} />
                       {/* FREE MODE: Credits page redirects to home - keep for future re-activation */}
                       <Route path="/credits" element={<Index />} />

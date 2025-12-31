@@ -992,7 +992,7 @@ const ProfilePage = () => {
                     {/* Buy Credits Button - Only visible on Android/Web */}
                     {!(Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios') && (
                       <Button 
-                        onClick={() => navigate('/credits?buy=true')}
+                        onClick={() => navigate('/credits')}
                         className="w-full h-12 text-base font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg"
                         size="lg"
                       >

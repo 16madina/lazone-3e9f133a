@@ -4,31 +4,23 @@ import logoLazone from "@/assets/logo-lazone.png";
 
 export type AppLogoProps = Omit<
   React.ImgHTMLAttributes<HTMLImageElement>,
-  "src" | "alt" | "onError"
+  "src" | "alt"
 > & {
-  /** Defaults to bundled logo asset. */
-  src?: string;
-  /** Defaults to public fallback path (works well in native builds). */
-  fallbackSrc?: string;
   /** Defaults to "LaZone". */
   alt?: string;
-  onError?: React.ImgHTMLAttributes<HTMLImageElement>["onError"];
 };
 
 export function AppLogo({
-  src,
-  fallbackSrc = `${import.meta.env.BASE_URL}images/logo-lazone.png`,
   alt = "LaZone",
-  onError,
   loading = "eager",
   decoding = "async",
+  style,
   ...props
 }: AppLogoProps) {
-  const [currentSrc, setCurrentSrc] = React.useState<string>(src ?? logoLazone);
-
-  React.useEffect(() => {
-    setCurrentSrc(src ?? logoLazone);
-  }, [src]);
+  // Priority: public path (works best for PWA/native), fallback to bundled asset
+  const publicPath = `${import.meta.env.BASE_URL}images/logo-lazone.png`;
+  const [currentSrc, setCurrentSrc] = React.useState<string>(publicPath);
+  const [hasTriedFallback, setHasTriedFallback] = React.useState(false);
 
   return (
     <img
@@ -37,11 +29,18 @@ export function AppLogo({
       alt={alt}
       loading={loading}
       decoding={decoding}
-      onError={(e) => {
-        if (fallbackSrc && currentSrc !== fallbackSrc) {
-          setCurrentSrc(fallbackSrc);
+      style={{
+        minWidth: 24,
+        minHeight: 24,
+        ...style,
+      }}
+      onError={() => {
+        // If public path fails, try bundled asset once
+        if (!hasTriedFallback && currentSrc === publicPath) {
+          console.warn("[AppLogo] Public path failed, trying bundled asset");
+          setCurrentSrc(logoLazone);
+          setHasTriedFallback(true);
         }
-        onError?.(e);
       }}
     />
   );

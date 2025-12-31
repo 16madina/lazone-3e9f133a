@@ -74,8 +74,7 @@ export default defineConfig(({ mode }) => ({
         ]
       },
       workbox: {
-        globPatterns: ["**/*.{js,css,html,ico,svg,webp}"],
-        globIgnores: ["**/images/logo-lazone.png"],
+        globPatterns: ["**/*.{js,css,html,ico,svg,webp,png}"],
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         runtimeCaching: [
           {

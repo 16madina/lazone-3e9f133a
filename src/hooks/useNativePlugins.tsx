@@ -724,13 +724,16 @@ export const useShare = () => {
     }
   }, []);
 
+  // Always use production domain for sharing (not capacitor://localhost or lovable preview)
+  const getProductionUrl = (path: string) => `https://lazoneapp.com${path}`;
+
   const shareProperty = useCallback(async (property: {
     id: string;
     title: string;
     price: number;
     city: string;
   }) => {
-    const url = `${window.location.origin}/property/${property.id}`;
+    const url = getProductionUrl(`/property/${property.id}`);
     const text = `🏠 ${property.title}\n📍 ${property.city}\n💰 ${property.price.toLocaleString()} - Découvrez sur LaZone!`;
     
     return share({
@@ -745,7 +748,7 @@ export const useShare = () => {
     userId: string;
     name: string;
   }) => {
-    const url = `${window.location.origin}/user/${profile.userId}`;
+    const url = getProductionUrl(`/user/${profile.userId}`);
     const text = `Découvrez le profil de ${profile.name} sur LaZone!`;
     
     return share({

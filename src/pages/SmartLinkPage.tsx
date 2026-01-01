@@ -58,17 +58,29 @@ const SmartLinkPage = () => {
       });
     }, 1000);
 
-    // Try to open the app via custom URL scheme
-    const appUrl = `lazone://auth${referralCode ? `?ref=${referralCode}` : ''}`;
+    // Try to open the app via Universal Links (HTTPS URL that app can intercept)
+    // This works better than custom URL schemes on modern iOS/Android
+    const universalLink = `https://lazoneapp.com/auth${referralCode ? `?ref=${referralCode}` : ''}`;
     
-    // Attempt to open the app
-    const timeout = setTimeout(() => {
-      window.location.href = appUrl;
-    }, 500);
+    // Create a hidden iframe to attempt opening the app without navigating away
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = universalLink;
+    document.body.appendChild(iframe);
+    
+    // Clean up iframe after attempt
+    const cleanupTimeout = setTimeout(() => {
+      if (document.body.contains(iframe)) {
+        document.body.removeChild(iframe);
+      }
+    }, 2000);
 
     return () => {
       clearInterval(timer);
-      clearTimeout(timeout);
+      clearTimeout(cleanupTimeout);
+      if (document.body.contains(iframe)) {
+        document.body.removeChild(iframe);
+      }
     };
   }, [platform, referralCode]);
 

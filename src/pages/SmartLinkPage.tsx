@@ -6,7 +6,11 @@ import { Button } from '@/components/ui/button';
 import { AppLogo } from '@/components/AppLogo';
 import splashBg from '@/assets/splash-bg-10.jpg';
 
-const APP_STORE_URL = 'https://apps.apple.com/app/lazone-afrique/id6740092997';
+const APP_STORE_ID = '6740092997';
+// Web URL for desktop/share previews
+const APP_STORE_WEB_URL = `https://apps.apple.com/app/id${APP_STORE_ID}`;
+// iOS deep link to open the App Store app directly (avoids Safari “page not found” issues)
+const APP_STORE_APP_URL = `itms-apps://apps.apple.com/app/id${APP_STORE_ID}`;
 const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.lazone.afrique';
 
 const SmartLinkPage = () => {
@@ -61,13 +65,13 @@ const SmartLinkPage = () => {
     // Try to open the app via Universal Links (HTTPS URL that app can intercept)
     // This works better than custom URL schemes on modern iOS/Android
     const universalLink = `https://lazoneapp.com/auth${referralCode ? `?ref=${referralCode}` : ''}`;
-    
+
     // Create a hidden iframe to attempt opening the app without navigating away
     const iframe = document.createElement('iframe');
     iframe.style.display = 'none';
     iframe.src = universalLink;
     document.body.appendChild(iframe);
-    
+
     // Clean up iframe after attempt
     const cleanupTimeout = setTimeout(() => {
       if (document.body.contains(iframe)) {
@@ -86,7 +90,7 @@ const SmartLinkPage = () => {
 
   const handleOpenStore = () => {
     if (platform === 'ios') {
-      window.location.href = APP_STORE_URL;
+      window.location.href = APP_STORE_APP_URL;
     } else if (platform === 'android') {
       window.location.href = PLAY_STORE_URL;
     }
@@ -126,7 +130,7 @@ const SmartLinkPage = () => {
             
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <a 
-                href={APP_STORE_URL}
+                href={APP_STORE_WEB_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 bg-black text-white px-4 py-3 rounded-xl hover:bg-gray-900 transition-colors"

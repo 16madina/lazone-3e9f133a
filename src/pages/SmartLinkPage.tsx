@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { AppLogo } from '@/components/AppLogo';
 import splashBg from '@/assets/splash-bg-10.jpg';
 
-const APP_STORE_ID = '6740092997';
+const APP_STORE_ID = '6756757879';
 // Web URL for desktop/share previews
 const APP_STORE_WEB_URL = `https://apps.apple.com/app/id${APP_STORE_ID}`;
 // iOS deep link to open the App Store app directly (avoids Safari “page not found” issues)

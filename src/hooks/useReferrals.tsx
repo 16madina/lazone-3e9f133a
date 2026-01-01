@@ -134,8 +134,8 @@ export const useReferrals = () => {
 
   const getReferralLink = () => {
     if (!referralCode) return '';
-    // Use /invite for smart app detection and store fallback
-    return `${window.location.origin}/invite?ref=${referralCode}`;
+    // Always use production domain for sharing (not capacitor://localhost)
+    return `https://lazoneapp.com/invite?ref=${referralCode}`;
   };
 
   useEffect(() => {

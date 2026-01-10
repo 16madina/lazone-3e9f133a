@@ -16,6 +16,11 @@ const pagesWithCustomHeader = [
   '/messages'
 ];
 
+// Pattern for pages that have their own header (dynamic routes)
+const pagesWithCustomHeaderPatterns = [
+  /^\/property\/[^/]+$/, // Property detail pages have their own share/favorite buttons
+];
+
 // Pages that should not show the header at all
 const pagesWithoutHeader = ['/install'];
 
@@ -24,8 +29,11 @@ export const GlobalHeader = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
+  // Check if current path matches a pattern for custom header pages
+  const matchesCustomHeaderPattern = pagesWithCustomHeaderPatterns.some(pattern => pattern.test(location.pathname));
+
   // Don't show on pages with custom headers or without headers
-  if (pagesWithCustomHeader.includes(location.pathname) || pagesWithoutHeader.includes(location.pathname)) {
+  if (pagesWithCustomHeader.includes(location.pathname) || pagesWithoutHeader.includes(location.pathname) || matchesCustomHeaderPattern) {
     return null;
   }
 

@@ -1,0 +1,39 @@
+# Serve static files directly
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Serve sitemap.xml directly
+  RewriteRule ^sitemap\.xml$ /sitemap.xml [L]
+
+  # Serve robots.txt directly
+  RewriteRule ^robots\.txt$ /robots.txt [L]
+
+  # Serve .well-known files directly
+  RewriteRule ^\.well-known/(.*)$ /.well-known/$1 [L]
+
+  # If the requested file or directory exists, serve it
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Otherwise, serve index.html for SPA routing
+  RewriteRule ^ /index.html [L]
+</IfModule>
+
+# Set correct MIME types
+<IfModule mod_mime.c>
+  AddType application/xml .xml
+  AddType application/json .json
+  AddType text/plain .txt
+</IfModule>
+
+# Headers for specific files
+<IfModule mod_headers.c>
+  <FilesMatch "sitemap\.xml$">
+    Header set Content-Type "application/xml"
+  </FilesMatch>
+  <FilesMatch "robots\.txt$">
+    Header set Content-Type "text/plain"
+  </FilesMatch>
+</IfModule>

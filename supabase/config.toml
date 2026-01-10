@@ -29,3 +29,6 @@ verify_jwt = true
 
 [functions.reset-monthly-credits]
 verify_jwt = false
+
+[functions.sitemap]
+verify_jwt = false

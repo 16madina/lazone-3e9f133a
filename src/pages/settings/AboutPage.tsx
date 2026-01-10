@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Target, Heart, Users, Globe, Shield, Sparkles, Building2, MapPin } from 'lucide-react';
+import { AppDownloadButtons } from '@/components/AppDownloadButtons';
 
 const AboutPage = () => {
   const navigate = useNavigate();
@@ -202,6 +203,9 @@ const AboutPage = () => {
             Contacter le support
           </button>
         </div>
+
+        {/* App Download Section */}
+        <AppDownloadButtons variant="footer" />
 
         {/* Footer */}
         <div className="text-center text-xs text-muted-foreground">

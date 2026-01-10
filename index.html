@@ -49,7 +49,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="LaZone" />
     
-    <!-- Android App Meta Tags (App Links) -->
+    <!-- Android App Meta Tags (App Links / Google Play) -->
+    <meta name="google-play-app" content="app-id=com.lazone.afrique" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="application-name" content="LaZone" />
     <link rel="manifest" href="/manifest.webmanifest" />
@@ -233,29 +234,78 @@
     }
     </script>
     
-    <!-- Schema.org MobileApplication -->
+    <!-- Schema.org MobileApplication - IMPORTANT for Google App Badges -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "MobileApplication",
       "name": "LaZone",
+      "alternateName": "LaZone - Immobilier en Afrique",
       "operatingSystem": "iOS, Android",
-      "applicationCategory": "BusinessApplication",
-      "description": "Application immobilière panafricaine pour acheter, vendre et louer des propriétés partout en Afrique.",
+      "applicationCategory": "RealEstateApplication",
+      "description": "Application immobilière panafricaine pour acheter, vendre et louer des propriétés partout en Afrique. Disponible sur App Store et Google Play.",
+      "inLanguage": ["fr", "en"],
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "XOF",
+        "availability": "https://schema.org/InStock"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.5",
+        "ratingCount": "150",
+        "bestRating": "5",
+        "worstRating": "1"
+      },
+      "installUrl": [
+        "https://apps.apple.com/app/lazone/id6756757879",
+        "https://play.google.com/store/apps/details?id=com.lazone.afrique"
+      ],
+      "downloadUrl": [
+        "https://apps.apple.com/app/lazone/id6756757879",
+        "https://play.google.com/store/apps/details?id=com.lazone.afrique"
+      ],
+      "softwareVersion": "1.0.0",
+      "datePublished": "2024-01-01",
+      "author": {
+        "@type": "Organization",
+        "name": "LaZone",
+        "url": "https://lazoneapp.com"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "LaZone",
+        "url": "https://lazoneapp.com"
+      },
+      "screenshot": [
+        "https://lazoneapp.com/images/og-image.png"
+      ],
+      "featureList": [
+        "Recherche de propriétés immobilières",
+        "Carte interactive",
+        "Messagerie intégrée",
+        "Favoris et alertes",
+        "Publication d'annonces",
+        "Réservation de visites"
+      ]
+    }
+    </script>
+    
+    <!-- Schema.org SoftwareApplication for broader compatibility -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "LaZone",
+      "operatingSystem": "iOS, Android, Web",
+      "applicationCategory": "RealEstateApplication",
       "offers": {
         "@type": "Offer",
         "price": "0",
         "priceCurrency": "XOF"
       },
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": "4.5",
-        "ratingCount": "100"
-      },
-      "downloadUrl": [
-        "https://apps.apple.com/app/id6756757879",
-        "https://play.google.com/store/apps/details?id=com.lazone.afrique"
-      ]
+      "downloadUrl": "https://lazoneapp.com/install"
     }
     </script>
   </head>

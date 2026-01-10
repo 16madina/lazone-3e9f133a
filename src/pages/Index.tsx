@@ -16,6 +16,7 @@ import { AppModeSwitch } from '@/components/home/AppModeSwitch';
 import { ModeSwitchSplash } from '@/components/ModeSwitchSplash';
 import { ReferralSheet } from '@/components/referral/ReferralSheet';
 import SectionTutorialButton from '@/components/tutorial/SectionTutorialButton';
+import { AppDownloadButtons } from '@/components/AppDownloadButtons';
 import { useAppStore, AppMode } from '@/stores/appStore';
 import { useProperties } from '@/hooks/useProperties';
 import { useAuth } from '@/hooks/useAuth';
@@ -412,6 +413,11 @@ const Index = () => {
               </p>
             </div>
           )}
+        </section>
+
+        {/* App Download Footer */}
+        <section className="mt-8 mb-4">
+          <AppDownloadButtons variant="footer" />
         </section>
       </div>
 

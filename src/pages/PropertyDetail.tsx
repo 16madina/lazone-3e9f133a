@@ -359,7 +359,14 @@ const PropertyDetailPage = () => {
         >
           <motion.button
             whileTap={{ scale: 0.9 }}
-            onClick={() => navigate(-1)}
+            onClick={() => {
+              // Use history.back if available, otherwise go to home
+              if (window.history.length > 1) {
+                navigate(-1);
+              } else {
+                navigate('/');
+              }
+            }}
             className="glass w-10 h-10 rounded-full flex items-center justify-center"
           >
             <ArrowLeft className="w-5 h-5" />

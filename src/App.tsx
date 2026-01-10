@@ -47,7 +47,7 @@ import NetworkStatusPage from "./pages/settings/NetworkStatusPage";
 import ReservationPage from "./pages/ReservationPage";
 import CreditsRedirectPage from "./pages/CreditsRedirectPage";
 import SmartLinkPage from "./pages/SmartLinkPage";
-import SitemapPage from "./pages/SitemapPage";
+
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { PushNotificationBanner } from "@/components/PushNotificationBanner";
 import { NotificationDeepLinkHandler } from "@/components/NotificationDeepLinkHandler";
@@ -115,7 +115,6 @@ const App = () => {
                       <Route path="/settings/badges" element={<VendorBadgesPage />} />
                       <Route path="/settings/push-test" element={<PushNotificationTestPage />} />
                       <Route path="/settings/network" element={<NetworkStatusPage />} />
-                      <Route path="/sitemap.xml" element={<SitemapPage />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                     <GlobalHeader />

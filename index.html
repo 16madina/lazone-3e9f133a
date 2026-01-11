@@ -90,21 +90,20 @@
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "RealEstateAgent",
+      "@type": "Organization",
       "name": "LaZone",
       "alternateName": "LaZone - Immobilier en Afrique",
       "url": "https://lazoneapp.com",
       "logo": "https://lazoneapp.com/images/logo-lazone.png",
       "image": "https://lazoneapp.com/images/og-image.png",
       "description": "Plateforme immobilière panafricaine leader. Trouvez maisons, appartements, terrains et locaux commerciaux à vendre ou à louer partout en Afrique.",
-      "address": {
-        "@type": "PostalAddress",
-        "addressCountry": "CI",
-        "addressLocality": "Abidjan",
-        "addressRegion": "Abidjan"
-      },
-      "telephone": "+225 0700000000",
       "email": "contact@lazoneapp.com",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer service",
+        "availableLanguage": ["French", "English"],
+        "url": "https://lazoneapp.com/help"
+      },
       "areaServed": [
         {
           "@type": "Continent",
@@ -217,27 +216,6 @@
           "urlTemplate": "https://lazoneapp.com/?search={search_term_string}"
         },
         "query-input": "required name=search_term_string"
-      }
-    }
-    </script>
-    
-    <!-- Schema.org Organization -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "Organization",
-      "name": "LaZone",
-      "url": "https://lazoneapp.com",
-      "logo": "https://lazoneapp.com/images/logo-lazone.png",
-      "description": "Plateforme immobilière panafricaine connectant acheteurs, vendeurs et locataires à travers tout le continent africain.",
-      "contactPoint": {
-        "@type": "ContactPoint",
-        "contactType": "customer service",
-        "availableLanguage": ["French", "English"]
-      },
-      "areaServed": {
-        "@type": "Continent",
-        "name": "Africa"
       }
     }
     </script>

@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { HelmetProvider } from 'react-helmet-async';
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
 import { GlobalHeader } from "@/components/layout/GlobalHeader";
 import { AuthProvider } from "@/hooks/useAuth";
@@ -125,29 +126,31 @@ const App = () => {
   };
  
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <AuthProvider>
-          <TutorialProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <OfflineIndicator />
-              {showSplash ? (
-                <SplashScreen onComplete={handleSplashComplete} />
-              ) : (
-                <BrowserRouter>
-                  <DeepLinkHandler />
-                  <NotificationDeepLinkHandler />
-                  <PushNotificationBanner />
-                  <AppLayout />
-                </BrowserRouter>
-              )}
-            </TooltipProvider>
-          </TutorialProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <HelmetProvider>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <AuthProvider>
+            <TutorialProvider>
+              <TooltipProvider>
+                <Toaster />
+                <Sonner />
+                <OfflineIndicator />
+                {showSplash ? (
+                  <SplashScreen onComplete={handleSplashComplete} />
+                ) : (
+                  <BrowserRouter>
+                    <DeepLinkHandler />
+                    <NotificationDeepLinkHandler />
+                    <PushNotificationBanner />
+                    <AppLayout />
+                  </BrowserRouter>
+                )}
+              </TooltipProvider>
+            </TutorialProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </HelmetProvider>
   );
 };
 

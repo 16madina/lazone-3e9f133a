@@ -17,6 +17,7 @@ import { ModeSwitchSplash } from '@/components/ModeSwitchSplash';
 import { ReferralSheet } from '@/components/referral/ReferralSheet';
 import SectionTutorialButton from '@/components/tutorial/SectionTutorialButton';
 import { AppDownloadButtons } from '@/components/AppDownloadButtons';
+import { SEOHead } from '@/components/SEOHead';
 import { useAppStore, AppMode } from '@/stores/appStore';
 import { useProperties } from '@/hooks/useProperties';
 import { useAuth } from '@/hooks/useAuth';
@@ -218,6 +219,8 @@ const Index = () => {
 
   return (
     <div className="min-h-screen pb-32 relative">
+      {/* Dynamic SEO with canonical URL for homepage */}
+      <SEOHead canonical="/" />
       {/* Parrainage Button - Fixed left side vertical */}
       {user && (
         <>

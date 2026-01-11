@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import logoLazone from '@/assets/lazone-logo-new.png';
+import { SEOHead } from '@/components/SEOHead';
 
 type Platform = 'ios' | 'android' | 'desktop';
 
@@ -55,6 +56,11 @@ const DownloadPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-primary/10 flex flex-col items-center justify-center px-6 py-12">
+      <SEOHead
+        title="Télécharger l'application"
+        description="Téléchargez l'application LaZone pour iOS et Android. L'immobilier en Afrique, simplifié."
+        canonical="/download"
+      />
       {/* Logo */}
       <div className="mb-8">
         <img 

@@ -37,6 +37,7 @@ import { formatPriceWithCurrency } from '@/data/currencies';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useShare } from '@/hooks/useNativePlugins';
+import { SEOHead } from '@/components/SEOHead';
 
 interface PropertyDetail {
   id: string;
@@ -324,6 +325,14 @@ const PropertyDetailPage = () => {
 
   return (
     <div className="min-h-screen pb-32">
+      {/* Dynamic SEO tags with canonical URL */}
+      <SEOHead
+        title={property.title}
+        description={`${property.title} - ${property.type === 'sale' ? 'À vendre' : 'À louer'} à ${property.city}. ${property.bedrooms} chambres, ${property.bathrooms} salles de bain, ${property.area}m².`}
+        canonical={`/property/${property.id}`}
+        ogImage={property.images[0] !== '/placeholder.svg' ? property.images[0] : undefined}
+        ogType="product"
+      />
       {/* Header Image Carousel */}
       <div className="relative h-80">
         <Swiper

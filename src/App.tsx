@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
 import { GlobalHeader } from "@/components/layout/GlobalHeader";
 import { AuthProvider } from "@/hooks/useAuth";
@@ -56,6 +56,67 @@ import { DeepLinkHandler } from "@/components/DeepLinkHandler";
  
 const queryClient = new QueryClient();
  
+// Layout wrapper that conditionally shows navigation
+const AppLayout = () => {
+  const location = useLocation();
+  
+  // Routes without any navigation (header, footer, tab bar)
+  const noNavigationRoutes = ['/download'];
+  const shouldShowNavigation = !noNavigationRoutes.includes(location.pathname);
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/auth" element={<AuthPage />} />
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
+        <Route path="/map" element={<MapPage />} />
+        <Route path="/publish" element={<PublishPage />} />
+        <Route path="/messages" element={<MessagesPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/my-listings" element={<MyListingsPage />} />
+        <Route path="/property/:id" element={<PropertyDetail />} />
+        <Route path="/property/:id/edit" element={<EditPropertyPage />} />
+        <Route path="/user/:userId" element={<PublicProfilePage />} />
+        <Route path="/notifications" element={<NotificationsPage />} />
+        <Route path="/followers" element={<FollowersPage />} />
+        <Route path="/followers/:userId" element={<FollowersPage />} />
+        <Route path="/install" element={<InstallPage />} />
+        <Route path="/invite" element={<SmartLinkPage />} />
+        <Route path="/download" element={<DownloadPage />} />
+        <Route path="/reservation/:id" element={<ReservationPage />} />
+        <Route path="/credits" element={<CreditsRedirectPage />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/admin" element={<AdminPage />} />
+        <Route path="/settings/edit-profile" element={<EditProfilePage />} />
+        <Route path="/settings/change-password" element={<ChangePasswordPage />} />
+        <Route path="/settings/security" element={<SecuritySettingsPage />} />
+        <Route path="/settings/notifications" element={<NotificationSettingsPage />} />
+        <Route path="/settings/regional" element={<RegionalSettingsPage />} />
+        <Route path="/settings/help" element={<HelpCenterPage />} />
+        <Route path="/settings/support" element={<SupportPage />} />
+        <Route path="/settings/legal" element={<LegalPage />} />
+        <Route path="/settings/legal/:id" element={<LegalDetailPage />} />
+        <Route path="/settings/account" element={<AccountManagementPage />} />
+        <Route path="/settings/about" element={<AboutPage />} />
+        <Route path="/settings/faq" element={<FaqPage />} />
+        <Route path="/settings/badges" element={<VendorBadgesPage />} />
+        <Route path="/settings/push-test" element={<PushNotificationTestPage />} />
+        <Route path="/settings/network" element={<NetworkStatusPage />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+      {shouldShowNavigation && (
+        <>
+          <GlobalHeader />
+          <BottomNavigation />
+          <TutorialOverlay />
+          <TutorialPrompt />
+        </>
+      )}
+    </div>
+  );
+};
+
 const App = () => {
   const [showSplash, setShowSplash] = useState(true);
  
@@ -79,51 +140,7 @@ const App = () => {
                   <DeepLinkHandler />
                   <NotificationDeepLinkHandler />
                   <PushNotificationBanner />
-                  <div className="min-h-screen bg-background">
-                    <Routes>
-                      <Route path="/" element={<Index />} />
-                      <Route path="/auth" element={<AuthPage />} />
-                      <Route path="/verify-email" element={<VerifyEmailPage />} />
-                      <Route path="/map" element={<MapPage />} />
-                      <Route path="/publish" element={<PublishPage />} />
-                      <Route path="/messages" element={<MessagesPage />} />
-                      <Route path="/profile" element={<ProfilePage />} />
-                      <Route path="/my-listings" element={<MyListingsPage />} />
-                      <Route path="/property/:id" element={<PropertyDetail />} />
-                      <Route path="/property/:id/edit" element={<EditPropertyPage />} />
-                      <Route path="/user/:userId" element={<PublicProfilePage />} />
-                      <Route path="/notifications" element={<NotificationsPage />} />
-                      <Route path="/followers" element={<FollowersPage />} />
-                      <Route path="/followers/:userId" element={<FollowersPage />} />
-                      <Route path="/install" element={<InstallPage />} />
-                      <Route path="/invite" element={<SmartLinkPage />} />
-                      <Route path="/download" element={<DownloadPage />} />
-                      <Route path="/reservation/:id" element={<ReservationPage />} />
-                      <Route path="/credits" element={<CreditsRedirectPage />} />
-                      <Route path="/dashboard" element={<DashboardPage />} />
-                      <Route path="/admin" element={<AdminPage />} />
-                      <Route path="/settings/edit-profile" element={<EditProfilePage />} />
-                      <Route path="/settings/change-password" element={<ChangePasswordPage />} />
-                      <Route path="/settings/security" element={<SecuritySettingsPage />} />
-                      <Route path="/settings/notifications" element={<NotificationSettingsPage />} />
-                      <Route path="/settings/regional" element={<RegionalSettingsPage />} />
-                      <Route path="/settings/help" element={<HelpCenterPage />} />
-                      <Route path="/settings/support" element={<SupportPage />} />
-                      <Route path="/settings/legal" element={<LegalPage />} />
-                      <Route path="/settings/legal/:id" element={<LegalDetailPage />} />
-                      <Route path="/settings/account" element={<AccountManagementPage />} />
-                      <Route path="/settings/about" element={<AboutPage />} />
-                      <Route path="/settings/faq" element={<FaqPage />} />
-                      <Route path="/settings/badges" element={<VendorBadgesPage />} />
-                      <Route path="/settings/push-test" element={<PushNotificationTestPage />} />
-                      <Route path="/settings/network" element={<NetworkStatusPage />} />
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                    <GlobalHeader />
-                    <BottomNavigation />
-                    <TutorialOverlay />
-                    <TutorialPrompt />
-                  </div>
+                  <AppLayout />
                 </BrowserRouter>
               )}
             </TooltipProvider>

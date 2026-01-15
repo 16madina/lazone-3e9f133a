@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Target, Heart, Users, Globe, Shield, Sparkles, Building2, MapPin } from 'lucide-react';
 import { AppDownloadButtons } from '@/components/AppDownloadButtons';
+import { SEOHead } from '@/components/SEOHead';
 
 const AboutPage = () => {
   const navigate = useNavigate();
@@ -59,7 +60,13 @@ const AboutPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-muted/30 pb-32">
+    <>
+      <SEOHead 
+        title="À propos de LaZone"
+        description="Découvrez LaZone, la première plateforme immobilière panafricaine. Notre mission, nos valeurs et notre équipe."
+        canonical="/settings/about"
+      />
+      <div className="min-h-screen bg-muted/30 pb-32">
       {/* Header */}
       <div className="bg-gradient-to-r from-primary via-primary to-primary/80 text-primary-foreground pt-[env(safe-area-inset-top)]">
         <div className="flex items-center gap-4 px-4 py-4">
@@ -213,7 +220,8 @@ const AboutPage = () => {
           <p className="mt-1">Version 1.0.0</p>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 

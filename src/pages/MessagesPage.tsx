@@ -22,6 +22,7 @@ import { AppointmentDialog } from '@/components/appointment/AppointmentDialog';
 import { ReportUserDialog } from '@/components/messages/ReportUserDialog';
 import SectionTutorialButton from '@/components/tutorial/SectionTutorialButton';
 import EmailVerificationRequired from '@/components/EmailVerificationRequired';
+import { SEOHead } from '@/components/SEOHead';
 import heroBg2 from '@/assets/hero-bg-2.jpg';
 import {
   DropdownMenu,
@@ -172,7 +173,14 @@ const MessagesPage = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen relative overflow-hidden">
+      <>
+        <SEOHead 
+          title="Messages"
+          description="Accédez à vos messages LaZone pour discuter avec les propriétaires et planifier des visites."
+          canonical="/messages"
+          noindex
+        />
+        <div className="min-h-screen relative overflow-hidden">
         {/* Background Image */}
         <div 
           className="absolute inset-0 bg-cover bg-center"
@@ -281,6 +289,7 @@ const MessagesPage = () => {
         </motion.div>
         </div>
       </div>
+      </>
     );
   }
 
@@ -320,7 +329,14 @@ const MessagesPage = () => {
   }
 
   return (
-    <div className="page-container">
+    <>
+      <SEOHead 
+        title="Messages"
+        description="Gérez vos conversations et discutez avec les propriétaires sur LaZone."
+        canonical="/messages"
+        noindex
+      />
+      <div className="page-container">
       <motion.header
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -451,7 +467,8 @@ const MessagesPage = () => {
           ))}
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 };
 interface ConversationViewProps {

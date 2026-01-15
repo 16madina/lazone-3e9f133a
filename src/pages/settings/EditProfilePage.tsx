@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { africanCountries } from '@/data/africanCountries';
 import { useCamera, isNativePlatform } from '@/hooks/useNativePlugins';
+import { SEOHead } from '@/components/SEOHead';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -145,7 +146,14 @@ const EditProfilePage = () => {
   const cities = selectedCountry?.cities || [];
 
   return (
-    <div className="min-h-screen bg-muted/30 pb-32">
+    <>
+      <SEOHead 
+        title="Modifier le profil"
+        description="Modifiez vos informations de profil sur LaZone."
+        canonical="/settings/edit-profile"
+        noindex
+      />
+      <div className="min-h-screen bg-muted/30 pb-32">
       {/* Header */}
       <div className="bg-gradient-to-r from-primary via-primary to-primary/80 text-primary-foreground pt-[env(safe-area-inset-top)]">
         <div className="flex items-center gap-4 px-4 py-4">
@@ -323,7 +331,8 @@ const EditProfilePage = () => {
           </Button>
         </form>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 

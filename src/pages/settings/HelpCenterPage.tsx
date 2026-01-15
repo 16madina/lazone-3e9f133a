@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useTutorial } from '@/hooks/useTutorial';
+import { SEOHead } from '@/components/SEOHead';
 
 const faqs = [
   {
@@ -59,7 +60,13 @@ const HelpCenterPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-muted/30 pb-32">
+    <>
+      <SEOHead 
+        title="Centre d'aide"
+        description="Besoin d'aide ? Consultez notre centre d'aide LaZone pour des guides et réponses à vos questions."
+        canonical="/settings/help"
+      />
+      <div className="min-h-screen bg-muted/30 pb-32">
       {/* Header */}
       <div className="bg-gradient-to-r from-primary via-primary to-primary/80 text-primary-foreground pt-[env(safe-area-inset-top)]">
         <div className="flex items-center gap-4 px-4 py-4">
@@ -169,7 +176,8 @@ const HelpCenterPage = () => {
           )}
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 

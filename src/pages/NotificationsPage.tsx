@@ -8,6 +8,7 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { Button } from '@/components/ui/button';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { SEOHead } from '@/components/SEOHead';
 
 const NotificationsPage = () => {
   const navigate = useNavigate();
@@ -80,7 +81,14 @@ const NotificationsPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <>
+      <SEOHead 
+        title="Notifications"
+        description="Consultez vos notifications LaZone : nouveaux abonnés, avis, messages et rendez-vous."
+        canonical="/notifications"
+        noindex
+      />
+      <div className="min-h-screen bg-background pb-24">
       {/* Header */}
       <div className="bg-card border-b border-border sticky top-0 z-10 pt-[env(safe-area-inset-top)]">
         <div className="flex items-center justify-between p-4">
@@ -170,7 +178,8 @@ const NotificationsPage = () => {
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 

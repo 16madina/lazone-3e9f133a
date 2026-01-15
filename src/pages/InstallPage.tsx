@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
 import { AppLogo } from '@/components/AppLogo';
+import { SEOHead } from '@/components/SEOHead';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -68,7 +69,13 @@ const InstallPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+    <>
+      <SEOHead 
+        title="Installer l'application"
+        description="Installez LaZone sur votre appareil pour un accès rapide, le mode hors-ligne et les notifications push. Disponible sur iPhone, iPad et Android."
+        canonical="/install"
+      />
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
       {/* Header */}
       <header className="sticky top-0 z-50 glass border-b border-border/50">
         <div className="flex items-center gap-3 px-4 py-3">
@@ -260,7 +267,8 @@ const InstallPage = () => {
           </Button>
         </div>
       </main>
-    </div>
+      </div>
+    </>
   );
 };
 

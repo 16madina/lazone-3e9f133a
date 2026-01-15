@@ -5,6 +5,7 @@ import { Gift, Download, Smartphone, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AppLogo } from '@/components/AppLogo';
 import splashBg from '@/assets/splash-bg-10.jpg';
+import { SEOHead } from '@/components/SEOHead';
 
 const APP_STORE_ID = '6756757879';
 // Web URL for desktop/share previews
@@ -103,7 +104,13 @@ const SmartLinkPage = () => {
   // For desktop, redirect directly to auth
   if (platform === 'web' && !Capacitor.isNativePlatform()) {
     return (
-      <div 
+      <>
+        <SEOHead 
+          title="Invitation parrainage"
+          description="Rejoignez LaZone avec un code de parrainage et recevez un crédit gratuit. Téléchargez l'application immobilière africaine sur iOS ou Android."
+          canonical="/invite"
+        />
+        <div
         className="min-h-screen flex flex-col items-center justify-center p-6"
         style={{
           backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.6), rgba(0,0,0,0.8)), url(${splashBg})`,
@@ -166,12 +173,19 @@ const SmartLinkPage = () => {
           </div>
         </div>
       </div>
+      </>
     );
   }
 
   // Mobile view with app opening attempt
   return (
-    <div 
+    <>
+      <SEOHead 
+        title="Invitation parrainage"
+        description="Rejoignez LaZone avec un code de parrainage et recevez un crédit gratuit. Téléchargez l'application immobilière africaine sur iOS ou Android."
+        canonical="/invite"
+      />
+      <div
       className="min-h-screen flex flex-col items-center justify-center p-6"
       style={{
         backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.6), rgba(0,0,0,0.8)), url(${splashBg})`,
@@ -231,6 +245,7 @@ const SmartLinkPage = () => {
         )}
       </div>
     </div>
+    </>
   );
 };
 

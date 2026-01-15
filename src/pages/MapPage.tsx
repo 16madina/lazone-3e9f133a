@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Filter, X, MapPin, Bed, Bath, Maximize, Search, Loader2, Navigation, Check, Globe, ChevronDown, Calendar, Star, List } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { MapPropertyList } from '@/components/map/MapPropertyList';
+import { SEOHead } from '@/components/SEOHead';
 import { useProperties, Property } from '@/hooks/useProperties';
 import { useAuth } from '@/hooks/useAuth';
 import { useAppStore } from '@/stores/appStore';
@@ -478,7 +479,13 @@ const MapPage = () => {
   };
 
   return (
-    <div className="h-screen flex flex-col relative">
+    <>
+      <SEOHead 
+        title="Carte des biens immobiliers"
+        description="Explorez les biens immobiliers en Afrique sur notre carte interactive. Trouvez maisons, appartements et terrains à vendre ou à louer près de chez vous."
+        canonical="/map"
+      />
+      <div className="h-screen flex flex-col relative">
       {/* Search and Filters Header */}
       <div 
         className="absolute top-0 left-0 right-0 z-[1000] p-3"
@@ -847,6 +854,7 @@ const MapPage = () => {
 
       <SectionTutorialButton section="map" />
     </div>
+    </>
   );
 };
 

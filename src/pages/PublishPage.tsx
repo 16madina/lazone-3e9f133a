@@ -43,6 +43,7 @@ import EmailVerificationRequired from '@/components/EmailVerificationRequired';
 import ListingPaymentDialog from '@/components/publish/ListingPaymentDialog';
 import { useListingLimit } from '@/hooks/useListingLimit';
 import { Badge } from '@/components/ui/badge';
+import { SEOHead } from '@/components/SEOHead';
 import heroBg3 from '@/assets/hero-bg-3.jpg';
 
 type PropertyType = 'house' | 'apartment' | 'land' | 'commercial';
@@ -1128,7 +1129,14 @@ const PublishPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-muted/30 pb-32">
+    <>
+      <SEOHead 
+        title="Publier une annonce"
+        description="Publiez votre annonce immobilière gratuitement sur LaZone. Vendez ou louez votre maison, appartement ou terrain en Afrique."
+        canonical="/publish"
+        noindex
+      />
+      <div className="min-h-screen bg-muted/30 pb-32">
       {/* Header */}
       <div
         className="bg-gradient-to-r from-primary via-primary to-primary/80 text-primary-foreground px-4 pb-6"
@@ -2278,7 +2286,8 @@ const PublishPage = () => {
         propertyId={pendingPropertyId || undefined}
         onBeforeStripeRedirect={saveFormToStorage}
       />
-    </div>
+      </div>
+    </>
   );
 };
 

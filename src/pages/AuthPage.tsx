@@ -9,6 +9,7 @@ import { africanCountries, Country } from '@/data/africanCountries';
 import { diasporaCountries, DiasporaCountry, getRegionLabel } from '@/data/diasporaCountries';
 import { useTheme } from '@/hooks/useTheme';
 import { AppLogo } from '@/components/AppLogo';
+import { SEOHead } from '@/components/SEOHead';
 import heroBg from '@/assets/hero-bg.jpg';
 import {
   Dialog,
@@ -457,7 +458,14 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <>
+      <SEOHead 
+        title={isLogin ? "Connexion" : "Inscription"}
+        description="Connectez-vous à LaZone pour gérer vos annonces, contacter des vendeurs et trouver le logement idéal en Afrique."
+        canonical="/auth"
+        noindex
+      />
+      <div className="min-h-screen relative overflow-hidden">
       {/* Background Image */}
       <div 
         className="absolute inset-0 bg-cover bg-center"
@@ -1211,7 +1219,8 @@ const AuthPage = () => {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+    </>
   );
 };
 

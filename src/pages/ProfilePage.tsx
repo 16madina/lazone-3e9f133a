@@ -79,6 +79,7 @@ import { useListingLimit } from '@/hooks/useListingLimit';
 import { useSponsoredListings } from '@/hooks/useSponsoredListings';
 import { ReferralSheet } from '@/components/referral/ReferralSheet';
 import { ProPremiumBadge, getProPremiumLevel } from '@/components/ProPremiumBadge';
+import { SEOHead } from '@/components/SEOHead';
 
 type TabType = 'annonces' | 'rdv' | 'favoris' | 'parametres';
 
@@ -676,7 +677,14 @@ const ProfilePage = () => {
   // Guest view
   if (!user) {
     return (
-      <div className="min-h-screen relative overflow-hidden">
+      <>
+        <SEOHead 
+          title="Mon profil"
+          description="Accédez à votre profil LaZone pour gérer vos annonces, favoris et rendez-vous immobiliers."
+          canonical="/profile"
+          noindex
+        />
+        <div className="min-h-screen relative overflow-hidden">
         {/* Background Image */}
         <div 
           className="absolute inset-0 bg-cover bg-center"
@@ -786,11 +794,19 @@ const ProfilePage = () => {
           </motion.div>
         </div>
       </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-muted/30 pb-32">
+    <>
+      <SEOHead 
+        title="Mon profil"
+        description="Gérez votre profil LaZone, vos annonces, favoris et paramètres."
+        canonical="/profile"
+        noindex
+      />
+      <div className="min-h-screen bg-muted/30 pb-32">
       {/* Hidden file input for avatar upload */}
       <input
         ref={fileInputRef}
@@ -1721,7 +1737,8 @@ const ProfilePage = () => {
       <CreditPurchaseSheet open={purchaseSheetOpen} onOpenChange={setPurchaseSheetOpen} />
 
       {user && <SectionTutorialButton section="profile" />}
-    </div>
+      </div>
+    </>
   );
 };
 

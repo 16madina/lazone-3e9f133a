@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, FileText, Shield, Users, Baby, ChevronRight } from 'lucide-react';
+import { SEOHead } from '@/components/SEOHead';
 
 const legalPages = [
   {
@@ -32,7 +33,13 @@ const LegalPage = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-muted/30 pb-32">
+    <>
+      <SEOHead 
+        title="Mentions légales"
+        description="Consultez les mentions légales, conditions d'utilisation et politique de confidentialité de LaZone."
+        canonical="/settings/legal"
+      />
+      <div className="min-h-screen bg-muted/30 pb-32">
       {/* Header */}
       <div className="bg-gradient-to-r from-primary via-primary to-primary/80 text-primary-foreground pt-[env(safe-area-inset-top)]">
         <div className="flex items-center gap-4 px-4 py-4">
@@ -72,7 +79,8 @@ const LegalPage = () => {
           Dernière mise à jour : Décembre 2025
         </p>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 

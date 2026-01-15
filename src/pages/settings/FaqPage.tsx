@@ -3,6 +3,7 @@ import { ArrowLeft, Search, HelpCircle, Home, CreditCard, Shield, MessageCircle,
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { SEOHead } from '@/components/SEOHead';
 
 interface FaqCategory {
   id: string;
@@ -226,7 +227,13 @@ const FaqPage = () => {
   const totalQuestions = faqCategories.reduce((acc, cat) => acc + cat.questions.length, 0);
 
   return (
-    <div className="min-h-screen bg-muted/30 pb-32">
+    <>
+      <SEOHead 
+        title="FAQ - Questions fréquentes"
+        description="Trouvez les réponses à vos questions sur LaZone. Publication d'annonces, recherche, contact, compte et sécurité."
+        canonical="/settings/faq"
+      />
+      <div className="min-h-screen bg-muted/30 pb-32">
       {/* Header */}
       <div className="bg-gradient-to-r from-primary via-primary to-primary/80 text-primary-foreground pt-[env(safe-area-inset-top)]">
         <div className="flex items-center gap-4 px-4 py-4">
@@ -337,7 +344,8 @@ const FaqPage = () => {
           </button>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 

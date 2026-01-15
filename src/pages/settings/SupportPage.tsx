@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { SEOHead } from '@/components/SEOHead';
 
 const SupportPage = () => {
   const navigate = useNavigate();
@@ -40,7 +41,14 @@ const SupportPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-muted/30 pb-32">
+    <>
+      <SEOHead 
+        title="Contacter le support"
+        description="Contactez l'équipe support LaZone pour toute question ou problème. Nous répondons sous 24-48h."
+        canonical="/settings/support"
+        noindex
+      />
+      <div className="min-h-screen bg-muted/30 pb-32">
       {/* Header */}
       <div className="bg-gradient-to-r from-primary via-primary to-primary/80 text-primary-foreground pt-[env(safe-area-inset-top)]">
         <div className="flex items-center gap-4 px-4 py-4">
@@ -132,7 +140,8 @@ const SupportPage = () => {
           </Button>
         </form>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 

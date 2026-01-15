@@ -323,8 +323,55 @@ const PropertyDetailPage = () => {
     // Dialog will handle the rest
   };
 
+  // Generate JSON-LD structured data for SEO
+  const jsonLdData = {
+    "@context": "https://schema.org",
+    "@type": "RealEstateListing",
+    "name": property.title,
+    "description": property.description || `${property.title} - ${property.type === 'sale' ? 'À vendre' : 'À louer'} à ${property.city}`,
+    "url": `https://lazoneapp.com/property/${property.id}`,
+    "image": property.images.filter(img => img !== '/placeholder.svg'),
+    "offers": {
+      "@type": "Offer",
+      "price": displayPrice,
+      "priceCurrency": "XOF",
+      "availability": "https://schema.org/InStock",
+      "priceSpecification": {
+        "@type": "UnitPriceSpecification",
+        "price": displayPrice,
+        "priceCurrency": "XOF",
+        "unitText": isResidenceProperty ? "nuit" : (property.type === 'rent' ? "mois" : undefined)
+      }
+    },
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": property.address,
+      "addressLocality": property.city,
+      "addressCountry": property.country || "CI"
+    },
+    ...(property.propertyType !== 'land' && {
+      "numberOfRooms": property.bedrooms + property.bathrooms,
+      "numberOfBedrooms": property.bedrooms,
+      "numberOfBathroomsTotal": property.bathrooms
+    }),
+    "floorSize": {
+      "@type": "QuantitativeValue",
+      "value": property.area,
+      "unitCode": "MTK"
+    },
+    "propertyType": property.propertyType === 'house' ? 'House' : 
+                    property.propertyType === 'apartment' ? 'Apartment' : 
+                    property.propertyType === 'commercial' ? 'CommercialBuilding' : 'LandPlot'
+  };
+
   return (
     <div className="min-h-screen pb-32">
+      {/* JSON-LD Structured Data for Rich Results */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdData) }}
+      />
+      
       {/* Dynamic SEO tags with canonical URL */}
       <SEOHead
         title={property.title}

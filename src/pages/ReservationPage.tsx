@@ -398,7 +398,7 @@ const ReservationPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen bg-background pb-[calc(12rem+max(env(safe-area-inset-bottom,0px),1rem))]">
       {/* Header */}
       <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border pt-[env(safe-area-inset-top)]">
         <div className="container max-w-2xl mx-auto px-4 py-4">
@@ -764,7 +764,10 @@ const ReservationPage = () => {
 
       {/* Price Summary & Action Button - Hidden when keyboard is visible */}
       {!isKeyboardVisible && (
-        <div className="fixed bottom-[90px] left-0 right-0 bg-background/95 backdrop-blur-md border-t border-border p-4 z-40">
+        <div
+          className="fixed left-0 right-0 bg-background/95 backdrop-blur-md border-t border-border p-4 z-40"
+          style={{ bottom: 'calc(6.5rem + env(safe-area-inset-bottom, 0px))' }}
+        >
           <div className="container max-w-2xl mx-auto">
             {nights > 0 && step !== 'confirmation' && (
               <div className="flex justify-between items-center mb-3">

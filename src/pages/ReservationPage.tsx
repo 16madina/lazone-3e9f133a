@@ -764,7 +764,7 @@ const ReservationPage = () => {
 
       {/* Price Summary & Action Button - Hidden when keyboard is visible */}
       {!isKeyboardVisible && (
-        <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-md border-t border-border p-4 pb-safe">
+        <div className="fixed bottom-[70px] left-0 right-0 bg-background/95 backdrop-blur-md border-t border-border p-4 z-40">
           <div className="container max-w-2xl mx-auto">
             {nights > 0 && step !== 'confirmation' && (
               <div className="flex justify-between items-center mb-3">

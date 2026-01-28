@@ -64,6 +64,33 @@ const ReservationPage = () => {
   const { user } = useAuth();
   const { keyboardHeight, isKeyboardVisible } = useKeyboardHeight();
 
+  // Bottom nav can overlap fixed CTAs on mobile web; measure it and offset accordingly.
+  const [bottomNavHeight, setBottomNavHeight] = useState(0);
+
+  useEffect(() => {
+    const nav = document.querySelector<HTMLElement>('.bottom-nav');
+    if (!nav) return;
+
+    const update = () => {
+      const h = Math.round(nav.getBoundingClientRect().height || 0);
+      setBottomNavHeight(h);
+    };
+
+    update();
+
+    let ro: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(update);
+      ro.observe(nav);
+    }
+
+    window.addEventListener('resize', update);
+    return () => {
+      window.removeEventListener('resize', update);
+      ro?.disconnect();
+    };
+  }, []);
+
   // State
   const [property, setProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
@@ -398,7 +425,14 @@ const ReservationPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-[calc(12rem+max(env(safe-area-inset-bottom,0px),1rem))]">
+    <div
+      className="min-h-screen bg-background pb-[calc(12rem+max(env(safe-area-inset-bottom,0px),1rem))]"
+      style={
+        bottomNavHeight
+          ? { paddingBottom: `calc(${bottomNavHeight}px + 12rem)` }
+          : undefined
+      }
+    >
       {/* Header */}
       <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border pt-[env(safe-area-inset-top)]">
         <div className="container max-w-2xl mx-auto px-4 py-4">
@@ -765,8 +799,12 @@ const ReservationPage = () => {
       {/* Price Summary & Action Button - Hidden when keyboard is visible */}
       {!isKeyboardVisible && (
         <div
-          className="fixed left-0 right-0 bg-background/95 backdrop-blur-md border-t border-border p-4 z-40"
-          style={{ bottom: 'calc(6.5rem + env(safe-area-inset-bottom, 0px))' }}
+          className="fixed left-0 right-0 bg-background/95 backdrop-blur-md border-t border-border p-4 z-[60]"
+          style={{
+            bottom: bottomNavHeight
+              ? `${bottomNavHeight + 8}px`
+              : 'calc(6.5rem + env(safe-area-inset-bottom, 0px))'
+          }}
         >
           <div className="container max-w-2xl mx-auto">
             {nights > 0 && step !== 'confirmation' && (

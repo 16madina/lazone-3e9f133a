@@ -662,7 +662,7 @@ const ProfilePage = () => {
 
   const tabs = [
     { id: 'annonces' as TabType, label: isResidence ? 'Séjours' : 'Annonces', icon: Home, tutorial: 'profile-listings' },
-    { id: 'rdv' as TabType, label: 'Mes RDV', icon: CalendarDays, tutorial: 'profile-appointments' },
+    { id: 'rdv' as TabType, label: isResidence ? 'Réservation' : 'Mes RDV', icon: CalendarDays, tutorial: 'profile-appointments' },
     { id: 'parametres' as TabType, label: 'Paramètres', icon: Settings, tutorial: 'profile-settings' },
   ];
 

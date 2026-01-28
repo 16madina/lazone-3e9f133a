@@ -9,10 +9,48 @@ import { Button } from '@/components/ui/button';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { SEOHead } from '@/components/SEOHead';
+import { useAppStore, AppMode } from '@/stores/appStore';
+import { toast } from '@/hooks/use-toast';
 
 const NotificationsPage = () => {
   const navigate = useNavigate();
   const { notifications, loading, markAsRead, markAllAsRead, unreadCount } = useNotifications();
+  const { appMode, setAppMode } = useAppStore();
+
+  // Helper to switch mode and navigate
+  const switchModeAndNavigate = (targetMode: AppMode, route: string) => {
+    const currentMode = appMode;
+    
+    if (targetMode !== currentMode) {
+      // Apply mode via Zustand
+      setAppMode(targetMode);
+      
+      // Apply DOM class immediately
+      if (targetMode === 'residence') {
+        document.documentElement.classList.add('residence');
+      } else {
+        document.documentElement.classList.remove('residence');
+      }
+      
+      // Persist to localStorage
+      localStorage.setItem('lazone-app-mode', targetMode);
+      
+      // Show toast for mode switch
+      const toastTitle = targetMode === 'residence' 
+        ? '🏠 Mode Résidence activé' 
+        : '🏢 Mode LaZone activé';
+      const toastDescription = targetMode === 'residence'
+        ? 'Passage automatique en mode résidence'
+        : 'Passage automatique en mode immobilier';
+      
+      toast({ title: toastTitle, description: toastDescription });
+    }
+    
+    // Navigate after a small delay to ensure mode is applied
+    setTimeout(() => {
+      navigate(route);
+    }, targetMode !== currentMode ? 150 : 0);
+  };
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -65,10 +103,12 @@ const NotificationsPage = () => {
       navigate(`/user/${notification.actor_id}`);
     } else if (notification.type === 'message') {
       navigate('/messages');
-    } else if (notification.type.includes('reservation') || notification.type.includes('appointment')) {
-      // Always navigate to dashboard for reservation/appointment notifications
-      // entity_id contains the appointment ID, not property ID
-      navigate('/dashboard');
+    } else if (notification.type.includes('reservation')) {
+      // Reservation notifications → switch to Residence mode
+      switchModeAndNavigate('residence', '/dashboard');
+    } else if (notification.type.includes('appointment')) {
+      // Appointment notifications → switch to LaZone mode
+      switchModeAndNavigate('lazone', '/dashboard');
     }
   };
 

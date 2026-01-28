@@ -7,7 +7,7 @@ const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 interface NotifyOwnerRequest {
@@ -29,14 +29,12 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Fetch reservation details with property and user info
+    // Fetch reservation details with property info only (no FK to profiles)
     const { data: reservation, error: reservationError } = await supabase
       .from('appointments')
       .select(`
         *,
-        property:properties(title, address, city, country),
-        requester:profiles!appointments_requester_id_fkey(full_name, user_id),
-        owner:profiles!appointments_owner_id_fkey(full_name, user_id)
+        property:properties(title, address, city, country)
       `)
       .eq('id', reservationId)
       .single();
@@ -50,6 +48,20 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     console.log("Reservation found:", reservation.id);
+
+    // Fetch requester profile separately
+    const { data: requesterProfile } = await supabase
+      .from('profiles')
+      .select('full_name')
+      .eq('user_id', reservation.requester_id)
+      .maybeSingle();
+
+    // Fetch owner profile separately
+    const { data: ownerProfile } = await supabase
+      .from('profiles')
+      .select('full_name')
+      .eq('user_id', reservation.owner_id)
+      .maybeSingle();
 
     // Get owner email from auth.users
     const { data: ownerData, error: ownerError } = await supabase.auth.admin.getUserById(
@@ -65,10 +77,10 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const ownerEmail = ownerData.user.email;
-    const ownerName = reservation.owner?.full_name || 'Propriétaire';
-    const requesterName = reservation.requester?.full_name || 'Un voyageur';
+    const ownerName = ownerProfile?.full_name || 'Propriétaire';
+    const requesterName = requesterProfile?.full_name || 'Un voyageur';
     const propertyTitle = reservation.property?.title || 'Votre logement';
-    const propertyAddress = `${reservation.property?.address}, ${reservation.property?.city}`;
+    const propertyAddress = `${reservation.property?.address || ''}, ${reservation.property?.city || ''}`;
     
     const checkInDate = new Date(reservation.check_in_date).toLocaleDateString('fr-FR', {
       weekday: 'long',

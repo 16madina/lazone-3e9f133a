@@ -17,7 +17,7 @@ const faqs = [
   },
   {
     question: "Comment modifier mon annonce ?",
-    answer: "Allez dans votre profil, onglet 'Annonces', puis cliquez sur l'annonce que vous souhaitez modifier."
+    answer: "Allez dans votre profil, onglet 'Annonces' (ou 'Séjours' en mode Résidence), puis cliquez sur l'annonce que vous souhaitez modifier."
   },
   {
     question: "Comment supprimer mon compte ?",

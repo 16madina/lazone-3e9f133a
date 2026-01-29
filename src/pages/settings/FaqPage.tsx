@@ -100,8 +100,8 @@ const faqCategories: FaqCategory[] = [
         answer: "Cliquez sur 'Prendre rendez-vous' sur la page de la propriété. Sélectionnez une date et une heure qui vous conviennent, ajoutez un message optionnel. Le propriétaire recevra votre demande et pourra l'accepter ou proposer un autre créneau."
       },
       {
-        question: "Où voir mes demandes de rendez-vous ?",
-        answer: "Accédez à votre profil, onglet 'Mes RDV'. Vous y verrez toutes vos demandes de rendez-vous (envoyées et reçues) avec leur statut : en attente, accepté ou refusé. Vous pouvez basculer entre vue liste et calendrier."
+        question: "Où voir mes demandes de rendez-vous ou réservations ?",
+        answer: "Accédez à votre profil, onglet 'Mes RDV' (mode Immobilier) ou 'Réservation' (mode Résidence). Vous y verrez toutes vos demandes (envoyées et reçues) avec leur statut : en attente, accepté ou refusé. Vous pouvez basculer entre vue liste et calendrier."
       },
       {
         question: "Puis-je partager mon numéro de téléphone ?",

@@ -29,6 +29,7 @@ import {
 import { useFavorites } from '@/hooks/useFavorites';
 import { ImageGallery } from '@/components/property/ImageGallery';
 import { ReportDialog } from '@/components/property/ReportDialog';
+import { PriceAnalysis } from '@/components/property/PriceAnalysis';
 import { AppointmentDialog } from '@/components/appointment/AppointmentDialog';
 import { ReservationDialog } from '@/components/appointment/ReservationDialog';
 import { useAppMode } from '@/hooks/useAppMode';
@@ -633,6 +634,26 @@ const PropertyDetailPage = () => {
             <p className="text-muted-foreground leading-relaxed">{property.description}</p>
           </motion.div>
         )}
+
+        {/* AI Price Analysis */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+        >
+          <PriceAnalysis
+            price={property.price}
+            city={property.city}
+            country={property.country || ''}
+            propertyType={property.propertyType}
+            transactionType={property.type}
+            listingType={property.listingType}
+            area={property.area}
+            bedrooms={property.bedrooms || undefined}
+            pricePerNight={property.pricePerNight || undefined}
+            variant="full"
+          />
+        </motion.div>
 
         {/* Features & Documents */}
         {property.features.length > 0 && (() => {

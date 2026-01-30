@@ -4,8 +4,9 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   Camera, MapPin, Home, DollarSign, Upload, Plus, X, 
   Bed, Bath, Maximize, FileText, Clock, Wallet, Check,
-  Loader2, AlertCircle, ChevronDown, Map, Image, Moon, Navigation
+  Loader2, AlertCircle, ChevronDown, Map, Image, Moon, Navigation, Sparkles
 } from 'lucide-react';
+import { PriceAnalysis } from '@/components/property/PriceAnalysis';
 import { useAuth } from '@/hooks/useAuth';
 import { useAppMode } from '@/hooks/useAppMode';
 import { supabase } from '@/integrations/supabase/client';
@@ -1410,6 +1411,24 @@ const PublishPage = () => {
                 </p>
               )}
             </>
+          )}
+
+          {/* AI Price Analysis */}
+          {((isResidence && pricePerNight && city && selectedCountry) || (!isResidence && price && city && selectedCountry && area)) && (
+            <div className="mt-4">
+              <PriceAnalysis
+                price={isResidence ? 0 : parseFloat(price) || 0}
+                city={city}
+                country={selectedCountry}
+                propertyType={propertyType}
+                transactionType={transactionType}
+                listingType={isResidence ? 'short_term' : 'long_term'}
+                area={parseFloat(area) || 0}
+                bedrooms={parseInt(bedrooms) || undefined}
+                pricePerNight={isResidence ? parseFloat(pricePerNight) || undefined : undefined}
+                variant="compact"
+              />
+            </div>
           )}
         </motion.div>
 

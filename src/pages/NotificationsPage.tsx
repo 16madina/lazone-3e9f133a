@@ -11,6 +11,7 @@ import { fr } from 'date-fns/locale';
 import { SEOHead } from '@/components/SEOHead';
 import { useAppStore, AppMode } from '@/stores/appStore';
 import { toast } from '@/hooks/use-toast';
+import { UserAvatar } from '@/components/UserAvatar';
 
 const NotificationsPage = () => {
   const navigate = useNavigate();
@@ -186,13 +187,10 @@ const NotificationsPage = () => {
               >
                 {/* Avatar */}
                 <div className="relative">
-                  <img
-                    src={notification.actor?.avatar_url || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop'}
-                    alt=""
-                    className="w-12 h-12 rounded-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.src = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop';
-                    }}
+                  <UserAvatar
+                    src={notification.actor?.avatar_url}
+                    name={notification.actor?.full_name}
+                    size="lg"
                   />
                   <div className="absolute -bottom-1 -right-1 p-1 bg-background rounded-full">
                     {getNotificationIcon(notification.type)}

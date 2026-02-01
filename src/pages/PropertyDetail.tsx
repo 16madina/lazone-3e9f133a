@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { useFavorites } from '@/hooks/useFavorites';
 import { ImageGallery } from '@/components/property/ImageGallery';
+import { UserAvatar } from '@/components/UserAvatar';
 import { ReportDialog } from '@/components/property/ReportDialog';
 import { PriceAnalysis } from '@/components/property/PriceAnalysis';
 import { AppointmentDialog } from '@/components/appointment/AppointmentDialog';
@@ -722,13 +723,10 @@ const PropertyDetailPage = () => {
           >
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <img
-                  src={ownerInfo.avatar_url || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop'}
-                  alt={ownerInfo.full_name || 'Propriétaire'}
-                  className="w-12 h-12 rounded-full object-cover"
-                  onError={(e) => {
-                    e.currentTarget.src = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop';
-                  }}
+                <UserAvatar
+                  src={ownerInfo.avatar_url}
+                  name={ownerInfo.full_name}
+                  size="lg"
                 />
                 <div>
                   <div className="flex items-center gap-2">

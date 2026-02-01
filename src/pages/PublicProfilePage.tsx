@@ -390,14 +390,27 @@ const PublicProfilePage = () => {
             {/* Avatar */}
             <div className="relative">
               <div className="relative w-24 h-24 rounded-full overflow-hidden border-4 border-background shadow-lg">
-                <img
-                  src={profile.avatar_url || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop'}
-                  alt={profile.full_name || 'Utilisateur'}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.currentTarget.src = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop';
-                  }}
-                />
+                {profile.avatar_url ? (
+                  <img
+                    src={profile.avatar_url}
+                    alt={profile.full_name || 'Utilisateur'}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      // Hide the broken image and show fallback
+                      e.currentTarget.style.display = 'none';
+                      const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                      if (fallback) fallback.style.display = 'flex';
+                    }}
+                  />
+                ) : null}
+                {/* Fallback initials avatar */}
+                <div 
+                  className={`w-full h-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center ${profile.avatar_url ? 'hidden' : 'flex'}`}
+                >
+                  <span className="text-3xl font-bold text-primary">
+                    {profile.full_name ? profile.full_name.charAt(0).toUpperCase() : '?'}
+                  </span>
+                </div>
                 
                 {/* Pro/Premium Diagonal Ribbon Badge based on listings count */}
                 {totalListingsCount >= 5 && (

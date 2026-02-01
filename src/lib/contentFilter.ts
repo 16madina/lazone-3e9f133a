@@ -86,6 +86,43 @@ const allowedPhrases = [
   'sans alcool',
 ];
 
+// Mots légitimes contenant des sous-chaînes inappropriées (faux positifs)
+const allowedWords = [
+  'balcon', 'balcons', // contient "con"
+  'seconde', 'secondes', 'second', 'seconds', // contient "con"
+  'condition', 'conditions', 'conditionné', 'conditionnée', // contient "con"
+  'confort', 'confortable', 'confortables', // contient "con"  
+  'concierge', 'conciergerie', // contient "con"
+  'connexion', 'connecté', 'connectée', // contient "con"
+  'construction', 'construit', 'construite', // contient "con"
+  'conservé', 'conservée', 'conservation', // contient "con"
+  'contemporain', 'contemporaine', // contient "con"
+  'contrat', 'contrats', 'contact', 'contacts', // contient "con"
+  'contrôle', 'contrôlé', // contient "con"
+  'convivial', 'conviviale', // contient "con"
+  'économie', 'économique', 'économiques', // contient "con" via normalisation
+  'réception', // contient "con" via normalisation
+  'conception', // contient "con"
+  'reconnu', 'reconnue', // contient "con"
+  'occasion', 'occasions', // contient "con"
+  'bacon', // contient "con"
+  'icone', 'icône', // contient "con"
+  'découvrir', 'découverte', // contient potentiellement des patterns
+  'reculé', 'reculée', // contient "cul"
+  'culte', 'culture', 'culturel', 'culturelle', // contient "cul"
+  'particulier', 'particulière', 'particuliers', // contient "cul"
+  'véhicule', 'véhicules', // contient "cul"
+  'circuler', 'circulation', // contient "cul"
+  'calculer', 'calcul', // contient "cul"
+  'spectaculaire', // contient "cul"
+  'masculin', 'masculine', // contient "cul"
+  'difficulté', 'difficultés', // contient "cul"
+  'faculté', 'facultatif', // contient "cul"
+  'inculpé', 'inculquer', // contient "cul"
+  'bascule', 'basculer', // contient "cul"
+  'articulation', // contient "cul"
+];
+
 /**
  * Remove allowed phrases from text before filtering
  */
@@ -99,6 +136,18 @@ function removeAllowedPhrases(text: string): string {
 }
 
 /**
+ * Remove allowed words (legitimate words that contain inappropriate substrings)
+ */
+function removeAllowedWords(text: string): string {
+  let cleanedText = text;
+  for (const word of allowedWords) {
+    const regex = new RegExp(`\\b${word}\\b`, 'gi');
+    cleanedText = cleanedText.replace(regex, '');
+  }
+  return cleanedText;
+}
+
+/**
  * Check if text contains inappropriate content
  */
 export function filterContent(text: string): ContentFilterResult {
@@ -106,9 +155,10 @@ export function filterContent(text: string): ContentFilterResult {
     return { isClean: true, flaggedWords: [], originalText: text };
   }
 
-  // Remove allowed phrases before checking for inappropriate content
+  // Remove allowed phrases and words before checking for inappropriate content
   const textWithoutAllowedPhrases = removeAllowedPhrases(text);
-  const normalizedText = normalizeText(textWithoutAllowedPhrases);
+  const textWithoutAllowedWords = removeAllowedWords(textWithoutAllowedPhrases);
+  const normalizedText = normalizeText(textWithoutAllowedWords);
   const flaggedWords: string[] = [];
 
   for (const word of inappropriateWords) {

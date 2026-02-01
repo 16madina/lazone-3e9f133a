@@ -1,6 +1,7 @@
 import { Star } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { UserAvatar } from '@/components/UserAvatar';
 
 interface ReviewCardProps {
   review: {
@@ -19,13 +20,10 @@ export const ReviewCard = ({ review }: ReviewCardProps) => {
   return (
     <div className="p-4 bg-card rounded-xl border border-border">
       <div className="flex items-start gap-3">
-        <img
-          src={review.reviewer?.avatar_url || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop'}
-          alt={review.reviewer?.full_name || 'Utilisateur'}
-          className="w-10 h-10 rounded-full object-cover"
-          onError={(e) => {
-            e.currentTarget.src = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop';
-          }}
+        <UserAvatar
+          src={review.reviewer?.avatar_url}
+          name={review.reviewer?.full_name}
+          size="md"
         />
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between">

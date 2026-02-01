@@ -23,6 +23,7 @@ import { ReportUserDialog } from '@/components/messages/ReportUserDialog';
 import SectionTutorialButton from '@/components/tutorial/SectionTutorialButton';
 import EmailVerificationRequired from '@/components/EmailVerificationRequired';
 import { SEOHead } from '@/components/SEOHead';
+import { UserAvatar } from '@/components/UserAvatar';
 import heroBg2 from '@/assets/hero-bg-2.jpg';
 import {
   DropdownMenu,
@@ -690,19 +691,13 @@ const ConversationView = ({ participantId, propertyId, onBack }: ConversationVie
           <button onClick={onBack} className="p-2 hover:bg-muted rounded-full">
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <div className="relative">
-            <img
-              src={participant?.avatar_url || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop'}
-              alt={participant?.full_name || 'Utilisateur'}
-              className="w-10 h-10 rounded-full object-cover"
-              onError={(e) => {
-                e.currentTarget.src = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop';
-              }}
-            />
-            {isOnline && (
-              <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-card rounded-full" />
-            )}
-          </div>
+          <UserAvatar
+            src={participant?.avatar_url}
+            name={participant?.full_name}
+            size="md"
+            showOnlineIndicator
+            isOnline={isOnline}
+          />
           <div className="flex-1">
             <h2 className="font-semibold">{participant?.full_name || 'Utilisateur'}</h2>
             {isTyping ? (

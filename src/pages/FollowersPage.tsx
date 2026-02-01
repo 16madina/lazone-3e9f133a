@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
+import { UserAvatar } from '@/components/UserAvatar';
 
 interface UserFollow {
   id: string;
@@ -250,13 +251,10 @@ const FollowersPage = () => {
                   onClick={() => navigate(`/user/${userFollow.user_id}`)}
                   className="flex items-center gap-3 flex-1 min-w-0"
                 >
-                  <img
-                    src={userFollow.avatar_url || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop'}
-                    alt={userFollow.full_name || 'Utilisateur'}
-                    className="w-12 h-12 rounded-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.src = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop';
-                    }}
+                  <UserAvatar
+                    src={userFollow.avatar_url}
+                    name={userFollow.full_name}
+                    size="lg"
                   />
                   <div className="flex-1 min-w-0 text-left">
                     <p className="font-medium truncate">

@@ -23,6 +23,7 @@ import { useAppMode } from '@/hooks/useAppMode';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { UserAvatar } from '@/components/UserAvatar';
 import {
   Dialog,
   DialogContent,
@@ -380,13 +381,10 @@ export const AppointmentsTab = () => {
 
       {/* User Info */}
       <div className="flex items-center gap-2">
-        <img
-          src={isReceived 
-            ? appointment.requester?.avatar_url || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop'
-            : appointment.owner?.avatar_url || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop'
-          }
-          alt=""
-          className="w-8 h-8 rounded-full object-cover"
+        <UserAvatar
+          src={isReceived ? appointment.requester?.avatar_url : appointment.owner?.avatar_url}
+          name={isReceived ? appointment.requester?.full_name : appointment.owner?.full_name}
+          size="sm"
         />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium truncate">

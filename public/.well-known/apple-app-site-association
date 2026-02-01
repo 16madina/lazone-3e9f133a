@@ -8,6 +8,7 @@
         ],
         "paths": [
           "/auth*",
+          "/verify-email*",
           "/property/*",
           "/user/*",
           "/credits*",
@@ -19,6 +20,10 @@
           {
             "/": "/auth*",
             "comment": "Matches auth page with referral codes"
+          },
+          {
+            "/": "/verify-email*",
+            "comment": "Matches email verification page"
           },
           {
             "/": "/property/*",

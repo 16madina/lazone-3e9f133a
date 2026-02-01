@@ -58,6 +58,20 @@ export const useDeepLinks = () => {
 
             console.log('[DeepLink] Parsed path:', path, 'params:', Object.fromEntries(params));
 
+            // Handle email verification deep links
+            if (path.includes('/verify-email')) {
+              const token = params.get('token');
+              if (token) {
+                console.log('[DeepLink] Email verification detected, navigating to verify-email');
+                navigate(`/verify-email?token=${token}`, { replace: true });
+                toast({
+                  title: 'Vérification en cours... 🔐',
+                  description: 'Nous vérifions votre adresse email.',
+                });
+                return;
+              }
+            }
+
             // Handle referral deep links
             const referralCode = params.get('ref');
             if (referralCode || path.includes('/auth')) {

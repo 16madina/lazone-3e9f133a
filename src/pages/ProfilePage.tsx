@@ -945,7 +945,7 @@ const ProfilePage = () => {
             </div>
 
             {/* Profile Actions - Compact horizontal row */}
-            <div className="grid grid-cols-3 gap-2 mt-4">
+            <div className="grid grid-cols-4 gap-2 mt-4">
               {/* Modifier le profil */}
               <button
                 onClick={() => navigate('/settings/edit-profile')}
@@ -1081,6 +1081,17 @@ const ProfilePage = () => {
                   </button>
                 }
               />
+
+              {/* Acheter des crédits */}
+              <button
+                onClick={() => setPurchaseSheetOpen(true)}
+                className="flex flex-col items-center gap-1 p-2 bg-gradient-to-r from-emerald-500/5 to-emerald-500/10 rounded-xl hover:from-emerald-500/10 hover:to-emerald-500/15 transition-colors border border-emerald-500/10"
+              >
+                <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                  <ShoppingCart className="w-4 h-4 text-emerald-600" />
+                </div>
+                <span className="text-[10px] font-medium text-center">Acheter</span>
+              </button>
             </div>
 
             {/* Email verification warning */}

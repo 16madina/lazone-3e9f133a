@@ -136,12 +136,12 @@ export function CreditPurchaseSheet({
           </SheetHeader>
 
           <Tabs defaultValue={defaultTab} className="h-[calc(100dvh-80px)] flex flex-col">
-            <TabsList className="grid w-full grid-cols-2 mb-4">
-              <TabsTrigger value="credits" className="flex items-center gap-2">
+            <TabsList className="grid w-full grid-cols-2 mb-4 h-12 bg-muted/80 p-1 rounded-xl">
+              <TabsTrigger value="credits" className="flex items-center gap-2 rounded-lg text-sm font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all">
                 <Package className="w-4 h-4" />
                 Crédits
               </TabsTrigger>
-              <TabsTrigger value="subscriptions" className="flex items-center gap-2">
+              <TabsTrigger value="subscriptions" className="flex items-center gap-2 rounded-lg text-sm font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all">
                 <Crown className="w-4 h-4" />
                 Abonnements
               </TabsTrigger>

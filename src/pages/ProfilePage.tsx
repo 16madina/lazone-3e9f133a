@@ -945,7 +945,7 @@ const ProfilePage = () => {
             </div>
 
             {/* Profile Actions - Compact horizontal row */}
-            <div className="grid grid-cols-4 gap-2 mt-4">
+            <div className="grid grid-cols-4 gap-2 mt-4 p-2 bg-muted/30 rounded-xl border border-border/50">
               {/* Modifier le profil */}
               <button
                 onClick={() => navigate('/settings/edit-profile')}

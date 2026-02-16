@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import { useCredits } from '@/hooks/useCredits';
 import { useAuth } from '@/hooks/useAuth';
@@ -36,9 +37,11 @@ type SelectedProduct = {
 export function CreditPurchaseSheet({
   open,
   onOpenChange,
+  defaultTab = 'credits',
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  defaultTab?: 'credits' | 'subscriptions';
 }) {
   const navigate = useNavigate();
   const { profile } = useAuth();
@@ -55,9 +58,6 @@ export function CreditPurchaseSheet({
     isIosNative,
   } = useCredits();
 
-  // Monetization is now visible on all platforms
-  const hideMonetization = false;
-
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<SelectedProduct | null>(null);
 
@@ -71,7 +71,6 @@ export function CreditPurchaseSheet({
     return convertUsdToLocal(usdPrice, userCountry);
   };
 
-  // Price used for Web/Android payments (Mobile Money) MUST match the displayed estimate.
   const parsePrice = (productId: string, displayPrice: string): { amount: number; symbol: string } => {
     const usdPrice = parseUsdPrice(displayPrice);
     if (usdPrice && userCountry) {
@@ -116,8 +115,6 @@ export function CreditPurchaseSheet({
     }
   };
 
-  if (hideMonetization) return null;
-
   return (
     <>
       <Sheet
@@ -131,21 +128,27 @@ export function CreditPurchaseSheet({
         }}
       >
         <SheetContent side="bottom" className="h-[100dvh] rounded-none">
-          <SheetHeader className="pb-4">
+          <SheetHeader className="pb-2">
             <SheetTitle className="flex items-center gap-2 text-xl">
               <Coins className="w-6 h-6 text-primary" />
               Acheter des crédits
             </SheetTitle>
           </SheetHeader>
 
-          <div className="overflow-y-auto h-[calc(100dvh-80px)] space-y-6 pb-8">
-            {/* Credit Packs */}
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <Package className="w-5 h-5 text-primary" />
-                <h2 className="font-semibold text-lg">Packs de crédits</h2>
-              </div>
+          <Tabs defaultValue={defaultTab} className="h-[calc(100dvh-80px)] flex flex-col">
+            <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsTrigger value="credits" className="flex items-center gap-2">
+                <Package className="w-4 h-4" />
+                Crédits
+              </TabsTrigger>
+              <TabsTrigger value="subscriptions" className="flex items-center gap-2">
+                <Crown className="w-4 h-4" />
+                Abonnements
+              </TabsTrigger>
+            </TabsList>
 
+            {/* Credits Tab */}
+            <TabsContent value="credits" className="flex-1 overflow-y-auto pb-8 space-y-4 mt-0">
               {loading || !initialized ? (
                 <div className="space-y-3">
                   {[1, 2, 3].map((i) => (
@@ -220,15 +223,27 @@ export function CreditPurchaseSheet({
                   })}
                 </div>
               )}
-            </div>
 
-            {/* Subscriptions */}
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <Crown className="w-5 h-5 text-amber-500" />
-                <h2 className="font-semibold text-lg">Abonnements</h2>
+              {/* Legal info for credits */}
+              <div className="space-y-3 pt-4 border-t border-border">
+                <p className="text-center text-sm text-muted-foreground">
+                  Les crédits sont utilisés pour publier des annonces.
+                </p>
+                {localCurrency && (
+                  <div className="flex items-start gap-2 p-3 bg-muted/50 rounded-lg">
+                    <Info className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
+                    <p className="text-xs text-muted-foreground">
+                      Les montants en {localCurrency.symbol} sont des estimations. Pour Mobile Money, vous payez le montant affiché ;
+                      pour carte bancaire, la conversion dépend de votre banque.
+                    </p>
+                  </div>
+                )}
+                <LegalLinks navigate={navigate} />
               </div>
+            </TabsContent>
 
+            {/* Subscriptions Tab */}
+            <TabsContent value="subscriptions" className="flex-1 overflow-y-auto pb-8 space-y-4 mt-0">
               {loading || !initialized ? (
                 <div className="space-y-3">
                   {[1, 2].map((i) => (
@@ -323,42 +338,25 @@ export function CreditPurchaseSheet({
                   })}
                 </div>
               )}
-            </div>
 
-            {/* Legal info */}
-            <div className="space-y-3 pt-4 border-t border-border">
-              <p className="text-center text-sm text-muted-foreground">
-                Les crédits sont utilisés pour publier des annonces. Les abonnements se renouvellent automatiquement chaque mois.
-              </p>
-              {localCurrency && (
-                <div className="flex items-start gap-2 p-3 bg-muted/50 rounded-lg">
-                  <Info className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
-                  <p className="text-xs text-muted-foreground">
-                    Les montants en {localCurrency.symbol} sont des estimations. Pour Mobile Money, vous payez le montant affiché ;
-                    pour carte bancaire, la conversion dépend de votre banque.
-                  </p>
-                </div>
-              )}
-              <div className="text-center space-y-1 pt-2">
-                <p className="text-xs text-muted-foreground">
-                  En achetant, vous acceptez nos{' '}
-                  <button
-                    onClick={() => navigate('/settings/legal/terms')}
-                    className="text-primary underline hover:text-primary/80 transition-colors"
-                  >
-                    Conditions d'utilisation
-                  </button>{' '}
-                  et notre{' '}
-                  <button
-                    onClick={() => navigate('/settings/legal/privacy')}
-                    className="text-primary underline hover:text-primary/80 transition-colors"
-                  >
-                    Politique de confidentialité
-                  </button>
+              {/* Legal info for subscriptions */}
+              <div className="space-y-3 pt-4 border-t border-border">
+                <p className="text-center text-sm text-muted-foreground">
+                  Les abonnements se renouvellent automatiquement chaque mois.
                 </p>
+                {localCurrency && (
+                  <div className="flex items-start gap-2 p-3 bg-muted/50 rounded-lg">
+                    <Info className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
+                    <p className="text-xs text-muted-foreground">
+                      Les montants en {localCurrency.symbol} sont des estimations. Pour Mobile Money, vous payez le montant affiché ;
+                      pour carte bancaire, la conversion dépend de votre banque.
+                    </p>
+                  </div>
+                )}
+                <LegalLinks navigate={navigate} />
               </div>
-            </div>
-          </div>
+            </TabsContent>
+          </Tabs>
         </SheetContent>
       </Sheet>
 
@@ -380,5 +378,28 @@ export function CreditPurchaseSheet({
         />
       )}
     </>
+  );
+}
+
+function LegalLinks({ navigate }: { navigate: (path: string) => void }) {
+  return (
+    <div className="text-center space-y-1 pt-2">
+      <p className="text-xs text-muted-foreground">
+        En achetant, vous acceptez nos{' '}
+        <button
+          onClick={() => navigate('/settings/legal/terms')}
+          className="text-primary underline hover:text-primary/80 transition-colors"
+        >
+          Conditions d'utilisation
+        </button>{' '}
+        et notre{' '}
+        <button
+          onClick={() => navigate('/settings/legal/privacy')}
+          className="text-primary underline hover:text-primary/80 transition-colors"
+        >
+          Politique de confidentialité
+        </button>
+      </p>
+    </div>
   );
 }

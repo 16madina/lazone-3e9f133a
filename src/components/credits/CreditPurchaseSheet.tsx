@@ -55,8 +55,8 @@ export function CreditPurchaseSheet({
     isIosNative,
   } = useCredits();
 
-  // Apple compliance
-  const hideMonetization = isIosNative;
+  // Monetization is now visible on all platforms
+  const hideMonetization = false;
 
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<SelectedProduct | null>(null);

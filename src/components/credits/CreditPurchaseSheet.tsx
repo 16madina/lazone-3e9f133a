@@ -297,19 +297,19 @@ export function CreditPurchaseSheet({
                             </Badge>
                           </div>
                         )}
-                        <CardHeader className="pb-2 p-3">
-                          <CardTitle className="flex items-center gap-1 text-sm">
-                            {isPremium && <Crown className="w-4 h-4 text-amber-500" />}
-                            {isPro && <Zap className="w-4 h-4 text-purple-500" />}
+                        <CardHeader className="pb-2 p-4 pt-5">
+                          <CardTitle className="flex items-center gap-1.5 text-base font-bold">
+                            {isPremium && <Crown className="w-5 h-5 text-amber-500" />}
+                            {isPro && <Zap className="w-5 h-5 text-purple-500" />}
                             {product.displayName}
                           </CardTitle>
-                          <CardDescription className="text-xs">{product.description}</CardDescription>
+                          <CardDescription className="text-sm mt-1">{product.description}</CardDescription>
                         </CardHeader>
-                        <CardContent className="p-3 pt-0">
-                          <ul className="space-y-0.5 mb-3">
+                        <CardContent className="p-4 pt-0">
+                          <ul className="space-y-1.5 mb-4">
                             {features.map((feature, i) => (
-                              <li key={i} className="flex items-center gap-1.5 text-xs">
-                                <Check className="w-3 h-3 text-green-500 shrink-0" />
+                              <li key={i} className="flex items-center gap-2 text-sm">
+                                <Check className="w-4 h-4 text-green-500 shrink-0" />
                                 {feature}
                               </li>
                             ))}

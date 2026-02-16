@@ -1309,11 +1309,10 @@ const AdminPage = () => {
     { id: 'sponsored' as TabType, label: 'Sponsorisés', icon: Star },
     { id: 'banners' as TabType, label: 'Bannières', icon: Image },
     { id: 'notifications' as TabType, label: 'Notifs', icon: Bell },
-    // APPLE REVIEW: Payment-related tabs hidden - uncomment after approval
-    // ...(isAdmin ? [
-    //   { id: 'payments' as TabType, label: 'Paiements', icon: CreditCard, badge: stats.pendingPayments },
-    //   { id: 'limits' as TabType, label: 'Limites', icon: Wallet },
-    // ] : []),
+    ...(isAdmin ? [
+      { id: 'payments' as TabType, label: 'Paiements', icon: CreditCard, badge: stats.pendingPayments },
+      { id: 'limits' as TabType, label: 'Limites', icon: Wallet },
+    ] : []),
     ...(isAdmin ? [
       { id: 'admins' as TabType, label: 'Admins', icon: Shield },
     ] : []),

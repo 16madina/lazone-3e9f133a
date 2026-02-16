@@ -251,7 +251,7 @@ export function CreditPurchaseSheet({
                   ))}
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
                   {subscriptions.map((product) => {
                     const isActive = activeSubscription?.product_id === product.id;
                     const isPro = product.id.includes('pro');
@@ -297,19 +297,19 @@ export function CreditPurchaseSheet({
                             </Badge>
                           </div>
                         )}
-                        <CardHeader className="pb-2">
-                          <CardTitle className="flex items-center gap-2">
-                            {isPremium && <Crown className="w-5 h-5 text-amber-500" />}
-                            {isPro && <Zap className="w-5 h-5 text-purple-500" />}
+                        <CardHeader className="pb-2 p-3">
+                          <CardTitle className="flex items-center gap-1 text-sm">
+                            {isPremium && <Crown className="w-4 h-4 text-amber-500" />}
+                            {isPro && <Zap className="w-4 h-4 text-purple-500" />}
                             {product.displayName}
                           </CardTitle>
-                          <CardDescription>{product.description}</CardDescription>
+                          <CardDescription className="text-xs">{product.description}</CardDescription>
                         </CardHeader>
-                        <CardContent>
-                          <ul className="space-y-1 mb-4">
+                        <CardContent className="p-3 pt-0">
+                          <ul className="space-y-0.5 mb-3">
                             {features.map((feature, i) => (
-                              <li key={i} className="flex items-center gap-2 text-sm">
-                                <Check className="w-4 h-4 text-green-500" />
+                              <li key={i} className="flex items-center gap-1.5 text-xs">
+                                <Check className="w-3 h-3 text-green-500 shrink-0" />
                                 {feature}
                               </li>
                             ))}

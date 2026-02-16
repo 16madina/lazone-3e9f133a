@@ -42,6 +42,7 @@ import { useCamera, isNativePlatform } from '@/hooks/useNativePlugins';
 import SectionTutorialButton from '@/components/tutorial/SectionTutorialButton';
 import EmailVerificationRequired from '@/components/EmailVerificationRequired';
 import ListingPaymentDialog from '@/components/publish/ListingPaymentDialog';
+import { CreditPurchaseSheet } from '@/components/credits/CreditPurchaseSheet';
 import { useListingLimit } from '@/hooks/useListingLimit';
 import { Badge } from '@/components/ui/badge';
 import { SEOHead } from '@/components/SEOHead';
@@ -150,6 +151,7 @@ const PublishPage = () => {
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [pendingPropertyId, setPendingPropertyId] = useState<string | null>(null);
   const [hasPaid, setHasPaid] = useState(false);
+  const [showCreditPurchase, setShowCreditPurchase] = useState(false);
   
   // Form state
   const [propertyType, setPropertyType] = useState<PropertyType>('house');
@@ -944,15 +946,15 @@ const PublishPage = () => {
           });
       }
 
-      // If user needs to pay and has no credits, redirect to credits page
+      // If user needs to pay and has no credits, show purchase sheet directly
       if (needsPayment && !canUseCredit && !hasPaid) {
         setLoading(false);
         setPendingPropertyId(property.id);
         toast({
           title: 'Crédits insuffisants',
-          description: 'Votre annonce est en attente. Veuillez acheter des crédits pour la publier.',
+          description: 'Votre annonce est en attente. Achetez des crédits pour la publier.',
         });
-        navigate('/profile', { state: { openPurchase: true } });
+        setShowCreditPurchase(true);
         return;
       }
 
@@ -2304,6 +2306,17 @@ const PublishPage = () => {
         listingType={isResidence ? 'short_term' : 'long_term'}
         propertyId={pendingPropertyId || undefined}
         onBeforeStripeRedirect={saveFormToStorage}
+      />
+
+      {/* Credit Purchase Sheet - shown when user has insufficient credits */}
+      <CreditPurchaseSheet 
+        open={showCreditPurchase} 
+        onOpenChange={(open) => {
+          setShowCreditPurchase(open);
+          if (!open) {
+            refetchLimits();
+          }
+        }} 
       />
       </div>
     </>

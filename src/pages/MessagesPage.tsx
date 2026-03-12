@@ -484,7 +484,11 @@ const ConversationView = ({ participantId, propertyId, onBack }: ConversationVie
   const navigate = useNavigate();
   const { isUserOnline, getLastSeen, fetchLastSeen } = useOnlineStatus();
   const { messages, loading, sendMessage, deleteMessage, addReaction, uploadAttachment, isTyping, setTyping } = useConversation(participantId, propertyId);
-  const { keyboardHeight } = useKeyboardHeight();
+  const { keyboardHeight: viewportKeyboardHeight } = useKeyboardHeight();
+  const { keyboardHeight: nativeKeyboardHeight, isVisible: nativeKeyboardVisible } = useKeyboard();
+  const [viewportHeight, setViewportHeight] = useState<number>(() =>
+    typeof window !== 'undefined' ? window.innerHeight : 0
+  );
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [participant, setParticipant] = useState<{ full_name: string; avatar_url: string | null } | null>(null);
@@ -502,15 +506,63 @@ const ConversationView = ({ participantId, propertyId, onBack }: ConversationVie
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const baselineViewportHeightRef = useRef<number>(
+    typeof window !== 'undefined' ? window.innerHeight : 0
+  );
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const updateViewportHeight = () => {
+      setViewportHeight(window.visualViewport?.height ?? window.innerHeight);
+    };
+
+    updateViewportHeight();
+    window.addEventListener('resize', updateViewportHeight);
+    window.visualViewport?.addEventListener('resize', updateViewportHeight);
+
+    return () => {
+      window.removeEventListener('resize', updateViewportHeight);
+      window.visualViewport?.removeEventListener('resize', updateViewportHeight);
+    };
+  }, []);
+
+  const hasSystemResize =
+    baselineViewportHeightRef.current > 0 &&
+    viewportHeight < baselineViewportHeightRef.current - 80;
+
+  const effectiveKeyboardHeight =
+    viewportKeyboardHeight > 0
+      ? viewportKeyboardHeight
+      : hasSystemResize
+        ? 0
+        : nativeKeyboardHeight;
+
+  const conversationHeight = hasSystemResize
+    ? viewportHeight
+    : effectiveKeyboardHeight > 0
+      ? Math.max(320, baselineViewportHeightRef.current - effectiveKeyboardHeight)
+      : viewportHeight;
+
+  useEffect(() => {
+    const keyboardClosed =
+      viewportKeyboardHeight === 0 &&
+      nativeKeyboardHeight === 0 &&
+      !nativeKeyboardVisible;
+
+    if (keyboardClosed && viewportHeight > 0) {
+      baselineViewportHeightRef.current = viewportHeight;
+    }
+  }, [viewportHeight, viewportKeyboardHeight, nativeKeyboardHeight, nativeKeyboardVisible]);
 
   // Scroll to bottom when keyboard opens
   useEffect(() => {
-    if (keyboardHeight > 0) {
+    if (effectiveKeyboardHeight > 0 || nativeKeyboardVisible) {
       setTimeout(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
       }, 100);
     }
-  }, [keyboardHeight]);
+  }, [effectiveKeyboardHeight, nativeKeyboardVisible]);
 
   const toggleMute = () => {
     const stored = localStorage.getItem('mutedConversations');

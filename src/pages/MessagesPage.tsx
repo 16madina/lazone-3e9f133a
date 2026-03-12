@@ -728,6 +728,7 @@ const ConversationView = ({ participantId, propertyId, onBack }: ConversationVie
     handleTyping();
   };
 
+  return (
     <div 
       className="flex flex-col"
       style={{ 

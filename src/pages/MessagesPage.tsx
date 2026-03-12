@@ -500,7 +500,7 @@ const ConversationView = ({ participantId, propertyId, onBack }: ConversationVie
   });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Scroll to bottom when keyboard opens
   useEffect(() => {

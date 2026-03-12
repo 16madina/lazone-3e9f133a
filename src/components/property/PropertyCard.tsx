@@ -10,7 +10,9 @@ import { VendorBadge } from '@/components/VendorBadge';
 import { UserTypeBadge } from '@/components/UserTypeBadge';
 import { ProPremiumBadge } from '@/components/ProPremiumBadge';
 
+// @ts-ignore
 import 'swiper/css';
+// @ts-ignore
 import 'swiper/css/pagination';
 
 interface PropertyCardProps {

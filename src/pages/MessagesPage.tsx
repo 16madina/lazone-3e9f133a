@@ -728,13 +728,10 @@ const ConversationView = ({ participantId, propertyId, onBack }: ConversationVie
     handleTyping();
   };
 
-  return (
     <div 
       className="flex flex-col"
       style={{ 
-        height: keyboardHeight > 0 
-          ? `${window.visualViewport?.height ?? (window.innerHeight - keyboardHeight)}px` 
-          : 'calc(100dvh - 80px)',
+        height: `${Math.max(320, conversationHeight)}px`,
         maxHeight: '100dvh',
         transition: 'height 0.15s ease-out'
       }}

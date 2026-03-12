@@ -680,8 +680,9 @@ const ConversationView = ({ participantId, propertyId, onBack }: ConversationVie
       className="flex flex-col"
       style={{ 
         height: keyboardHeight > 0 
-          ? `calc(100vh - ${keyboardHeight}px)` 
-          : 'calc(100vh - 80px)',
+          ? `${window.visualViewport?.height ?? (window.innerHeight - keyboardHeight)}px` 
+          : 'calc(100dvh - 80px)',
+        maxHeight: '100dvh',
         transition: 'height 0.15s ease-out'
       }}
     >

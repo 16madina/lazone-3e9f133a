@@ -49,7 +49,7 @@ const SwipeableMessage = ({ message, isMe, userId, participantAvatar, myAvatar, 
   const lastTapRef = useRef<number>(0);
   const initialDistanceRef = useRef<number>(0);
   const initialScaleRef = useRef<number>(1);
-  const longPressRef = useRef<NodeJS.Timeout | null>(null);
+  const longPressRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleCloseLightbox = () => {
     setEnlargedImage(null);

@@ -207,7 +207,7 @@ const PublishPage = () => {
 
   // Geocoding state
   const [isGeocoding, setIsGeocoding] = useState(false);
-  const geocodeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const geocodeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Popover states
   const [amenitiesOpen, setAmenitiesOpen] = useState(false);

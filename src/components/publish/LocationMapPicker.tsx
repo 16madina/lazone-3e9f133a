@@ -104,7 +104,7 @@ export default function LocationMapPicker({ position, onPositionChange, countryC
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [pendingPosition, setPendingPosition] = useState<{ lat: number; lng: number } | null>(null);
-  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Debounced search function
   const searchAddress = useCallback(async (query: string) => {

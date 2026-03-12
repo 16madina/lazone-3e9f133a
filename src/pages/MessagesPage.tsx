@@ -996,7 +996,9 @@ const ConversationView = ({ participantId, propertyId, onBack }: ConversationVie
       <div 
         className="p-3 bg-card border-t border-border flex-shrink-0" 
         style={{ 
-          paddingBottom: keyboardHeight > 0 ? '12px' : 'calc(16px + env(safe-area-inset-bottom))'
+          paddingBottom: effectiveKeyboardHeight > 0 || hasSystemResize || nativeKeyboardVisible
+            ? '12px'
+            : 'calc(16px + env(safe-area-inset-bottom))'
         }} 
         data-tutorial="messages-input"
       >

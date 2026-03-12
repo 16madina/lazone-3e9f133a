@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 /**
  * Hook to detect iOS keyboard height using Visual Viewport API
- * Returns the keyboard height and a ref callback for scrolling into view
+ * Returns the keyboard height for layout adjustments
  */
 export const useKeyboardHeight = () => {
   const [keyboardHeight, setKeyboardHeight] = useState(0);
@@ -12,38 +12,27 @@ export const useKeyboardHeight = () => {
     const viewport = window.visualViewport;
     if (!viewport) return;
 
-    let lastHeight = viewport.height;
-
     const handleResize = () => {
-      // Calculate keyboard height
-      const keyboardH = window.innerHeight - viewport.height;
-      const newKeyboardHeight = Math.max(0, keyboardH);
-      
-      // Only update if there's a significant change (more than 50px)
-      if (Math.abs(newKeyboardHeight - keyboardHeight) > 50 || newKeyboardHeight === 0) {
-        setKeyboardHeight(newKeyboardHeight);
-        
-        // Scroll to target element when keyboard opens
-        if (newKeyboardHeight > 0 && scrollTargetRef.current) {
-          setTimeout(() => {
-            scrollTargetRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }, 100);
-        }
+      // Calculate keyboard height from visual viewport
+      const keyboardH = Math.max(0, window.innerHeight - viewport.height);
+      setKeyboardHeight(keyboardH);
+
+      // Scroll to target element when keyboard opens
+      if (keyboardH > 50 && scrollTargetRef.current) {
+        setTimeout(() => {
+          scrollTargetRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
       }
-      
-      lastHeight = viewport.height;
     };
 
     viewport.addEventListener('resize', handleResize);
-    viewport.addEventListener('scroll', handleResize);
 
     return () => {
       viewport.removeEventListener('resize', handleResize);
-      viewport.removeEventListener('scroll', handleResize);
     };
-  }, [keyboardHeight]);
+  }, []); // No dependencies - avoids stale closure
 
-  const isKeyboardVisible = keyboardHeight > 0;
+  const isKeyboardVisible = keyboardHeight > 50;
 
   return { 
     keyboardHeight, 

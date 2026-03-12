@@ -13,6 +13,7 @@ import { useMessages, useConversation } from '@/hooks/useMessages';
 import { useAppMode } from '@/hooks/useAppMode';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { useKeyboardHeight } from '@/hooks/useKeyboardHeight';
+import { useKeyboard } from '@/hooks/useNativePlugins';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';

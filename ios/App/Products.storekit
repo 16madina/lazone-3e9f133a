@@ -170,7 +170,7 @@
               "locale" : "fr"
             }
           ],
-          "productID" : "com.lazone.sub.pro.monthly",
+          "productID" : "com.lazone.pro.monthly",
           "recurringSubscriptionPeriod" : "P1M",
           "referenceName" : "LaZone Pro",
           "subscriptionGroupID" : "21869557",

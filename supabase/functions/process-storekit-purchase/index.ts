@@ -17,7 +17,7 @@ const CREDITS_PER_PRODUCT: Record<string, number> = {
 
 // Subscription product patterns
 const isSubscriptionProduct = (productId: string): boolean => {
-  return productId.includes('sub.') || productId.includes('agency.');
+  return productId.includes('.pro.') || productId.includes('.premium.') || productId.includes('agency.');
 };
 
 // Calculate expiration date for subscriptions (1 month from purchase)

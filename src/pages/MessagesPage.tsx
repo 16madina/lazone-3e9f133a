@@ -509,6 +509,30 @@ const ConversationView = ({ participantId, propertyId, onBack }: ConversationVie
   const baselineViewportHeightRef = useRef<number>(
     typeof window !== 'undefined' ? window.innerHeight : 0
   );
+  const [bottomNavHeight, setBottomNavHeight] = useState(0);
+
+  // Measure bottom nav height dynamically
+  useEffect(() => {
+    const measureNav = () => {
+      const navEl = document.querySelector('.bottom-nav') as HTMLElement | null;
+      setBottomNavHeight(navEl ? navEl.offsetHeight : 0);
+    };
+
+    measureNav();
+
+    const navEl = document.querySelector('.bottom-nav') as HTMLElement | null;
+    let resizeObserver: ResizeObserver | undefined;
+    if (navEl) {
+      resizeObserver = new ResizeObserver(() => measureNav());
+      resizeObserver.observe(navEl);
+    }
+
+    window.addEventListener('resize', measureNav);
+    return () => {
+      window.removeEventListener('resize', measureNav);
+      resizeObserver?.disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -538,11 +562,16 @@ const ConversationView = ({ participantId, propertyId, onBack }: ConversationVie
         ? 0
         : nativeKeyboardHeight;
 
+  const isKeyboardOpen = effectiveKeyboardHeight > 0 || hasSystemResize || nativeKeyboardVisible;
+
+  // When keyboard is open, nav is usually hidden by the OS, so don't subtract it
+  const navOffset = isKeyboardOpen ? 0 : bottomNavHeight;
+
   const conversationHeight = hasSystemResize
-    ? viewportHeight
+    ? viewportHeight - navOffset
     : effectiveKeyboardHeight > 0
       ? Math.max(320, baselineViewportHeightRef.current - effectiveKeyboardHeight)
-      : viewportHeight;
+      : viewportHeight - navOffset;
 
   useEffect(() => {
     const keyboardClosed =

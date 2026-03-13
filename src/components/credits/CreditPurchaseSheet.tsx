@@ -340,6 +340,21 @@ export function CreditPurchaseSheet({
                 </div>
               )}
 
+              {/* Restore purchases (iOS only) */}
+              {isIosNative && (
+                <div className="pt-2">
+                  <Button
+                    variant="ghost"
+                    className="w-full text-muted-foreground"
+                    onClick={() => restorePurchases()}
+                    disabled={purchasing}
+                  >
+                    <RotateCcw className="w-4 h-4 mr-2" />
+                    Restaurer les achats
+                  </Button>
+                </div>
+              )}
+
               {/* Legal info for subscriptions */}
               <div className="space-y-3 pt-4 border-t border-border">
                 <p className="text-center text-sm text-muted-foreground">

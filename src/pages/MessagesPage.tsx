@@ -1025,11 +1025,10 @@ const ConversationView = ({ participantId, propertyId, onBack }: ConversationVie
       <div 
         className="p-3 bg-card border-t border-border flex-shrink-0" 
         style={{ 
-          paddingBottom: effectiveKeyboardHeight > 0 || hasSystemResize || nativeKeyboardVisible
-            ? '12px'
-            : 'calc(16px + env(safe-area-inset-bottom))'
+          paddingBottom: isKeyboardOpen ? '12px' : '12px'
         }} 
         data-tutorial="messages-input"
+      >
       >
         <div className="flex items-center gap-2">
           <input

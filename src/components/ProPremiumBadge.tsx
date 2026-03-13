@@ -4,13 +4,16 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 export type ProPremiumLevel = 'none' | 'pro' | 'premium';
 
 interface ProPremiumBadgeProps {
-  listingsCount: number;
+  subscriptionType?: ProPremiumLevel | string | null;
+  /** @deprecated Use subscriptionType instead */
+  listingsCount?: number;
   size?: 'sm' | 'md' | 'lg';
   showTooltip?: boolean;
   variant?: 'badge' | 'ribbon';
   className?: string;
 }
 
+/** @deprecated Use subscriptionType prop directly */
 export const getProPremiumLevel = (listingsCount: number): ProPremiumLevel => {
   if (listingsCount >= 15) return 'premium';
   if (listingsCount >= 5) return 'pro';
@@ -21,12 +24,12 @@ const badgeConfig = {
   none: null,
   pro: {
     name: 'Pro',
-    description: '5+ annonces publiées',
+    description: 'Abonnement Pro actif',
     gradient: 'bg-gradient-to-r from-purple-500 to-pink-500',
   },
   premium: {
     name: 'Premium',
-    description: '15+ annonces publiées',
+    description: 'Abonnement Premium actif',
     gradient: 'bg-gradient-to-r from-amber-500 to-orange-500',
   },
 };
@@ -47,13 +50,21 @@ const sizeConfig = {
 };
 
 export const ProPremiumBadge = ({ 
+  subscriptionType,
   listingsCount, 
   size = 'sm', 
   showTooltip = true,
   variant = 'badge',
   className = '' 
 }: ProPremiumBadgeProps) => {
-  const level = getProPremiumLevel(listingsCount);
+  // Priority: use subscriptionType if provided, fallback to listingsCount for backwards compat
+  let level: ProPremiumLevel = 'none';
+  if (subscriptionType === 'pro' || subscriptionType === 'premium') {
+    level = subscriptionType;
+  } else if (listingsCount !== undefined) {
+    level = getProPremiumLevel(listingsCount);
+  }
+
   const config = badgeConfig[level];
   
   if (!config) return null;

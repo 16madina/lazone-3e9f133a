@@ -412,9 +412,9 @@ const PublicProfilePage = () => {
                   </span>
                 </div>
                 
-                {/* Pro/Premium Diagonal Ribbon Badge based on listings count */}
-                {totalListingsCount >= 5 && (
-                  <ProPremiumBadge listingsCount={totalListingsCount} variant="ribbon" />
+                {/* Pro/Premium Diagonal Ribbon Badge based on subscription */}
+                {userSubscription?.subscription_type && (
+                  <ProPremiumBadge subscriptionType={userSubscription.subscription_type} variant="ribbon" />
                 )}
               </div>
               

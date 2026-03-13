@@ -1029,7 +1029,6 @@ const ConversationView = ({ participantId, propertyId, onBack }: ConversationVie
         }} 
         data-tutorial="messages-input"
       >
-      >
         <div className="flex items-center gap-2">
           <input
             type="file"

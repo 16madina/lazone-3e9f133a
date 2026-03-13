@@ -375,6 +375,18 @@ export const useListingLimit = () => {
     }
   }, [user, currentListingType, fetchUserListingsCount, fetchAvailableCredits, fetchFreeMonthlyCredits]);
 
+  // Listen for credit updates from useCredits (after purchase/restore)
+  useEffect(() => {
+    const handleCreditsUpdated = () => {
+      console.log('[useListingLimit] Credits updated event received, refreshing...');
+      fetchAvailableCredits();
+      fetchFreeMonthlyCredits();
+    };
+
+    window.addEventListener('credits-updated', handleCreditsUpdated);
+    return () => window.removeEventListener('credits-updated', handleCreditsUpdated);
+  }, [fetchAvailableCredits, fetchFreeMonthlyCredits]);
+
   // Get the mode-specific settings
   // FREE MODE: Always return 5 free listings for everyone
   const getModeSettings = (): ModeLimitSettings => {

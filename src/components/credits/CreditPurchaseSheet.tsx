@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Crown, Coins, Check, Info, Package, Star, Zap } from 'lucide-react';
+import { Crown, Coins, Check, Info, Package, Star, Zap, RotateCcw } from 'lucide-react';
 
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -52,6 +52,7 @@ export function CreditPurchaseSheet({
     subscriptions,
     activeSubscription,
     purchaseProduct,
+    restorePurchases,
     loading,
     purchasing,
     initialized,
@@ -336,6 +337,21 @@ export function CreditPurchaseSheet({
                       </Card>
                     );
                   })}
+                </div>
+              )}
+
+              {/* Restore purchases (iOS only) */}
+              {isIosNative && (
+                <div className="pt-2">
+                  <Button
+                    variant="ghost"
+                    className="w-full text-muted-foreground"
+                    onClick={() => restorePurchases()}
+                    disabled={purchasing}
+                  >
+                    <RotateCcw className="w-4 h-4 mr-2" />
+                    Restaurer les achats
+                  </Button>
                 </div>
               )}
 

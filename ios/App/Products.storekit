@@ -25,7 +25,7 @@
           "locale" : "fr"
         }
       ],
-      "productID" : "com.lazone.listing.single",
+      "productID" : "com.lazone.credits.single",
       "referenceName" : "Annonce Unique",
       "type" : "Consumable"
     },

@@ -11,8 +11,8 @@ const CREDITS_PER_PRODUCT: Record<string, number> = {
   'com.lazone.credits.single': 1,
   'com.lazone.credits.pack5': 5,
   'com.lazone.credits.pack10': 10,
-  'com.lazone.pro.monthly': 30,
-  'com.lazone.premium.monthly': 999,
+  'com.lazone.pro.monthly': 15,
+  'com.lazone.premium.monthly': 30,
 };
 
 // Subscription product patterns
@@ -81,18 +81,31 @@ serve(async (req) => {
       });
     }
 
+    const creditsAmount = CREDITS_PER_PRODUCT[productId] || 1;
+    const isSubscription = isSubscriptionProduct(productId);
+    const actualPurchaseDate = purchaseDate || new Date().toISOString();
+    const actualExpirationDate = expirationDate || getExpirationDate(productId, actualPurchaseDate);
+
     // Check if this transaction was already processed
     const { data: existingPurchase } = await supabase
       .from("storekit_purchases")
-      .select("id, user_id")
+      .select("id, user_id, product_id, credits_amount")
       .eq("transaction_id", transactionId)
       .maybeSingle();
 
     if (existingPurchase) {
-      console.log(`[process-storekit] Transaction ${transactionId} already exists`);
-      
-      // If it's the same user, return success (idempotent)
-      if (existingPurchase.user_id === user.id) {
+      // Different user trying to claim same transaction - fraud attempt
+      if (existingPurchase.user_id !== user.id) {
+        console.error(`[process-storekit] FRAUD ATTEMPT: User ${user.id} trying to claim transaction ${transactionId} owned by ${existingPurchase.user_id}`);
+        return new Response(JSON.stringify({ success: false, error: "Transaction already claimed" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Same user, same product - truly idempotent, nothing to do
+      if (existingPurchase.product_id === productId) {
+        console.log(`[process-storekit] Transaction ${transactionId} already exists with same product, skipping`);
         return new Response(JSON.stringify({ 
           success: true, 
           message: "Already processed",
@@ -101,22 +114,64 @@ serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+
+      // Same user, DIFFERENT product - subscription upgrade/downgrade!
+      // Apple reuses transactionId when changing subscription level in the same group
+      console.log(`[process-storekit] Subscription change detected: ${existingPurchase.product_id} -> ${productId}`);
       
-      // Different user trying to claim same transaction - fraud attempt
-      console.error(`[process-storekit] FRAUD ATTEMPT: User ${user.id} trying to claim transaction ${transactionId} owned by ${existingPurchase.user_id}`);
-      return new Response(JSON.stringify({ success: false, error: "Transaction already claimed" }), {
-        status: 400,
+      const { error: updateError } = await supabase
+        .from("storekit_purchases")
+        .update({
+          product_id: productId,
+          credits_amount: creditsAmount,
+          credits_used: 0, // Reset credits for new subscription period
+          purchase_date: actualPurchaseDate,
+          expiration_date: actualExpirationDate,
+          is_subscription: isSubscription,
+          status: 'active',
+        })
+        .eq("id", existingPurchase.id);
+
+      if (updateError) {
+        console.error("[process-storekit] Error updating purchase for subscription change:", updateError);
+        return new Response(JSON.stringify({ success: false, error: "Failed to update purchase" }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      console.log(`[process-storekit] Updated purchase ${existingPurchase.id}: ${existingPurchase.product_id} -> ${productId}`);
+
+      // Update user_subscriptions table
+      if (isSubscription) {
+        const subscriptionType = productId.includes('premium') ? 'premium' : 'pro';
+        
+        await supabase
+          .from("user_subscriptions")
+          .upsert({
+            user_id: user.id,
+            subscription_type: subscriptionType,
+            is_active: true,
+            active_until: actualExpirationDate,
+          }, {
+            onConflict: 'user_id',
+          });
+        
+        console.log(`[process-storekit] Updated user_subscriptions: ${subscriptionType}`);
+      }
+
+      return new Response(JSON.stringify({ 
+        success: true, 
+        purchaseId: existingPurchase.id,
+        creditsAmount,
+        isSubscription,
+        upgraded: true,
+      }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Get credits amount for this product
-    const creditsAmount = CREDITS_PER_PRODUCT[productId] || 1;
-    const isSubscription = isSubscriptionProduct(productId);
-    const actualPurchaseDate = purchaseDate || new Date().toISOString();
-    const actualExpirationDate = expirationDate || getExpirationDate(productId, actualPurchaseDate);
-
-    // Insert the purchase record (only backend can do this with service role)
+    // New transaction - insert the purchase record
     const { data: purchase, error: insertError } = await supabase
       .from("storekit_purchases")
       .insert({
@@ -168,7 +223,7 @@ serve(async (req) => {
       .from("notifications")
       .insert({
         user_id: user.id,
-        type: isRestore ? "payment_approved" : "payment_approved",
+        type: "payment_approved",
         actor_id: user.id,
         entity_id: purchase.id,
       });

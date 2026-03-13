@@ -260,11 +260,12 @@ class StoreKitService {
         console.log(`[StoreKit] Products loaded: ${this.products.size} products`);
       } catch (fetchError) {
         console.error('[StoreKit] Failed to fetch products:', fetchError);
-        // If fetch fails, manually populate with mock products for display
-        if (this.products.size === 0) {
-          console.log('[StoreKit] Populating fallback products for display...');
-          this.populateFallbackProducts();
-        }
+      }
+
+      // If no products were loaded (fetch failed OR returned empty), use fallback
+      if (this.products.size === 0) {
+        console.log('[StoreKit] No products loaded, populating fallback products for display...');
+        this.populateFallbackProducts();
       }
     } catch (error) {
       console.error('[StoreKit] Initialization error:', error);

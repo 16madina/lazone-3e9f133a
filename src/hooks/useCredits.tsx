@@ -307,6 +307,9 @@ export function useCredits(): UseCreditsReturn {
         const creditsAmount = CREDITS_PER_PRODUCT[productId] || 1;
         console.log('[useCredits] Credits added:', creditsAmount);
         
+        // Notify other hooks (useListingLimit) to refresh
+        window.dispatchEvent(new CustomEvent('credits-updated'));
+
         toast({
           title: 'Achat réussi !',
           description: `${creditsAmount} crédit(s) ajouté(s) à votre compte`,

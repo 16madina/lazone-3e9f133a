@@ -675,9 +675,30 @@ const ConversationView = ({ participantId, propertyId, onBack }: ConversationVie
     fetchPropertyInfo();
   }, [propertyId]);
 
+  // Auto-scroll to bottom on new messages (only if already near bottom)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const container = messagesContainerRef.current;
+    if (!container) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+    const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+    if (distanceFromBottom < 150) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
   }, [messages]);
+
+  // Detect scroll position to show/hide scroll-to-bottom button
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    const handleScroll = () => {
+      const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+      setShowScrollButton(distanceFromBottom > 200);
+    };
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [selectedConversation]);
 
   // Handle typing indicator
   const handleTyping = useCallback(() => {

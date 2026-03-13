@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, ArrowLeft, Send, Loader2, 
   MessageCircle, Paperclip, X, FileText, Reply, MapPin,
-  MoreVertical, Calendar, Flag, Volume2, VolumeX, Ban
+  MoreVertical, Calendar, Flag, Volume2, VolumeX, Ban, ArrowDown
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -504,7 +504,9 @@ const ConversationView = ({ participantId, propertyId, onBack }: ConversationVie
     return mutedSet.has(`${propertyId}_${participantId}`);
   });
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showScrollButton, setShowScrollButton] = useState(false);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const baselineViewportHeightRef = useRef<number>(
     typeof window !== 'undefined' ? window.innerHeight : 0
@@ -673,9 +675,30 @@ const ConversationView = ({ participantId, propertyId, onBack }: ConversationVie
     fetchPropertyInfo();
   }, [propertyId]);
 
+  // Auto-scroll to bottom on new messages (only if already near bottom)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const container = messagesContainerRef.current;
+    if (!container) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+    const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+    if (distanceFromBottom < 150) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
   }, [messages]);
+
+  // Detect scroll position to show/hide scroll-to-bottom button
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    const handleScroll = () => {
+      const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+      setShowScrollButton(distanceFromBottom > 200);
+    };
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [participantId, propertyId]);
 
   // Handle typing indicator
   const handleTyping = useCallback(() => {
@@ -898,7 +921,7 @@ const ConversationView = ({ participantId, propertyId, onBack }: ConversationVie
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-3">
+      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-3 space-y-3 relative">
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -952,6 +975,24 @@ const ConversationView = ({ participantId, propertyId, onBack }: ConversationVie
             </div>
           </motion.div>
         )}
+
+        {/* Scroll to bottom button */}
+        <AnimatePresence>
+          {showScrollButton && (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              onClick={() => {
+                messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="sticky bottom-2 left-1/2 -translate-x-1/2 mx-auto flex items-center gap-1.5 px-3 py-2 bg-primary text-primary-foreground rounded-full shadow-lg z-10"
+            >
+              <ArrowDown className="w-4 h-4" />
+              <span className="text-xs font-medium">Derniers messages</span>
+            </motion.button>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Pending attachment preview */}

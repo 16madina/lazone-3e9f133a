@@ -698,7 +698,7 @@ const ConversationView = ({ participantId, propertyId, onBack }: ConversationVie
     };
     container.addEventListener('scroll', handleScroll, { passive: true });
     return () => container.removeEventListener('scroll', handleScroll);
-  }, [selectedConversation]);
+  }, [participantId, propertyId]);
 
   // Handle typing indicator
   const handleTyping = useCallback(() => {

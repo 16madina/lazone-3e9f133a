@@ -52,6 +52,7 @@ export function CreditPurchaseSheet({
     subscriptions,
     activeSubscription,
     purchaseProduct,
+    restorePurchases,
     loading,
     purchasing,
     initialized,

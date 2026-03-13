@@ -975,6 +975,24 @@ const ConversationView = ({ participantId, propertyId, onBack }: ConversationVie
             </div>
           </motion.div>
         )}
+
+        {/* Scroll to bottom button */}
+        <AnimatePresence>
+          {showScrollButton && (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              onClick={() => {
+                messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="sticky bottom-2 left-1/2 -translate-x-1/2 mx-auto flex items-center gap-1.5 px-3 py-2 bg-primary text-primary-foreground rounded-full shadow-lg z-10"
+            >
+              <ArrowDown className="w-4 h-4" />
+              <span className="text-xs font-medium">Derniers messages</span>
+            </motion.button>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Pending attachment preview */}

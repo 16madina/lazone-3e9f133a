@@ -397,6 +397,9 @@ export function useCredits(): UseCreditsReturn {
 
       setPurchases((newPurchases || []) as StoreKitPurchase[]);
 
+      // Notify other hooks to refresh
+      window.dispatchEvent(new CustomEvent('credits-updated'));
+
       toast({
         title: 'Restauration terminée',
         description: `${restoredCount} achat(s) restauré(s)`,

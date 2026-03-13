@@ -940,6 +940,18 @@ const ProfilePage = () => {
                     <Calendar className="w-3 h-3" />
                     <span>Membre depuis {memberSince}</span>
                   </div>
+                  {hasActiveSubscription && activeSubscription?.expiration_date && (
+                    <div className="flex items-center gap-1.5 text-xs">
+                      <Crown className="w-3 h-3 text-amber-500" />
+                      <span className={`font-medium ${
+                        new Date(activeSubscription.expiration_date) < new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+                          ? 'text-destructive'
+                          : 'text-amber-600 dark:text-amber-400'
+                      }`}>
+                        {subscriptionType === 'premium' ? 'Premium' : 'Pro'} · expire le {new Date(activeSubscription.expiration_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

@@ -154,9 +154,9 @@ export const PropertyCard = ({ property, userCountry, isFirst = false }: Propert
               <h3 className="font-display font-semibold text-lg leading-tight line-clamp-1">
                 {property.title}
               </h3>
-              {/* Pro/Premium Badge based on listings count */}
-              {property.ownerListingsCount && property.ownerListingsCount >= 5 && (
-                <ProPremiumBadge listingsCount={property.ownerListingsCount} size="sm" />
+              {/* Pro/Premium Badge based on subscription */}
+              {property.subscriptionType && (
+                <ProPremiumBadge subscriptionType={property.subscriptionType} size="sm" />
               )}
               {property.vendorBadge && property.vendorBadge !== 'none' && (
                 <VendorBadge level={property.vendorBadge} size="sm" />

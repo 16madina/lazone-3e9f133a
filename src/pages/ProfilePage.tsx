@@ -870,9 +870,9 @@ const ProfilePage = () => {
                       </div>
                     )}
                     
-                    {/* Pro/Premium Diagonal Ribbon Badge based on listings count */}
-                    {totalListingsCount >= 5 && (
-                      <ProPremiumBadge listingsCount={totalListingsCount} variant="ribbon" />
+                    {/* Pro/Premium Diagonal Ribbon Badge based on subscription */}
+                    {subscriptionType && (
+                      <ProPremiumBadge subscriptionType={subscriptionType} variant="ribbon" />
                     )}
                     
                     {/* Overlay on hover */}

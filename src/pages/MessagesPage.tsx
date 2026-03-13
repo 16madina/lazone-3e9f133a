@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, ArrowLeft, Send, Loader2, 
   MessageCircle, Paperclip, X, FileText, Reply, MapPin,
-  MoreVertical, Calendar, Flag, Volume2, VolumeX, Ban
+  MoreVertical, Calendar, Flag, Volume2, VolumeX, Ban, ArrowDown
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';

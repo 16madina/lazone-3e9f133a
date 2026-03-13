@@ -504,7 +504,9 @@ const ConversationView = ({ participantId, propertyId, onBack }: ConversationVie
     return mutedSet.has(`${propertyId}_${participantId}`);
   });
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showScrollButton, setShowScrollButton] = useState(false);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const baselineViewportHeightRef = useRef<number>(
     typeof window !== 'undefined' ? window.innerHeight : 0

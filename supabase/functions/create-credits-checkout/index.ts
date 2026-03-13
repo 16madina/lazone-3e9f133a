@@ -9,28 +9,28 @@ const corsHeaders = {
 
 // Product definitions - credits per product
 const PRODUCTS_CREDITS: Record<string, { name: string; credits: number; type: 'one_time' | 'subscription'; interval?: 'month' }> = {
-  'com.lazone.listing.single': {
+  'com.lazone.credits.single': {
     name: '1 Crédit Annonce',
     credits: 1,
     type: 'one_time',
   },
-  'com.lazone.listing.pack5': {
+  'com.lazone.credits.pack5': {
     name: 'Pack 5 Crédits',
     credits: 5,
     type: 'one_time',
   },
-  'com.lazone.listing.pack10': {
+  'com.lazone.credits.pack10': {
     name: 'Pack 10 Crédits',
     credits: 10,
     type: 'one_time',
   },
-  'com.lazone.sub.pro.monthly': {
+  'com.lazone.pro.monthly': {
     name: 'Abonnement Pro',
     credits: 30,
     type: 'subscription',
     interval: 'month',
   },
-  'com.lazone.sub.premium.monthly': {
+  'com.lazone.premium.monthly': {
     name: 'Abonnement Premium',
     credits: 999,
     type: 'subscription',
@@ -40,11 +40,11 @@ const PRODUCTS_CREDITS: Record<string, { name: string; credits: number; type: 'o
 
 // Fallback prices in XOF centimes (used only if client doesn't send amount)
 const FALLBACK_PRICES: Record<string, number> = {
-  'com.lazone.listing.single': 500,
-  'com.lazone.listing.pack5': 2250,
-  'com.lazone.listing.pack10': 4000,
-  'com.lazone.sub.pro.monthly': 12000,
-  'com.lazone.sub.premium.monthly': 25000,
+  'com.lazone.credits.single': 500,
+  'com.lazone.credits.pack5': 2250,
+  'com.lazone.credits.pack10': 4000,
+  'com.lazone.pro.monthly': 12000,
+  'com.lazone.premium.monthly': 25000,
 };
 
 serve(async (req) => {

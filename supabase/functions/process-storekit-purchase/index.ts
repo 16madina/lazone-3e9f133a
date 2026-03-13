@@ -8,16 +8,16 @@ const corsHeaders = {
 
 // Credits per product
 const CREDITS_PER_PRODUCT: Record<string, number> = {
-  'com.lazone.listing.single': 1,
-  'com.lazone.listing.pack5': 5,
-  'com.lazone.listing.pack10': 10,
-  'com.lazone.sub.pro.monthly': 30,
-  'com.lazone.sub.premium.monthly': 999,
+  'com.lazone.credits.single': 1,
+  'com.lazone.credits.pack5': 5,
+  'com.lazone.credits.pack10': 10,
+  'com.lazone.pro.monthly': 30,
+  'com.lazone.premium.monthly': 999,
 };
 
 // Subscription product patterns
 const isSubscriptionProduct = (productId: string): boolean => {
-  return productId.includes('sub.') || productId.includes('agency.');
+  return productId.includes('.pro.') || productId.includes('.premium.') || productId.includes('agency.');
 };
 
 // Calculate expiration date for subscriptions (1 month from purchase)

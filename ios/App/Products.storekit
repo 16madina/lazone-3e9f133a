@@ -25,7 +25,7 @@
           "locale" : "fr"
         }
       ],
-      "productID" : "com.lazone.listing.single",
+      "productID" : "com.lazone.credits.single",
       "referenceName" : "Annonce Unique",
       "type" : "Consumable"
     },
@@ -40,7 +40,7 @@
           "locale" : "fr"
         }
       ],
-      "productID" : "com.lazone.listing.pack10",
+      "productID" : "com.lazone.credits.pack10",
       "referenceName" : "Pack 10 Crédits",
       "type" : "Consumable"
     },
@@ -55,7 +55,7 @@
           "locale" : "fr"
         }
       ],
-      "productID" : "com.lazone.listing.pack5",
+      "productID" : "com.lazone.credits.pack5",
       "referenceName" : "Pack 5 Crédits",
       "type" : "Consumable"
     }
@@ -142,7 +142,7 @@
               "locale" : "fr"
             }
           ],
-          "productID" : "com.lazone.sub.premium.monthly",
+          "productID" : "com.lazone.premium.monthly",
           "recurringSubscriptionPeriod" : "P1M",
           "referenceName" : "LaZone Premium",
           "subscriptionGroupID" : "21869557",
@@ -170,7 +170,7 @@
               "locale" : "fr"
             }
           ],
-          "productID" : "com.lazone.sub.pro.monthly",
+          "productID" : "com.lazone.pro.monthly",
           "recurringSubscriptionPeriod" : "P1M",
           "referenceName" : "LaZone Pro",
           "subscriptionGroupID" : "21869557",

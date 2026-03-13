@@ -8,13 +8,13 @@ import { Capacitor, registerPlugin } from '@capacitor/core';
 // Product IDs
 export const PRODUCT_IDS = {
   // Single credits
-  LISTING_SINGLE: 'com.lazone.listing.single',
+  LISTING_SINGLE: 'com.lazone.credits.single',
   // Packs
-  LISTING_PACK_5: 'com.lazone.listing.pack5',
-  LISTING_PACK_10: 'com.lazone.listing.pack10',
+  LISTING_PACK_5: 'com.lazone.credits.pack5',
+  LISTING_PACK_10: 'com.lazone.credits.pack10',
   // Subscriptions (for everyone)
-  SUB_PRO_MONTHLY: 'com.lazone.sub.pro.monthly',
-  SUB_PREMIUM_MONTHLY: 'com.lazone.sub.premium.monthly',
+  SUB_PRO_MONTHLY: 'com.lazone.pro.monthly',
+  SUB_PREMIUM_MONTHLY: 'com.lazone.premium.monthly',
 };
 
 // Credits per product

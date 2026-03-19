@@ -1304,6 +1304,7 @@ const AdminPage = () => {
 
   const tabs = [
     { id: 'users' as TabType, label: 'Utilisateurs', icon: Users },
+    { id: 'new-users' as TabType, label: 'Nouveaux', icon: UserPlus },
     { id: 'properties' as TabType, label: 'Immobilier', icon: Home },
     { id: 'properties-residence' as TabType, label: 'Résidence', icon: Home, color: 'text-emerald-500' },
     { id: 'reports' as TabType, label: 'Signalements', icon: Flag },

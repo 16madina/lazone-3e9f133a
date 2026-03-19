@@ -87,7 +87,7 @@ import ListingLimitsTab from '@/components/admin/ListingLimitsTab';
 import PaymentValidationTab from '@/components/admin/PaymentValidationTab';
 import NewUsersTab from '@/components/admin/NewUsersTab';
 
-type TabType = 'users' | 'properties' | 'properties-residence' | 'reports' | 'admins' | 'sponsored' | 'notifications' | 'banners' | 'limits' | 'payments';
+type TabType = 'users' | 'properties' | 'properties-residence' | 'reports' | 'admins' | 'sponsored' | 'notifications' | 'banners' | 'limits' | 'payments' | 'new-users';
 
 // Predefined notification templates
 const notificationTemplates = [

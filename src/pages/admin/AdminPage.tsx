@@ -85,8 +85,9 @@ import { cn } from '@/lib/utils';
 import { africanCountries } from '@/data/africanCountries';
 import ListingLimitsTab from '@/components/admin/ListingLimitsTab';
 import PaymentValidationTab from '@/components/admin/PaymentValidationTab';
+import NewUsersTab from '@/components/admin/NewUsersTab';
 
-type TabType = 'users' | 'properties' | 'properties-residence' | 'reports' | 'admins' | 'sponsored' | 'notifications' | 'banners' | 'limits' | 'payments';
+type TabType = 'users' | 'properties' | 'properties-residence' | 'reports' | 'admins' | 'sponsored' | 'notifications' | 'banners' | 'limits' | 'payments' | 'new-users';
 
 // Predefined notification templates
 const notificationTemplates = [
@@ -1303,6 +1304,7 @@ const AdminPage = () => {
 
   const tabs = [
     { id: 'users' as TabType, label: 'Utilisateurs', icon: Users },
+    { id: 'new-users' as TabType, label: 'Nouveaux', icon: UserPlus },
     { id: 'properties' as TabType, label: 'Immobilier', icon: Home },
     { id: 'properties-residence' as TabType, label: 'Résidence', icon: Home, color: 'text-emerald-500' },
     { id: 'reports' as TabType, label: 'Signalements', icon: Flag },
@@ -2449,6 +2451,11 @@ const AdminPage = () => {
             {/* Payments Validation Tab */}
             {activeTab === 'payments' && isAdmin && (
               <PaymentValidationTab />
+            )}
+
+            {/* New Users Tab */}
+            {activeTab === 'new-users' && (
+              <NewUsersTab />
             )}
           </>
         )}

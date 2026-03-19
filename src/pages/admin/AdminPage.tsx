@@ -1500,7 +1500,7 @@ const AdminPage = () => {
         </div>
       </div>
 
-      {/* Tabs - Two rows for mobile */}
+      {/* Tabs - Multiple rows for mobile */}
       <div className="px-4 -mt-3">
         <div className="bg-card rounded-xl shadow-sm p-2 space-y-2">
           {/* First row - 4 tabs */}
@@ -1522,9 +1522,9 @@ const AdminPage = () => {
               </button>
             ))}
           </div>
-          {/* Second row - remaining tabs */}
+          {/* Second row - next 4 tabs */}
           <div className="grid grid-cols-4 gap-1">
-            {tabs.slice(4).map((tab) => (
+            {tabs.slice(4, 8).map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
@@ -1544,6 +1544,30 @@ const AdminPage = () => {
               </button>
             ))}
           </div>
+          {/* Third row - remaining tabs */}
+          {tabs.length > 8 && (
+            <div className="grid grid-cols-4 gap-1">
+              {tabs.slice(8).map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`py-2 px-2 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1 relative ${
+                    activeTab === tab.id
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:bg-muted'
+                  }`}
+                >
+                  <tab.icon className="w-4 h-4 flex-shrink-0" />
+                  <span className="truncate">{tab.label}</span>
+                  {'badge' in tab && typeof (tab as any).badge === 'number' && (tab as any).badge > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                      {(tab as any).badge}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

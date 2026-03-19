@@ -399,14 +399,14 @@ export function CreditPurchaseSheet({
 
 function LegalLinks({ navigate }: { navigate: (path: string) => void }) {
   return (
-    <div className="text-center space-y-1 pt-2">
+    <div className="text-center space-y-2 pt-2">
       <p className="text-xs text-muted-foreground">
         En achetant, vous acceptez nos{' '}
         <button
           onClick={() => navigate('/settings/legal/terms')}
           className="text-primary underline hover:text-primary/80 transition-colors"
         >
-          Conditions d'utilisation
+          Conditions d'utilisation (EULA)
         </button>{' '}
         et notre{' '}
         <button
@@ -415,6 +415,9 @@ function LegalLinks({ navigate }: { navigate: (path: string) => void }) {
         >
           Politique de confidentialité
         </button>
+      </p>
+      <p className="text-xs text-muted-foreground">
+        Les abonnements sont facturés mensuellement. Le renouvellement automatique peut être désactivé dans les réglages de votre compte Apple au moins 24h avant la fin de la période en cours.
       </p>
     </div>
   );

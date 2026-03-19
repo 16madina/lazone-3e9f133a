@@ -1026,7 +1026,7 @@ const AuthPage = () => {
                     onClick={() => setShowTermsDialog(true)}
                     className="text-primary underline"
                   >
-                    conditions d'utilisation
+                    conditions d'utilisation (EULA)
                   </button>
                   {' '}et la{' '}
                   <button

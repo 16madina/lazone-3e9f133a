@@ -2452,6 +2452,11 @@ const AdminPage = () => {
             {activeTab === 'payments' && isAdmin && (
               <PaymentValidationTab />
             )}
+
+            {/* New Users Tab */}
+            {activeTab === 'new-users' && (
+              <NewUsersTab />
+            )}
           </>
         )}
       </div>

@@ -1109,6 +1109,28 @@ const AuthPage = () => {
             </button>
           </p>
         </div>
+
+        {/* EULA & Privacy links - always visible */}
+        <div className="text-center mt-3 pb-2">
+          <p className="text-[11px] text-muted-foreground">
+            En continuant, vous acceptez nos{' '}
+            <button
+              type="button"
+              onClick={() => setShowTermsDialog(true)}
+              className="text-primary underline"
+            >
+              Conditions d'utilisation (EULA)
+            </button>{' '}
+            et notre{' '}
+            <button
+              type="button"
+              onClick={() => setShowPrivacyDialog(true)}
+              className="text-primary underline"
+            >
+              Politique de confidentialité
+            </button>
+          </p>
+        </div>
         </motion.div>
       </div>
 

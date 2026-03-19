@@ -85,6 +85,7 @@ import { cn } from '@/lib/utils';
 import { africanCountries } from '@/data/africanCountries';
 import ListingLimitsTab from '@/components/admin/ListingLimitsTab';
 import PaymentValidationTab from '@/components/admin/PaymentValidationTab';
+import NewUsersTab from '@/components/admin/NewUsersTab';
 
 type TabType = 'users' | 'properties' | 'properties-residence' | 'reports' | 'admins' | 'sponsored' | 'notifications' | 'banners' | 'limits' | 'payments';
 

@@ -1,8 +1,12 @@
 import { useEffect, useState } from 'react';
+import { Capacitor } from '@capacitor/core';
 import logoLazone from '@/assets/lazone-logo-new.png';
 import { SEOHead } from '@/components/SEOHead';
 
 type Platform = 'ios' | 'android' | 'desktop';
+
+// Hide Google Play references in the iOS native build (Apple Guideline 2.3.10)
+const IS_IOS_NATIVE = Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios';
 
 const APP_STORE_URL = 'https://apps.apple.com/app/lazone/id6756757879';
 const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.lazone.afrique';

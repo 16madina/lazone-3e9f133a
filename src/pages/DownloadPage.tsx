@@ -99,8 +99,8 @@ const DownloadPage = () => {
           </a>
         )}
 
-        {/* Google Play Button - Show on Android or Desktop */}
-        {(platform === 'android' || platform === 'desktop') && (
+        {/* Google Play Button - Show on Android or Desktop, hidden inside iOS native */}
+        {!IS_IOS_NATIVE && (platform === 'android' || platform === 'desktop') && (
           <a
             href={PLAY_STORE_URL}
             target="_blank"

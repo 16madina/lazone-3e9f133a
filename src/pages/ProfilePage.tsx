@@ -1654,8 +1654,7 @@ const ProfilePage = () => {
                           // Placeholder for iOS App Store URL
                           toast({ title: 'Bientôt sur l\'App Store', description: 'L\'application sera disponible prochainement.' });
                         } else if (isAndroid) {
-                          // Placeholder for Google Play Store URL
-                          toast({ title: 'Bientôt sur Google Play', description: 'L\'application sera disponible prochainement.' });
+                          toast({ title: 'Bientôt disponible', description: 'L\'application sera disponible prochainement.' });
                         } else {
                           toast({ title: 'Merci !', description: 'La notation sera disponible sur les stores mobiles.' });
                         }

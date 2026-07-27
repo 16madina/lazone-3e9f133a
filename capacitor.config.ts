@@ -1,23 +1,30 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
-// Production builds should NOT use a remote server URL.
-// If you want hot-reload during local native development, set:
-//   CAPACITOR_SERVER_URL="http://YOUR_IP:5173"
-// then run: npx cap sync android/ios
-const devServerUrl = process.env.CAPACITOR_SERVER_URL;
+
+
+
+
+// Live web shell (like KiDi+): UI/JS updates without a new Play build.
+// Local hot-reload: set NATIVE_APP_URL=http://YOUR_LAN_IP:5173 before cap sync.
+const nativeAppUrl = process.env.NATIVE_APP_URL || "https://lazoneapp.com";
 
 const config: CapacitorConfig = {
   appId: 'com.lazone.afrique',
   appName: 'LaZone',
   webDir: 'dist',
-  ...(devServerUrl
-    ? {
-        server: {
-          url: devServerUrl,
-          cleartext: true,
-        },
-      }
-    : {}),
+  server: {
+    url: nativeAppUrl,
+    cleartext: nativeAppUrl.startsWith("http://"),
+    androidScheme: "https",
+    allowNavigation: [
+      "lazoneapp.com",
+      "www.lazoneapp.com",
+      "*.lovable.app",
+      "*.lovableproject.com",
+      "*.stripe.com",
+    ],
+  },
+
   ios: {
     // Let the webview extend under the iOS status bar; we handle safe areas in CSS per-page.
     contentInset: 'never',

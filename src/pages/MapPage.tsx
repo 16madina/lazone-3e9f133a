@@ -489,7 +489,7 @@ const MapPage = () => {
       {/* Search and Filters Header */}
       <div 
         className="absolute top-0 left-0 right-0 z-[1000] p-3"
-        style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)' }}
+        style={{ paddingTop: 'calc(var(--app-sat) + 0.75rem)' }}
       >
         <div className="flex gap-2">
           <DropdownMenu>

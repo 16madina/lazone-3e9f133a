@@ -40,7 +40,7 @@ const SectionTutorialButton = ({ section, className = '', variant = 'floating' }
           ? 'bg-emerald-500/90 hover:bg-emerald-500' 
           : 'bg-primary/90 hover:bg-primary'
       } ${className}`}
-      style={{ bottom: 'calc(80px + env(safe-area-inset-bottom))', right: '16px' }}
+      style={{ bottom: 'calc(80px + var(--app-sab))', right: '16px' }}
       aria-label="Aide de cette section"
     >
       <HelpCircle className="w-5 h-5" />

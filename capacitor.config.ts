@@ -36,6 +36,11 @@ const config: CapacitorConfig = {
     overrideUserAgent: 'LaZone Mobile App'
   },
   plugins: {
+    // Capacitor 8: inject correct --safe-area-inset-* on Android WebViews
+    SystemBars: {
+      insetsHandling: 'css',
+      style: 'LIGHT',
+    },
     SplashScreen: {
       launchAutoHide: true,
       launchShowDuration: 0,
@@ -50,7 +55,7 @@ const config: CapacitorConfig = {
     },
     StatusBar: {
       overlaysWebView: true,
-      style: 'light',
+      style: 'LIGHT',
       backgroundColor: '#ea580c'
     },
     PushNotifications: {

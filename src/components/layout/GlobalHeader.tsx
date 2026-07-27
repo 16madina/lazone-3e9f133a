@@ -46,8 +46,8 @@ export const GlobalHeader = () => {
     <div 
       className="fixed top-0 right-0 z-40 p-3 sm:p-4"
       style={{ 
-        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)',
-        paddingRight: 'calc(env(safe-area-inset-right, 0px) + 12px)'
+        paddingTop: 'calc(var(--app-sat) + 12px)',
+        paddingRight: 'calc(var(--app-sar) + 12px)'
       }}
     >
       <NotificationDropdown />

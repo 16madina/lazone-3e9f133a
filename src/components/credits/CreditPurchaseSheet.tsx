@@ -128,7 +128,7 @@ export function CreditPurchaseSheet({
           }
         }}
       >
-        <SheetContent side="bottom" className="h-[100dvh] rounded-none pt-[calc(env(safe-area-inset-top)+1.5rem)]">
+        <SheetContent side="bottom" className="h-[100dvh] rounded-none pt-[calc(var(--app-sat)+1.5rem)]">
           <SheetHeader className="pb-2">
             <SheetTitle className="flex items-center gap-2 text-xl">
               <Coins className="w-6 h-6 text-primary" />
@@ -136,7 +136,7 @@ export function CreditPurchaseSheet({
             </SheetTitle>
           </SheetHeader>
 
-          <Tabs defaultValue={defaultTab} className="h-[calc(100dvh-80px-env(safe-area-inset-top))] flex flex-col">
+          <Tabs defaultValue={defaultTab} className="h-[calc(100dvh-80px-var(--app-sat))] flex flex-col">
             <TabsList className="grid w-full grid-cols-2 mb-4 h-12 bg-muted/80 p-1 rounded-xl">
               <TabsTrigger value="credits" className="flex items-center gap-2 rounded-lg text-sm font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all">
                 <Package className="w-4 h-4" />

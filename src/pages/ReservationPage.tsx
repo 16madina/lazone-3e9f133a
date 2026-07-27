@@ -434,7 +434,7 @@ const ReservationPage = () => {
       }
     >
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border pt-[env(safe-area-inset-top)]">
+      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border pt-[var(--app-sat)]">
         <div className="container max-w-2xl mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" onClick={prevStep}>
@@ -803,7 +803,7 @@ const ReservationPage = () => {
           style={{
             bottom: bottomNavHeight
               ? `${bottomNavHeight + 8}px`
-              : 'calc(6.5rem + env(safe-area-inset-bottom, 0px))'
+              : 'calc(6.5rem + var(--app-sab))'
           }}
         >
           <div className="container max-w-2xl mx-auto">

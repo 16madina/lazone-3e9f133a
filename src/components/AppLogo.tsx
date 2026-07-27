@@ -22,9 +22,14 @@ export function AppLogo({
   const [currentSrc, setCurrentSrc] = React.useState<string>(publicPath);
   const [hasTriedFallback, setHasTriedFallback] = React.useState(false);
 
+  const { className, ...rest } = props;
+
   return (
     <img
-      {...props}
+      {...rest}
+      className={["object-contain shrink-0 align-middle", className]
+        .filter(Boolean)
+        .join(" ")}
       src={currentSrc}
       alt={alt}
       loading={loading}

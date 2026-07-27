@@ -49,7 +49,7 @@ export const PropertyCard = ({ property, userCountry, isFirst = false }: Propert
 
   return (
     <div className="property-card" data-tutorial={isFirst ? "property-card" : undefined}>
-      <div className="relative aspect-[4/3] overflow-hidden">
+      <div className="relative aspect-[4/3] overflow-hidden bg-muted">
         {hasMultipleImages ? (
           <Swiper
             modules={[Pagination]}
@@ -58,28 +58,35 @@ export const PropertyCard = ({ property, userCountry, isFirst = false }: Propert
               bulletClass: 'swiper-pagination-bullet !w-1.5 !h-1.5 !bg-white/50 !opacity-100',
               bulletActiveClass: '!bg-white !w-2 !h-2',
             }}
-            className="w-full h-full property-card-swiper"
+            className="absolute inset-0 w-full h-full property-card-swiper"
             onTouchStart={() => setSwiperActive(true)}
             onTouchEnd={() => setSwiperActive(false)}
           >
             {property.images.map((image, idx) => (
-              <SwiperSlide key={idx}>
-                <Link to={`/property/${property.id}`}>
+              <SwiperSlide key={idx} className="!h-full">
+                <Link to={`/property/${property.id}`} className="block w-full h-full">
                   <img
                     src={image}
                     alt={`${property.title} - ${idx + 1}`}
-                    className="w-full h-full object-cover"
+                    className="absolute inset-0 w-full h-full object-cover"
+                    loading={idx === 0 ? 'eager' : 'lazy'}
+                    decoding="async"
                   />
                 </Link>
               </SwiperSlide>
             ))}
           </Swiper>
         ) : (
-          <Link to={`/property/${property.id}`}>
+          <Link to={`/property/${property.id}`} className="absolute inset-0 block">
             <img
-              src={property.images[0]}
+              src={property.images[0] || '/placeholder.svg'}
               alt={property.title}
-              className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+              loading={isFirst ? 'eager' : 'lazy'}
+              decoding="async"
+              onError={(e) => {
+                e.currentTarget.src = '/placeholder.svg';
+              }}
             />
           </Link>
         )}

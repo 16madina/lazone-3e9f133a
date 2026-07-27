@@ -693,7 +693,7 @@ const ProfilePage = () => {
         
         <div 
           className="relative z-10 flex flex-col items-center justify-center min-h-[70vh] px-6"
-          style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+          style={{ paddingTop: 'var(--app-sat)' }}
         >
           {/* Animated illustration */}
           <motion.div

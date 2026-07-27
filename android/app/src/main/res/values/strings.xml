@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">LaZone</string>
+    <string name="title_activity_main">LaZone</string>
+    <string name="package_name">com.lazone.afrique</string>
+    <string name="custom_url_scheme">com.lazone.afrique</string>
+</resources>

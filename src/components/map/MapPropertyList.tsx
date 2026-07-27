@@ -42,7 +42,7 @@ export const MapPropertyList = ({
           exit={{ x: '-100%' }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
           className="absolute left-0 top-0 bottom-0 w-80 bg-card/95 backdrop-blur-lg z-[999] shadow-xl border-r flex flex-col"
-          style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 120px)' }}
+          style={{ paddingTop: 'calc(var(--app-sat) + 120px)' }}
         >
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b bg-card/80">

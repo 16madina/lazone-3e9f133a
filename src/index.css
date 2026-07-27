@@ -6,6 +6,12 @@
 
 @layer base {
   :root {
+    /* Capacitor SystemBars injects --safe-area-inset-*; env() fallback for iOS/WebView */
+    --app-sat: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+    --app-sab: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+    --app-sal: var(--safe-area-inset-left, env(safe-area-inset-left, 0px));
+    --app-sar: var(--safe-area-inset-right, env(safe-area-inset-right, 0px));
+
     --background: 30 30% 98%;
     --foreground: 20 20% 10%;
 
@@ -259,22 +265,23 @@
   .bottom-nav {
     @apply fixed bottom-0 left-0 right-0 z-50;
     @apply glass border-t border-glass-border;
-    padding-bottom: max(env(safe-area-inset-bottom, 0px), 4px);
-    padding-left: env(safe-area-inset-left, 0px);
-    padding-right: env(safe-area-inset-right, 0px);
+    padding-bottom: max(var(--app-sab), 4px);
+    padding-left: var(--app-sal);
+    padding-right: var(--app-sar);
   }
 
   .top-safe-area {
-    padding-top: env(safe-area-inset-top, 0px);
+    padding-top: var(--app-sat);
   }
 
-  .bottom-safe-area {
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+  .bottom-safe-area,
+  .pb-safe {
+    padding-bottom: var(--app-sab);
   }
 
   .horizontal-safe-area {
-    padding-left: env(safe-area-inset-left, 0px);
-    padding-right: env(safe-area-inset-right, 0px);
+    padding-left: var(--app-sal);
+    padding-right: var(--app-sar);
   }
 
   .property-card {
@@ -303,8 +310,8 @@
 
   .page-container {
     @apply min-h-screen pt-4 px-4 horizontal-safe-area;
-    padding-top: max(env(safe-area-inset-top, 0px), 1rem);
-    padding-bottom: calc(5rem + max(env(safe-area-inset-bottom, 0px), 1rem));
+    padding-top: max(var(--app-sat), 1rem);
+    padding-bottom: calc(5rem + max(var(--app-sab), 1rem));
   }
 
   /* Tablet and large screen optimizations */
@@ -428,7 +435,7 @@
 
   /* iOS Keyboard handling */
   .keyboard-aware-input {
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+    padding-bottom: calc(var(--app-sab) + 16px);
     transition: padding-bottom 0.25s ease;
   }
 

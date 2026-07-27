@@ -274,7 +274,7 @@ const MyListingsPage = () => {
       </AlertDialog>
 
       {/* Header */}
-      <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white pt-[env(safe-area-inset-top)]">
+      <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white pt-[var(--app-sat)]">
         <div className="flex items-center gap-4 px-4 py-4">
           <button 
             onClick={() => navigate('/profile')}

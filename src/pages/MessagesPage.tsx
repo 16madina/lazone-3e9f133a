@@ -193,7 +193,7 @@ const MessagesPage = () => {
         
         <div 
           className="relative z-10 flex flex-col items-center justify-center min-h-[70vh] px-6"
-          style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+          style={{ paddingTop: 'var(--app-sat)' }}
         >
         {/* Animated illustration */}
         <motion.div
@@ -790,7 +790,7 @@ const ConversationView = ({ participantId, propertyId, onBack }: ConversationVie
       }}
     >
       {/* Header */}
-      <div className="bg-card border-b border-border pt-[env(safe-area-inset-top)] flex-shrink-0">
+      <div className="bg-card border-b border-border pt-[var(--app-sat)] flex-shrink-0">
         <div className="p-4 flex items-center gap-3">
           <button onClick={onBack} className="p-2 hover:bg-muted rounded-full">
             <ArrowLeft className="w-5 h-5" />

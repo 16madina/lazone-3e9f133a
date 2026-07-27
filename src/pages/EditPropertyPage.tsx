@@ -428,7 +428,7 @@ const EditPropertyPage = () => {
           whileTap={{ scale: 0.9 }}
           onClick={() => navigate(-1)}
           className="absolute left-4 z-10 glass w-10 h-10 rounded-full flex items-center justify-center"
-          style={{ top: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}
+          style={{ top: 'calc(var(--app-sat) + 1rem)' }}
         >
           <ArrowLeft className="w-5 h-5" />
         </motion.button>

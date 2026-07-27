@@ -477,7 +477,7 @@ const AuthPage = () => {
       {/* Header */}
       <header 
         className="relative z-20 p-4 flex items-center justify-between"
-        style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}
+        style={{ paddingTop: 'calc(var(--app-sat) + 1rem)' }}
       >
         <motion.button
           initial={{ opacity: 0, x: -20 }}

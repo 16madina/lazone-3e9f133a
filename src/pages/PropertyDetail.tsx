@@ -384,23 +384,25 @@ const PropertyDetailPage = () => {
         ogImage={property.images[0] !== '/placeholder.svg' ? property.images[0] : undefined}
         ogType="product"
       />
-      {/* Header Image Carousel */}
-      <div className="relative h-80">
+      {/* Header Image Carousel — hauteur fixe pour éviter les sauts */}
+      <div className="relative h-80 bg-muted">
         <Swiper
           modules={[Pagination]}
           spaceBetween={0}
           slidesPerView={1}
           onSwiper={setSwiperRef}
           onSlideChange={(swiper) => setCurrentImageIndex(swiper.activeIndex)}
-          className="h-full"
+          className="absolute inset-0 h-full w-full"
         >
           {property.images.map((img, idx) => (
-            <SwiperSlide key={idx}>
+            <SwiperSlide key={idx} className="!h-full">
               <img
-                src={img}
+                src={img || '/placeholder.svg'}
                 alt={`${property.title} - ${idx + 1}`}
-                className="w-full h-full object-cover cursor-pointer"
+                className="absolute inset-0 w-full h-full object-cover cursor-pointer"
                 onClick={() => setShowGallery(true)}
+                loading={idx === 0 ? 'eager' : 'lazy'}
+                decoding="async"
                 onError={(e) => {
                   e.currentTarget.src = '/placeholder.svg';
                 }}

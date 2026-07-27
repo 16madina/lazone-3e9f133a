@@ -66,11 +66,14 @@ export const PropertyCard = ({ property, userCountry, isFirst = false }: Propert
               <SwiperSlide key={idx} className="!h-full">
                 <Link to={`/property/${property.id}`} className="block w-full h-full">
                   <img
-                    src={image}
+                    src={image || '/placeholder.svg'}
                     alt={`${property.title} - ${idx + 1}`}
                     className="absolute inset-0 w-full h-full object-cover"
                     loading={idx === 0 ? 'eager' : 'lazy'}
                     decoding="async"
+                    onError={(e) => {
+                      e.currentTarget.src = '/placeholder.svg';
+                    }}
                   />
                 </Link>
               </SwiperSlide>

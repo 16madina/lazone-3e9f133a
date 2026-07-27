@@ -758,11 +758,16 @@ const MapPage = () => {
                 onClick={() => navigate(`/property/${selectedProperty.id}`)}
               >
                 {/* Image */}
-                <div className="w-28 h-28 flex-shrink-0 rounded-xl overflow-hidden">
+                <div className="w-28 h-28 flex-shrink-0 rounded-xl overflow-hidden relative bg-muted">
                   <img
                     src={getPrimaryImage(selectedProperty.images)}
                     alt={selectedProperty.title}
-                    className="w-full h-full object-cover"
+                    className="absolute inset-0 w-full h-full object-cover"
+                    loading="lazy"
+                    decoding="async"
+                    onError={(e) => {
+                      e.currentTarget.src = '/placeholder.svg';
+                    }}
                   />
                 </div>
 

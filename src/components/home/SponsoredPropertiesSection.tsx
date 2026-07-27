@@ -131,12 +131,17 @@ export const SponsoredPropertiesSection = ({ userCountry }: SponsoredPropertiesS
               {/* Glow Background */}
               <div className="absolute -inset-1 bg-gradient-to-r from-primary/0 via-primary/0 to-primary/0 rounded-2xl opacity-0 group-hover:opacity-100 group-hover:from-primary/30 group-hover:via-primary/50 group-hover:to-primary/30 blur-xl transition-all duration-300 -z-10" />
               
-              {/* Image */}
-              <div className="aspect-[3/4] relative">
+              {/* Image — cadre fixe pour éviter les sauts de layout */}
+              <div className="aspect-[3/4] relative bg-muted">
                 <img
-                  src={property.imageUrl}
+                  src={property.imageUrl || '/placeholder.svg'}
                   alt={property.title}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                  loading="lazy"
+                  decoding="async"
+                  onError={(e) => {
+                    e.currentTarget.src = '/placeholder.svg';
+                  }}
                 />
                 {/* Gradient Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />

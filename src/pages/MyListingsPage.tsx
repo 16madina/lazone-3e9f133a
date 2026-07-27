@@ -451,11 +451,16 @@ const MyListingsPage = () => {
 
                   <div className="flex">
                     {/* Image */}
-                    <div className="w-28 h-28 flex-shrink-0 relative">
+                    <div className="w-28 h-28 flex-shrink-0 relative bg-muted overflow-hidden">
                       <img
                         src={getPrimaryImage(property.property_images)}
                         alt={property.title}
-                        className="w-full h-full object-cover"
+                        className="absolute inset-0 w-full h-full object-cover"
+                        loading="lazy"
+                        decoding="async"
+                        onError={(e) => {
+                          e.currentTarget.src = '/placeholder.svg';
+                        }}
                       />
                       {isSponsored && timeRemaining && (
                         <div className="absolute bottom-1 left-1 px-2 py-0.5 bg-black/70 rounded-full">
